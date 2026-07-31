@@ -28,9 +28,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-display font-bold">
-                C
-              </span>
+              <img src="/logo-icon.png" alt="" className="w-8 h-8" />
               <span className="font-display font-bold text-white">CricBooking</span>
             </div>
             <p className="text-sm text-surface-200/60">

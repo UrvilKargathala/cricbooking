@@ -63,9 +63,7 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Link href="/" className="flex md:hidden items-center gap-2">
-          <span className="w-9 h-9 bg-brand-600 rounded-lg flex items-center justify-center text-white font-display font-bold text-lg">
-            C
-          </span>
+          <img src="/logo-icon.png" alt="" className="w-9 h-9" />
           <span className="font-display font-bold text-xl">
             <span className="text-surface-900">Cric</span>
             <span className="text-brand-600">Booking</span>
@@ -91,9 +89,7 @@ export function Header() {
         </nav>
 
         <Link href="/" className="hidden md:flex items-center gap-2 justify-self-center">
-          <span className="w-9 h-9 bg-brand-600 rounded-lg flex items-center justify-center text-white font-display font-bold text-lg">
-            C
-          </span>
+          <img src="/logo-icon.png" alt="" className="w-9 h-9" />
           <span className="font-display font-bold text-xl">
             <span className="text-surface-900">Cric</span>
             <span className="text-brand-600">Booking</span>

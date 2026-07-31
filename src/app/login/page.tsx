@@ -63,9 +63,7 @@ export default function LoginPage() {
       <main className="max-w-md mx-auto px-4 sm:px-6 py-16">
         <div className="bg-white rounded-xl border border-surface-200 p-6">
           <div className="flex flex-col items-center mb-6">
-            <span className="w-12 h-12 bg-brand-600 rounded-lg flex items-center justify-center text-white font-display font-bold text-2xl mb-3">
-              C
-            </span>
+            <img src="/logo-icon.png" alt="" className="w-12 h-12 mb-3" />
             <h1 className="font-display font-bold text-xl text-surface-900">Welcome to CricBooking</h1>
           </div>
 

@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Search,
   MapPin,
   Calendar,
+  CalendarCheck,
+  Building2,
   Shield,
   Zap,
   IndianRupee,
@@ -22,6 +25,10 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { AreaSelector } from '@/components/venue/AreaSelector'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { DEMO_AREAS, DEMO_VENUES, DEMO_TESTIMONIALS } from '@/lib/demo-data'
+import { SPORT_LABELS } from '@/lib/utils'
+import type { SportType } from '@/types'
+
+const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
 
 const HOW_IT_WORKS = [
   { icon: MapPin, title: 'Pick Your Area', description: 'Browse turfs and grounds near you, anywhere in Surat.' },
@@ -56,8 +63,18 @@ const FAQS = [
 ]
 
 export default function Home() {
+  const router = useRouter()
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [heroArea, setHeroArea] = useState('')
+  const [heroSport, setHeroSport] = useState('')
+
+  const handleHeroSearch = () => {
+    const params = new URLSearchParams()
+    if (heroArea) params.set('area', heroArea)
+    if (heroSport) params.set('sport', heroSport)
+    router.push(`/venues${params.toString() ? `?${params.toString()}` : ''}`)
+  }
 
   const filteredVenues = selectedArea
     ? DEMO_VENUES.filter((v) => v.area?.slug === selectedArea)
@@ -72,65 +89,116 @@ export default function Home() {
     <>
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-gradient-to-br from-surface-900 via-brand-900 to-surface-900 py-16 sm:py-24">
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
+        <section className="relative overflow-hidden -mt-16">
+          <img
+            src="https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1600"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/70 to-surface-900/40" />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-36 sm:pt-44 pb-16 text-center">
             <h1 className="font-display font-bold text-3xl sm:text-5xl text-white animate-fade-up">
               Book Cricket Turfs <span className="text-brand-400">Across Surat</span>
             </h1>
-            <p className="mt-4 text-surface-200/70 text-base sm:text-lg max-w-xl mx-auto animate-fade-up [animation-delay:120ms]">
+            <p className="mt-4 text-surface-200/80 text-base sm:text-lg max-w-xl mx-auto animate-fade-up [animation-delay:120ms]">
               Find and book box cricket, turfs, and grounds near you — real-time slots, instant confirmation.
             </p>
+          </div>
 
-            <div className="mt-8 max-w-xl mx-auto flex gap-2 animate-fade-up [animation-delay:240ms]">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
-                <input
-                  type="text"
-                  placeholder="Search venues, areas..."
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-                />
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pb-10 sm:pb-14 animate-fade-up [animation-delay:240ms]">
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 sm:items-end">
+              <div>
+                <label className="block text-xs font-medium text-surface-800/60 mb-1">Area</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
+                  <select
+                    value={heroArea}
+                    onChange={(e) => setHeroArea(e.target.value)}
+                    className="w-full pl-10 pr-8 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none"
+                  >
+                    <option value="">Any area</option>
+                    {DEMO_AREAS.map((area) => (
+                      <option key={area.slug} value={area.slug}>{area.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40 pointer-events-none" />
+                </div>
               </div>
-              <Button variant="primary" size="lg">Search</Button>
-            </div>
 
-            <div className="mt-10 flex justify-center gap-8 sm:gap-16 text-white animate-fade-up [animation-delay:360ms]">
               <div>
-                <p className="font-display font-bold text-2xl">
-                  <CountUp value={DEMO_VENUES.length} suffix="+" />
-                </p>
-                <p className="text-sm text-surface-200/60">Venues</p>
+                <label className="block text-xs font-medium text-surface-800/60 mb-1">Sport</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
+                  <select
+                    value={heroSport}
+                    onChange={(e) => setHeroSport(e.target.value)}
+                    className="w-full pl-10 pr-8 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none"
+                  >
+                    <option value="">Any sport</option>
+                    {SPORT_OPTIONS.map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40 pointer-events-none" />
+                </div>
               </div>
-              <div>
-                <p className="font-display font-bold text-2xl">
-                  <CountUp value={DEMO_AREAS.length} />
-                </p>
-                <p className="text-sm text-surface-200/60">Areas</p>
-              </div>
-              <div>
-                <p className="font-display font-bold text-2xl">
-                  <CountUp value={1000} suffix="+" />
-                </p>
-                <p className="text-sm text-surface-200/60">Bookings</p>
-              </div>
+
+              <Button variant="primary" size="lg" onClick={handleHeroSearch} className="w-full sm:w-auto">
+                Search
+              </Button>
             </div>
           </div>
         </section>
 
         <section className="border-b border-surface-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {TRUST_BAR.map((item) => (
-              <div key={item.label} className="flex items-center gap-2 justify-center sm:justify-start">
-                <item.icon className="w-4 h-4 text-brand-600 shrink-0" />
-                <span className="text-sm text-surface-800/70">{item.label}</span>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col items-center gap-8">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
+                  <Building2 className="w-6 h-6 text-brand-600" />
+                </div>
+                <div>
+                  <p className="font-display font-bold text-2xl text-surface-900">
+                    <CountUp value={DEMO_VENUES.length} suffix="+" />
+                  </p>
+                  <p className="text-sm text-surface-800/50">Venues</p>
+                </div>
               </div>
-            ))}
+
+              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
+                  <MapPin className="w-6 h-6 text-brand-600" />
+                </div>
+                <div>
+                  <p className="font-display font-bold text-2xl text-surface-900">
+                    <CountUp value={DEMO_AREAS.length} />
+                  </p>
+                  <p className="text-sm text-surface-800/50">Areas</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
+                  <CalendarCheck className="w-6 h-6 text-brand-600" />
+                </div>
+                <div>
+                  <p className="font-display font-bold text-2xl text-surface-900">
+                    <CountUp value={1000} suffix="+" />
+                  </p>
+                  <p className="text-sm text-surface-800/50">Bookings</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full pt-6 border-t border-surface-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {TRUST_BAR.map((item) => (
+                <div key={item.label} className="flex items-center gap-2 justify-center sm:justify-start">
+                  <item.icon className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span className="text-sm text-surface-800/70">{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

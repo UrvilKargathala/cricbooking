@@ -44,11 +44,8 @@ export const AMENITY_LABELS: Record<string, string> = {
 }
 
 export const SPORT_LABELS: Record<string, string> = {
-  box_cricket: 'Box Cricket',
-  cricket: 'Cricket',
-  football: 'Football',
-  badminton: 'Badminton',
-  tennis: 'Tennis',
+  turf: 'Turf',
+  cricket_ground: 'Cricket Ground',
 }
 
 export const SURFACE_LABELS: Record<string, string> = {

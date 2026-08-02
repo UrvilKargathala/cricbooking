@@ -2,39 +2,50 @@ import type { Area, Venue, Court, Slot, Booking, Profile } from '@/types'
 
 export const DEMO_AREAS: Area[] = [
   { id: 1, name: 'Vesu', slug: 'vesu', image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600' },
-  { id: 2, name: 'Adajan', slug: 'adajan', image: 'https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=600' },
-  { id: 3, name: 'Varachha', slug: 'varachha', image: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=600' },
+  { id: 2, name: 'Adajan', slug: 'adajan', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg/960px-Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg' },
+  { id: 3, name: 'Varachha', slug: 'varachha', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg/960px-Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg' },
   { id: 4, name: 'Katargam', slug: 'katargam', image: 'https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=600' },
   { id: 5, name: 'Piplod', slug: 'piplod', image: 'https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=600' },
   { id: 6, name: 'Dumas', slug: 'dumas', image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600' },
-  { id: 7, name: 'Athwa', slug: 'athwa', image: 'https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=600' },
-  { id: 8, name: 'Pal', slug: 'pal', image: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=600' },
+  { id: 7, name: 'Athwa', slug: 'athwa', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg/960px-Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg' },
+  { id: 8, name: 'Pal', slug: 'pal', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg/960px-Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg' },
   { id: 9, name: 'City Light', slug: 'city-light', image: 'https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=600' },
   { id: 10, name: 'Ring Road', slug: 'ring-road', image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600' },
 ]
 
 const areaBySlug = (slug: string) => DEMO_AREAS.find((a) => a.slug === slug)!
 
+const PHOTO_POOL = [
+  'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=900',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg/960px-Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg/960px-Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg',
+  'https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=900',
+]
+
+function galleryFor(coverIndex: number) {
+  return [0, 1, 2, 3].map((i) => PHOTO_POOL[(coverIndex + i) % PHOTO_POOL.length])
+}
+
 const courtsByVenue: Record<string, Court[]> = {
   'v1': [
-    { id: 'c1', venue_id: 'v1', name: 'Box-1 Turf', surface: 'turf', sport: 'box_cricket', max_players: 12, dimensions: '110x60 ft', price_per_slot: 800, weekend_price: 1000, night_price: 1200, is_active: true },
-    { id: 'c2', venue_id: 'v1', name: 'Box-2 Mat', surface: 'mat', sport: 'cricket', max_players: 12, dimensions: '100x50 ft', price_per_slot: 600, weekend_price: 800, night_price: 900, is_active: true },
+    { id: 'c1', venue_id: 'v1', name: 'Box-1 Turf', surface: 'turf', sport: 'turf', max_players: 12, dimensions: '110x60 ft', price_per_slot: 800, weekend_price: 1000, night_price: 1200, is_active: true },
+    { id: 'c2', venue_id: 'v1', name: 'Box-2 Mat', surface: 'mat', sport: 'cricket_ground', max_players: 12, dimensions: '100x50 ft', price_per_slot: 600, weekend_price: 800, night_price: 900, is_active: true },
   ],
   'v2': [
-    { id: 'c3', venue_id: 'v2', name: 'Turf A', surface: 'turf', sport: 'box_cricket', max_players: 12, dimensions: '100x50 ft', price_per_slot: 600, weekend_price: 800, night_price: null, is_active: true },
+    { id: 'c3', venue_id: 'v2', name: 'Turf A', surface: 'turf', sport: 'turf', max_players: 12, dimensions: '100x50 ft', price_per_slot: 600, weekend_price: 800, night_price: null, is_active: true },
   ],
   'v3': [
-    { id: 'c4', venue_id: 'v3', name: 'Box-1', surface: 'turf', sport: 'box_cricket', max_players: 12, dimensions: '110x60 ft', price_per_slot: 700, weekend_price: 900, night_price: 1000, is_active: true },
-    { id: 'c5', venue_id: 'v3', name: 'Ground-1', surface: 'turf', sport: 'football', max_players: 14, dimensions: '130x70 ft', price_per_slot: 1000, weekend_price: 1200, night_price: null, is_active: true },
+    { id: 'c4', venue_id: 'v3', name: 'Box-1', surface: 'turf', sport: 'turf', max_players: 12, dimensions: '110x60 ft', price_per_slot: 700, weekend_price: 900, night_price: 1000, is_active: true },
+    { id: 'c5', venue_id: 'v3', name: 'Ground-1', surface: 'turf', sport: 'cricket_ground', max_players: 14, dimensions: '130x70 ft', price_per_slot: 1000, weekend_price: 1200, night_price: null, is_active: true },
   ],
   'v4': [
-    { id: 'c6', venue_id: 'v4', name: 'Ground-1', surface: 'natural_grass', sport: 'cricket', max_players: 22, dimensions: '180x150 ft', price_per_slot: 1500, weekend_price: 2000, night_price: null, is_active: true },
+    { id: 'c6', venue_id: 'v4', name: 'Ground-1', surface: 'natural_grass', sport: 'cricket_ground', max_players: 22, dimensions: '180x150 ft', price_per_slot: 1500, weekend_price: 2000, night_price: null, is_active: true },
   ],
   'v5': [
-    { id: 'c7', venue_id: 'v5', name: 'Beach Ground', surface: 'natural_grass', sport: 'cricket', max_players: 16, dimensions: '120x80 ft', price_per_slot: 1200, weekend_price: 1500, night_price: null, is_active: true },
+    { id: 'c7', venue_id: 'v5', name: 'Beach Ground', surface: 'natural_grass', sport: 'cricket_ground', max_players: 16, dimensions: '120x80 ft', price_per_slot: 1200, weekend_price: 1500, night_price: null, is_active: true },
   ],
   'v6': [
-    { id: 'c8', venue_id: 'v6', name: 'Box-1', surface: 'turf', sport: 'box_cricket', max_players: 12, dimensions: '100x50 ft', price_per_slot: 900, weekend_price: 1100, night_price: 1300, is_active: true },
+    { id: 'c8', venue_id: 'v6', name: 'Box-1', surface: 'turf', sport: 'turf', max_players: 12, dimensions: '100x50 ft', price_per_slot: 900, weekend_price: 1100, night_price: 1300, is_active: true },
   ],
 }
 
@@ -44,8 +55,8 @@ export const DEMO_VENUES: Venue[] = [
     description: 'Premium box cricket arena with dual turf and mat courts, floodlit for night matches.',
     address: 'Near VR Mall, Dumas Road, Vesu, Surat', area_id: 1, city: 'Surat', phone: '+919825012345',
     cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800',
-    images: [], amenities: ['parking', 'lighting', 'drinking_water', 'restrooms', 'seating', 'changing_room', 'first_aid'],
-    sports: ['box_cricket', 'cricket'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
+    images: galleryFor(0), amenities: ['parking', 'lighting', 'drinking_water', 'restrooms', 'seating', 'changing_room', 'first_aid'],
+    sports: ['turf', 'cricket_ground'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
     min_advance_hours: 2, max_advance_days: 14, cancellation_hours: 4, cancellation_refund_pct: 80,
     rating: 4.5, total_reviews: 128, status: 'approved', is_featured: true, created_at: '2025-01-10T00:00:00Z',
     area: areaBySlug('vesu'), courts: courtsByVenue['v1'],
@@ -54,20 +65,20 @@ export const DEMO_VENUES: Venue[] = [
     id: 'v2', owner_id: 'o2', name: 'Champion Turf Ground', slug: 'champion-turf-ground',
     description: 'Compact single-court turf ground, popular for evening corporate matches.',
     address: 'Opp. Iskcon Temple, Adajan Road, Adajan, Surat', area_id: 2, city: 'Surat', phone: '+919825023456',
-    cover_image: 'https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=800',
-    images: [], amenities: ['parking', 'lighting', 'seating'],
-    sports: ['box_cricket'], opening_time: '07:00', closing_time: '22:00', slot_duration_mins: 60,
+    cover_image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg/960px-Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg',
+    images: galleryFor(1), amenities: ['parking', 'lighting', 'seating'],
+    sports: ['turf'], opening_time: '07:00', closing_time: '22:00', slot_duration_mins: 60,
     min_advance_hours: 1, max_advance_days: 7, cancellation_hours: 2, cancellation_refund_pct: 50,
     rating: 4.2, total_reviews: 67, status: 'approved', is_featured: false, created_at: '2025-02-14T00:00:00Z',
     area: areaBySlug('adajan'), courts: courtsByVenue['v2'],
   },
   {
     id: 'v3', owner_id: 'o1', name: 'Green Pitch Sports', slug: 'green-pitch-sports',
-    description: 'Multi-sport facility with box cricket and a full-size football ground.',
+    description: 'Facility with a box cricket turf and a full-size cricket ground on the same premises.',
     address: 'Near Kapodra Circle, Varachha Road, Varachha, Surat', area_id: 3, city: 'Surat', phone: '+919825034567',
-    cover_image: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=800',
-    images: [], amenities: ['parking', 'drinking_water', 'changing_room', 'cafe'],
-    sports: ['box_cricket', 'football'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
+    cover_image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg/960px-Cockfosters_CC_v_Radlett_CC_at_Cockfosters%2C_London%2C_England_10.jpg',
+    images: galleryFor(2), amenities: ['parking', 'drinking_water', 'changing_room', 'cafe'],
+    sports: ['turf', 'cricket_ground'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
     min_advance_hours: 2, max_advance_days: 14, cancellation_hours: 6, cancellation_refund_pct: 100,
     rating: 4.7, total_reviews: 203, status: 'approved', is_featured: true, created_at: '2024-11-05T00:00:00Z',
     area: areaBySlug('varachha'), courts: courtsByVenue['v3'],
@@ -77,8 +88,8 @@ export const DEMO_VENUES: Venue[] = [
     description: 'Full-size natural grass cricket ground for serious league matches.',
     address: 'Behind Piplod Garden, Piplod, Surat', area_id: 5, city: 'Surat', phone: '+919825045678',
     cover_image: 'https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=800',
-    images: [], amenities: ['parking', 'lighting'],
-    sports: ['cricket'], opening_time: '06:00', closing_time: '22:00', slot_duration_mins: 60,
+    images: galleryFor(3), amenities: ['parking', 'lighting'],
+    sports: ['cricket_ground'], opening_time: '06:00', closing_time: '22:00', slot_duration_mins: 60,
     min_advance_hours: 3, max_advance_days: 10, cancellation_hours: 6, cancellation_refund_pct: 50,
     rating: 3.9, total_reviews: 34, status: 'approved', is_featured: false, created_at: '2025-03-20T00:00:00Z',
     area: areaBySlug('piplod'), courts: courtsByVenue['v4'],
@@ -88,8 +99,8 @@ export const DEMO_VENUES: Venue[] = [
     description: 'Scenic beachside cricket ground near Dumas, great for weekend games.',
     address: 'Dumas Beach Road, Dumas, Surat', area_id: 6, city: 'Surat', phone: '+919825056789',
     cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800',
-    images: [], amenities: ['parking', 'restrooms', 'seating'],
-    sports: ['cricket'], opening_time: '06:00', closing_time: '21:00', slot_duration_mins: 90,
+    images: galleryFor(0), amenities: ['parking', 'restrooms', 'seating'],
+    sports: ['cricket_ground'], opening_time: '06:00', closing_time: '21:00', slot_duration_mins: 90,
     min_advance_hours: 2, max_advance_days: 7, cancellation_hours: 4, cancellation_refund_pct: 50,
     rating: 4.0, total_reviews: 45, status: 'approved', is_featured: false, created_at: '2025-04-01T00:00:00Z',
     area: areaBySlug('dumas'), courts: courtsByVenue['v5'],
@@ -98,9 +109,9 @@ export const DEMO_VENUES: Venue[] = [
     id: 'v6', owner_id: 'o4', name: 'Athwa Box Cricket Zone', slug: 'athwa-box-cricket-zone',
     description: 'Neighborhood box cricket favorite with equipment rental on site.',
     address: 'Near Athwa Gate, Athwalines, Surat', area_id: 7, city: 'Surat', phone: '+919825067890',
-    cover_image: 'https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=800',
-    images: [], amenities: ['lighting', 'drinking_water', 'equipment'],
-    sports: ['box_cricket'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
+    cover_image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg/960px-Cambridge_University_CC_v_MCC_at_Cambridge%2C_England_023.jpg',
+    images: galleryFor(1), amenities: ['lighting', 'drinking_water', 'equipment'],
+    sports: ['turf'], opening_time: '06:00', closing_time: '23:00', slot_duration_mins: 60,
     min_advance_hours: 1, max_advance_days: 7, cancellation_hours: 2, cancellation_refund_pct: 50,
     rating: 4.3, total_reviews: 89, status: 'approved', is_featured: false, created_at: '2025-05-12T00:00:00Z',
     area: areaBySlug('athwa'), courts: courtsByVenue['v6'],
@@ -193,6 +204,30 @@ export const DEMO_USER_BOOKINGS: Booking[] = [
     amount: 800, payment_status: 'refunded', status: 'cancelled', notes: 'Rained out', created_at: '2026-07-12T08:00:00Z',
     venue: venueById('v1'), court: courtById('c2'), slot: demoSlot('s5', 'c2', '2026-07-15', '20:00', '21:00', 800),
   },
+]
+
+export interface VenueReview {
+  id: string
+  venue_id: string
+  name: string
+  rating: number
+  comment: string
+  created_at: string
+}
+
+export const DEMO_VENUE_REVIEWS: VenueReview[] = [
+  { id: 'r1', venue_id: 'v1', name: 'Rohan Patel', rating: 5, comment: 'Best turf in Vesu. Lights are bright even for 9pm matches and the mat court drains well after rain.', created_at: '2026-07-18T00:00:00Z' },
+  { id: 'r2', venue_id: 'v1', name: 'Aarav Bhatt', rating: 4, comment: 'Good facility, gets crowded on weekends so book early. Parking could be bigger.', created_at: '2026-07-02T00:00:00Z' },
+  { id: 'r3', venue_id: 'v1', name: 'Isha Mehta', rating: 5, comment: 'Clean changing rooms and the staff is helpful. Our office plays here every Friday now.', created_at: '2026-06-20T00:00:00Z' },
+  { id: 'r4', venue_id: 'v2', name: 'Kunal Shah', rating: 4, comment: 'Solid turf for the price. No frills but does the job for a casual game.', created_at: '2026-07-10T00:00:00Z' },
+  { id: 'r5', venue_id: 'v2', name: 'Priya Trivedi', rating: 4, comment: 'Easy booking, turf quality is decent. Wish they had drinking water on site.', created_at: '2026-06-28T00:00:00Z' },
+  { id: 'r6', venue_id: 'v3', name: 'Devansh Gandhi', rating: 5, comment: 'Two courts in one place is a huge plus — we switch between the turf and the full ground back to back.', created_at: '2026-07-15T00:00:00Z' },
+  { id: 'r7', venue_id: 'v3', name: 'Meera Shukla', rating: 5, comment: 'The cafe after the match is a nice touch. Best maintained ground in Varachha.', created_at: '2026-07-01T00:00:00Z' },
+  { id: 'r8', venue_id: 'v3', name: 'Nirav Joshi', rating: 4, comment: 'Great ground, only downside is it books out fast on weekends.', created_at: '2026-06-14T00:00:00Z' },
+  { id: 'r9', venue_id: 'v4', name: 'Sameer Pathan', rating: 4, comment: 'Real grass, feels like proper cricket. A bit far but worth it for league matches.', created_at: '2026-06-30T00:00:00Z' },
+  { id: 'r10', venue_id: 'v5', name: 'Yash Rana', rating: 4, comment: 'Beautiful location right by the beach. Wind can affect the ball so plan accordingly.', created_at: '2026-07-05T00:00:00Z' },
+  { id: 'r11', venue_id: 'v6', name: 'Manav Desai', rating: 5, comment: 'Equipment rental saved us — forgot our bats and they had spares ready.', created_at: '2026-07-20T00:00:00Z' },
+  { id: 'r12', venue_id: 'v6', name: 'Jignesh Modi', rating: 4, comment: 'Good neighborhood turf, floodlights are strong for night games.', created_at: '2026-06-25T00:00:00Z' },
 ]
 
 export interface Testimonial {

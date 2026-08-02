@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Phone } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -84,18 +84,29 @@ export default function LoginPage() {
 
             {step === 'phone' ? (
               <div className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                  <span className="flex items-center px-3 bg-surface-100 border border-surface-200 rounded-lg text-sm text-surface-800">
-                    +91
-                  </span>
-                  <Input
-                    type="tel"
-                    placeholder="98765 43210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="flex-1"
-                    maxLength={10}
-                  />
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-surface-800 mb-1.5">
+                    Phone Number
+                  </label>
+                  <div className="flex items-stretch rounded-lg border border-surface-200 bg-surface-100 overflow-hidden focus-within:ring-2 focus-within:ring-brand-400 focus-within:border-transparent">
+                    <span className="flex items-center gap-1.5 px-3 border-r border-surface-200 text-sm font-medium text-surface-800">
+                      <Phone className="w-4 h-4 text-surface-800/40" />
+                      +91
+                    </span>
+                    <input
+                      id="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="98765 43210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      maxLength={10}
+                      className="flex-1 min-w-0 px-3 py-2.5 bg-transparent text-sm focus:outline-none placeholder:text-surface-800/40"
+                    />
+                  </div>
+                  <p className="text-xs text-surface-800/50 mt-1.5">
+                    We&apos;ll text a one-time code to verify it&apos;s you — no spam, no calls.
+                  </p>
                 </div>
                 <Button variant="primary" onClick={handleSendOtp} disabled={phone.length !== 10 || loading}>
                   {loading ? 'Sending OTP...' : 'Send OTP'}

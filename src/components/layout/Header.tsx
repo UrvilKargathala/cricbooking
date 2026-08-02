@@ -54,35 +54,51 @@ export function Header() {
     }
   }, [searchOpen])
 
+  const transparent = pathname === '/' && !scrolled && !menuOpen && !searchOpen
+
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 h-16 bg-white/90 backdrop-blur-md border-b transition-shadow duration-200',
-        scrolled ? 'border-transparent shadow-md' : 'border-surface-200 shadow-none'
+        'sticky top-0 z-50 h-16 border-b transition-all duration-200',
+        transparent
+          ? 'bg-transparent border-transparent shadow-none'
+          : 'bg-white/90 backdrop-blur-md shadow-none',
+        !transparent && (scrolled ? 'border-transparent shadow-md' : 'border-surface-200')
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Link href="/" className="flex md:hidden items-center gap-2">
           <img src="/logo-icon.png" alt="" className="w-9 h-9" />
           <span className="font-display font-bold text-xl">
-            <span className="text-surface-900">Cric</span>
-            <span className="text-brand-600">Booking</span>
+            <span className={transparent ? 'text-white' : 'text-surface-900'}>Cric</span>
+            <span className={transparent ? "text-brand-400" : "text-brand-600"}>Booking</span>
           </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 justify-self-start">
           <Link
             href="/venues"
-            className={cn(NAV_LINK_CLASS, pathname === '/venues' && 'text-brand-600 after:w-full')}
+            className={cn(
+              NAV_LINK_CLASS,
+              transparent && 'text-white/80 hover:text-white after:bg-white',
+              pathname === '/venues' && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+            )}
           >
             Venues
           </Link>
-          <button onClick={handleHowItWorks} className={NAV_LINK_CLASS}>
+          <button
+            onClick={handleHowItWorks}
+            className={cn(NAV_LINK_CLASS, transparent && 'text-white/80 hover:text-white after:bg-white')}
+          >
             How It Works
           </button>
           <Link
             href="/list-venue"
-            className={cn(NAV_LINK_CLASS, pathname === '/list-venue' && 'text-brand-600 after:w-full')}
+            className={cn(
+              NAV_LINK_CLASS,
+              transparent && 'text-white/80 hover:text-white after:bg-white',
+              pathname === '/list-venue' && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+            )}
           >
             List Your Venue
           </Link>
@@ -91,8 +107,8 @@ export function Header() {
         <Link href="/" className="hidden md:flex items-center gap-2 justify-self-center">
           <img src="/logo-icon.png" alt="" className="w-9 h-9" />
           <span className="font-display font-bold text-xl">
-            <span className="text-surface-900">Cric</span>
-            <span className="text-brand-600">Booking</span>
+            <span className={transparent ? 'text-white' : 'text-surface-900'}>Cric</span>
+            <span className={transparent ? "text-brand-400" : "text-brand-600"}>Booking</span>
           </span>
         </Link>
 
@@ -103,7 +119,11 @@ export function Header() {
               aria-label="Search"
               className={cn(
                 'w-9 h-9 flex items-center justify-center rounded-lg transition-colors',
-                searchOpen ? 'bg-brand-50 text-brand-600' : 'text-surface-800/70 hover:bg-surface-100'
+                searchOpen
+                  ? 'bg-brand-50 text-brand-600'
+                  : transparent
+                    ? 'text-white/80 hover:bg-white/10'
+                    : 'text-surface-800/70 hover:bg-surface-100'
               )}
             >
               <Search className="w-4.5 h-4.5" />
@@ -122,14 +142,20 @@ export function Header() {
               </div>
             )}
           </div>
-          <span className="w-px h-6 bg-surface-200" />
-          <span className="flex items-center gap-1.5 text-sm text-surface-800/70">
-            <MapPin className="w-4 h-4 text-brand-500" />
+          <span className={cn('w-px h-6', transparent ? 'bg-white/20' : 'bg-surface-200')} />
+          <span className={cn('flex items-center gap-1.5 text-sm', transparent ? 'text-white/80' : 'text-surface-800/70')}>
+            <MapPin className={cn('w-4 h-4', transparent ? 'text-brand-400' : 'text-brand-500')} />
             Surat
           </span>
-          <span className="w-px h-6 bg-surface-200" />
+          <span className={cn('w-px h-6', transparent ? 'bg-white/20' : 'bg-surface-200')} />
           <Link href="/bookings">
-            <Button variant="ghost" size="sm">My Bookings</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={transparent ? 'text-white hover:bg-white/10' : undefined}
+            >
+              My Bookings
+            </Button>
           </Link>
           <Link href="/login">
             <Button variant="primary" size="sm">
@@ -141,7 +167,7 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 md:hidden justify-self-end">
+        <div className={cn('flex items-center gap-3 md:hidden justify-self-end', transparent && 'text-white')}>
           <button onClick={() => setMenuOpen(true)} aria-label="Search">
             <Search className="w-5 h-5" />
           </button>

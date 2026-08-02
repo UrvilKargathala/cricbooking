@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { MapPin } from 'lucide-react'
+import { MapPin, Search } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
@@ -32,15 +32,22 @@ function VenuesPageContent() {
     (searchParams.get('sport') as SportType | null) ?? 'all'
   )
   const [sort, setSort] = useState<SortOption>('default')
+  const [query, setQuery] = useState('')
 
   const venueMinPrice = (venue: (typeof DEMO_VENUES)[number]) =>
     venue.courts?.length ? Math.min(...venue.courts.map((c) => c.price_per_slot)) : Infinity
 
   const filteredVenues = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+
     let venues = DEMO_VENUES.filter((v) => {
       const matchesArea = !selectedArea || v.area?.slug === selectedArea
       const matchesSport = selectedSport === 'all' || v.sports.includes(selectedSport)
-      return matchesArea && matchesSport
+      const matchesQuery =
+        !normalizedQuery ||
+        v.name.toLowerCase().includes(normalizedQuery) ||
+        v.area?.name.toLowerCase().includes(normalizedQuery)
+      return matchesArea && matchesSport && matchesQuery
     })
 
     if (sort === 'price_asc') {
@@ -50,12 +57,13 @@ function VenuesPageContent() {
     }
 
     return venues
-  }, [selectedArea, selectedSport, sort])
+  }, [selectedArea, selectedSport, sort, query])
 
   const clearFilters = () => {
     setSelectedArea(null)
     setSelectedSport('all')
     setSort('default')
+    setQuery('')
   }
 
   return (
@@ -65,15 +73,27 @@ function VenuesPageContent() {
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-surface-900">All Venues in Surat</h1>
         <p className="text-sm text-surface-800/60 mt-1">{filteredVenues.length} venues found</p>
 
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1">
+        <div className="mt-6 bg-white rounded-xl border border-surface-200 p-3 flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="relative shrink-0 w-full sm:w-48">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search venues..."
+              className="w-full pl-9 pr-3 py-2 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
             <AreaSelector areas={DEMO_AREAS} selectedArea={selectedArea} onChange={setSelectedArea} />
           </div>
-          <div className="flex gap-3">
+
+          <div className="flex flex-wrap gap-2 shrink-0">
             <select
               value={selectedSport}
               onChange={(e) => setSelectedSport(e.target.value as SportType | 'all')}
-              className="px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="px-3 py-2 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               <option value="all">All Sports</option>
               {SPORT_OPTIONS.map(([value, label]) => (
@@ -83,12 +103,18 @@ function VenuesPageContent() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="px-3 py-2 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               <option value="default">Sort: Default</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
             </select>
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 bg-surface-900 text-white rounded-lg text-sm font-medium hover:bg-surface-800 transition-colors"
+            >
+              Reset
+            </button>
           </div>
         </div>
 

@@ -3,20 +3,29 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, MapPin, User, Menu, X } from 'lucide-react'
+import { Search, MapPin, User, Menu, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/hooks/useAuth'
 
 const NAV_LINK_CLASS =
   'relative py-1.5 text-sm font-medium text-surface-800/70 hover:text-brand-600 transition-colors after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0 after:bg-brand-600 after:transition-all after:duration-200 hover:after:w-full'
 
+function initials(name: string) {
+  const parts = name.trim().split(' ')
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'U'
+}
+
 export function Header() {
+  const { user, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 0)
@@ -53,6 +62,17 @@ export function Header() {
       window.removeEventListener('keydown', handleKey)
     }
   }, [searchOpen])
+
+  useEffect(() => {
+    if (!profileOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+    window.addEventListener('mousedown', handleClick)
+    return () => window.removeEventListener('mousedown', handleClick)
+  }, [profileOpen])
 
   const transparent = pathname === '/' && !scrolled && !menuOpen && !searchOpen
 
@@ -148,23 +168,71 @@ export function Header() {
             Surat
           </span>
           <span className={cn('w-px h-6', transparent ? 'bg-white/20' : 'bg-surface-200')} />
-          <Link href="/bookings">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={transparent ? 'text-white hover:bg-white/10' : undefined}
-            >
-              My Bookings
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="primary" size="sm">
-              <span className="flex items-center gap-1.5">
-                <User className="w-4 h-4" />
-                Login
-              </span>
-            </Button>
-          </Link>
+          {user?.role === 'user' && (
+            <Link href="/bookings">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={transparent ? 'text-white hover:bg-white/10' : undefined}
+              >
+                My Bookings
+              </Button>
+            </Link>
+          )}
+          {user && (user.role === 'owner' || user.role === 'admin') ? (
+            <Link href={user.role === 'admin' ? '/admin' : '/dashboard'}>
+              <Button variant="primary" size="sm">
+                {user.role === 'admin' ? 'Admin Panel' : 'Go to Dashboard'}
+              </Button>
+            </Link>
+          ) : user ? (
+            <div ref={profileRef} className="relative">
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center gap-1.5"
+              >
+                <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-semibold text-sm flex items-center justify-center">
+                  {initials(user.full_name)}
+                </span>
+                <ChevronDown className={cn('w-4 h-4', transparent ? 'text-white/80' : 'text-surface-800/60')} />
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-surface-200 shadow-lg p-2 z-50">
+                  <div className="px-3 py-2 border-b border-surface-100 mb-1">
+                    <p className="text-sm font-medium text-surface-900 truncate">{user.full_name}</p>
+                    <p className="text-xs text-surface-800/50 capitalize">{user.role}</p>
+                  </div>
+                  <Link
+                    href="/bookings"
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
+                  >
+                    My Bookings
+                  </Link>
+                  <div className="border-t border-surface-100 mt-1 pt-1">
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false)
+                        signOut()
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button variant="primary" size="sm">
+                <span className="flex items-center gap-1.5">
+                  <User className="w-4 h-4" />
+                  Login
+                </span>
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className={cn('flex items-center gap-3 md:hidden justify-self-end', transparent && 'text-white')}>
@@ -179,7 +247,7 @@ export function Header() {
 
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 border-t border-surface-200 bg-white ${
-          menuOpen ? 'max-h-[32rem]' : 'max-h-0 border-t-0'
+          menuOpen ? 'max-h-[40rem]' : 'max-h-0 border-t-0'
         }`}
       >
         <div className="px-4 py-4 flex flex-col gap-3">
@@ -200,14 +268,45 @@ export function Header() {
           <Link href="/list-venue" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
             List Your Venue
           </Link>
-          <Link href="/bookings" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
-            My Bookings
-          </Link>
-          <Link href="/login" onClick={closeMenu}>
-            <Button variant="primary" className="w-full">
-              Login / Sign Up
-            </Button>
-          </Link>
+          {user && (user.role === 'owner' || user.role === 'admin') ? (
+            <Link href={user.role === 'admin' ? '/admin' : '/dashboard'} onClick={closeMenu}>
+              <Button variant="primary" className="w-full">
+                {user.role === 'admin' ? 'Admin Panel' : 'Go to Dashboard'}
+              </Button>
+            </Link>
+          ) : user ? (
+            <>
+              <div className="flex items-center gap-2.5 py-1.5 border-t border-surface-100 pt-3">
+                <span className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-semibold text-sm flex items-center justify-center shrink-0">
+                  {initials(user.full_name)}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-surface-900 truncate">{user.full_name}</p>
+                  <p className="text-xs text-surface-800/50 capitalize">{user.role}</p>
+                </div>
+              </div>
+              <Link href="/bookings" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
+                My Bookings
+              </Link>
+              <button
+                onClick={() => { closeMenu(); signOut() }}
+                className="text-sm font-medium text-red-600 py-1.5 text-left"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/bookings" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
+                My Bookings
+              </Link>
+              <Link href="/login" onClick={closeMenu}>
+                <Button variant="primary" className="w-full">
+                  Login / Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

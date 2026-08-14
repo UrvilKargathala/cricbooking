@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { MapPin, Search } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
@@ -10,8 +10,9 @@ import { AreaSelector } from '@/components/venue/AreaSelector'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { DEMO_AREAS, DEMO_VENUES } from '@/lib/demo-data'
+import { loadLocalVenues } from '@/lib/local-venues'
 import { SPORT_LABELS } from '@/lib/utils'
-import type { SportType } from '@/types'
+import type { SportType, Venue } from '@/types'
 
 const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
 
@@ -33,14 +34,21 @@ function VenuesPageContent() {
   )
   const [sort, setSort] = useState<SortOption>('default')
   const [query, setQuery] = useState('')
+  const [allVenues, setAllVenues] = useState<Venue[]>(DEMO_VENUES)
 
-  const venueMinPrice = (venue: (typeof DEMO_VENUES)[number]) =>
+  // Merge in browser-local venues after mount only, so the server-rendered HTML
+  // (which never sees localStorage) matches the client's first paint.
+  useEffect(() => {
+    setAllVenues([...DEMO_VENUES, ...loadLocalVenues()])
+  }, [])
+
+  const venueMinPrice = (venue: Venue) =>
     venue.courts?.length ? Math.min(...venue.courts.map((c) => c.price_per_slot)) : Infinity
 
   const filteredVenues = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
-    let venues = DEMO_VENUES.filter((v) => {
+    let venues = allVenues.filter((v) => {
       const matchesArea = !selectedArea || v.area?.slug === selectedArea
       const matchesSport = selectedSport === 'all' || v.sports.includes(selectedSport)
       const matchesQuery =
@@ -57,7 +65,7 @@ function VenuesPageContent() {
     }
 
     return venues
-  }, [selectedArea, selectedSport, sort, query])
+  }, [allVenues, selectedArea, selectedSport, sort, query])
 
   const clearFilters = () => {
     setSelectedArea(null)

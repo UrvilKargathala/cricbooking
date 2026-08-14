@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -25,8 +25,9 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { AreaSelector } from '@/components/venue/AreaSelector'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { DEMO_AREAS, DEMO_VENUES, DEMO_TESTIMONIALS } from '@/lib/demo-data'
+import { loadLocalVenues } from '@/lib/local-venues'
 import { SPORT_LABELS } from '@/lib/utils'
-import type { SportType } from '@/types'
+import type { SportType, Venue } from '@/types'
 
 const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
 
@@ -68,6 +69,13 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [heroArea, setHeroArea] = useState('')
   const [heroSport, setHeroSport] = useState('')
+  const [allVenues, setAllVenues] = useState<Venue[]>(DEMO_VENUES)
+
+  // Merge in browser-local venues after mount only, so the server-rendered HTML
+  // (which never sees localStorage) matches the client's first paint.
+  useEffect(() => {
+    setAllVenues([...DEMO_VENUES, ...loadLocalVenues()])
+  }, [])
 
   const handleHeroSearch = () => {
     const params = new URLSearchParams()
@@ -77,12 +85,12 @@ export default function Home() {
   }
 
   const filteredVenues = selectedArea
-    ? DEMO_VENUES.filter((v) => v.area?.slug === selectedArea)
-    : DEMO_VENUES
+    ? allVenues.filter((v) => v.area?.slug === selectedArea)
+    : allVenues
 
   const areaVenueCounts = DEMO_AREAS.map((area) => ({
     ...area,
-    count: DEMO_VENUES.filter((v) => v.area?.slug === area.slug).length,
+    count: allVenues.filter((v) => v.area?.slug === area.slug).length,
   })).filter((area) => area.count > 0)
 
   return (
@@ -160,7 +168,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="font-display font-bold text-2xl text-surface-900">
-                    <CountUp value={DEMO_VENUES.length} suffix="+" />
+                    <CountUp value={allVenues.length} suffix="+" />
                   </p>
                   <p className="text-sm text-surface-800/50">Venues</p>
                 </div>

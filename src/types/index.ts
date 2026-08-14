@@ -41,3 +41,34 @@ export interface Review {
   id: string; user_id: string; venue_id: string; rating: number
   comment: string | null; created_at: string; user?: Profile
 }
+
+export interface CourtFormData {
+  id: string
+  name: string
+  surface: SurfaceType
+  sport: SportType
+  max_players: number
+  dimensions: string
+  price_per_slot: number
+  weekend_price: number
+  night_price: number
+}
+
+export interface VenueFormData {
+  name: string
+  address: string
+  area: string
+  phone: string
+  description: string
+  photos: File[]
+  courts: CourtFormData[]
+  sports: SportType[]
+  amenities: string[]
+  opening_time: string
+  closing_time: string
+  slot_duration: number
+  min_advance_hours: number
+  max_advance_days: number
+  cancellation_hours: number
+  cancellation_refund_pct: number
+}

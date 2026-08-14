@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { VenueDetailClient } from '@/components/venue/VenueDetailClient'
+import { LocalVenueDetail } from '@/components/venue/LocalVenueDetail'
 import { DEMO_VENUES } from '@/lib/demo-data'
 
 interface VenuePageProps {
@@ -22,12 +22,10 @@ export function generateMetadata({ params }: VenuePageProps): Metadata {
 export default function VenueDetailPage({ params }: VenuePageProps) {
   const venue = DEMO_VENUES.find((v) => v.slug === params.slug)
 
-  if (!venue) notFound()
-
   return (
     <>
       <Header />
-      <VenueDetailClient venue={venue} />
+      {venue ? <VenueDetailClient venue={venue} /> : <LocalVenueDetail slug={params.slug} />}
       <Footer />
     </>
   )

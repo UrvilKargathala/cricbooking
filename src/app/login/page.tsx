@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Phone } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase'
@@ -11,13 +11,12 @@ import { useAuth } from '@/hooks/useAuth'
 export default function LoginPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [step, setStep] = useState<'phone' | 'otp'>('phone')
-  const [phone, setPhone] = useState('')
+  const [step, setStep] = useState<1 | 2>(1)
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [devCode, setDevCode] = useState<string | null>(null)
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
-  const [countdown, setCountdown] = useState(30)
+  const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   const submittingRef = useRef(false)
 
@@ -31,29 +30,25 @@ export default function LoginPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (step !== 'otp' || countdown === 0) return
+    if (step !== 2 || countdown === 0) return
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [step, countdown])
 
-  const sendOtp = async () => {
-    const supabase = createClient()
-    const { data, error: fnError } = await supabase.functions.invoke('otp-send', {
-      body: { phone: '+91' + phone },
-    })
-    if (fnError || data?.error) {
-      setError(data?.error || 'Could not send OTP. Please try again.')
-      return false
-    }
-    setDevCode(data.devCode ?? null)
-    return true
-  }
-
   const handleSendOtp = async () => {
     setLoading(true)
     setError(null)
-    if (await sendOtp()) {
-      setStep('otp')
+    const supabase = createClient()
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    })
+
+    if (otpError) {
+      setError(otpError.message || JSON.stringify(otpError))
+    } else {
+      setStep(2)
       setCountdown(30)
     }
     setLoading(false)
@@ -61,7 +56,16 @@ export default function LoginPage() {
 
   const handleResend = async () => {
     setError(null)
-    if (await sendOtp()) setCountdown(30)
+    const supabase = createClient()
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    })
+    if (otpError) {
+      setError(otpError.message || JSON.stringify(otpError))
+    } else {
+      setCountdown(30)
+    }
   }
 
   const handleOtpChange = (index: number, value: string) => {
@@ -69,7 +73,8 @@ export default function LoginPage() {
     const next = [...otp]
     next[index] = value
     setOtp(next)
-    if (value && index < 5) otpRefs.current[index + 1]?.focus()
+    setError(null)
+    if (value && index < 7) otpRefs.current[index + 1]?.focus()
   }
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,13 +84,13 @@ export default function LoginPage() {
   }
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
     if (!pasted) return
     e.preventDefault()
     const next = [...otp]
     pasted.split('').forEach((digit, i) => { next[i] = digit })
     setOtp(next)
-    otpRefs.current[Math.min(pasted.length, 5)]?.focus()
+    otpRefs.current[Math.min(pasted.length, 7)]?.focus()
   }
 
   const handleVerify = async () => {
@@ -94,33 +99,51 @@ export default function LoginPage() {
     setError(null)
     const supabase = createClient()
 
-    const { data, error: fnError } = await supabase.functions.invoke('otp-verify', {
-      body: { phone: '+91' + phone, code: otp.join('') },
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: otp.join(''),
+      type: 'email',
     })
 
-    if (fnError || data?.error) {
+    if (verifyError) {
       submittingRef.current = false
-      setError(data?.error || 'Invalid OTP. Please try again.')
+      setError('Invalid or expired code. Please try again.')
       setLoading(false)
       return
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    })
+    const userId = data.user!.id
 
-    if (signInError) {
-      submittingRef.current = false
-      setError('Could not sign you in. Please try again.')
-      setLoading(false)
-      return
+    let { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (!profile) {
+      await supabase.from('profiles').upsert({
+        id: userId,
+        email,
+        full_name: email.split('@')[0],
+        role: 'user',
+        city: 'Surat',
+        created_at: new Date().toISOString(),
+      })
+      profile = { role: 'user' as const }
     }
 
-    router.push('/')
+    if (profile.role === 'admin') {
+      router.push('/admin')
+    } else if (profile.role === 'owner') {
+      router.push('/dashboard')
+    } else {
+      router.push('/')
+    }
   }
 
   if (!submittingRef.current && (authLoading || user)) return null
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   return (
     <>
@@ -146,49 +169,48 @@ export default function LoginPage() {
             <div className="flex flex-col items-center mb-8">
               <img src="/logo-icon.png" alt="" className="w-12 h-12 mb-3" />
               <h1 className="font-display font-bold text-xl text-surface-900">Welcome to CricBooking</h1>
+              <p className="text-sm text-surface-800/60 mt-1">
+                Enter your email to get started
+              </p>
             </div>
 
-            {step === 'phone' ? (
+            {step === 1 ? (
               <div className="flex flex-col gap-4">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-surface-800 mb-1.5">
-                    Phone Number
+                  <label htmlFor="email" className="block text-sm font-medium text-surface-800 mb-1.5">
+                    Email Address
                   </label>
-                  <div className="flex items-stretch rounded-lg border border-surface-200 bg-surface-100 overflow-hidden focus-within:ring-2 focus-within:ring-brand-400 focus-within:border-transparent">
-                    <span className="flex items-center gap-1.5 px-3 border-r border-surface-200 text-sm font-medium text-surface-800">
-                      <Phone className="w-4 h-4 text-surface-800/40" />
-                      +91
-                    </span>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
                     <input
-                      id="phone"
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder="98765 43210"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      maxLength={10}
-                      className="flex-1 min-w-0 px-3 py-2.5 bg-transparent text-sm focus:outline-none placeholder:text-surface-800/40"
+                      id="email"
+                      type="email"
+                      placeholder="yourname@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-surface-100 border border-surface-200 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/40"
                     />
                   </div>
-                  <p className="text-xs text-surface-800/50 mt-1.5">
-                    We&apos;ll text a one-time code to verify it&apos;s you — no spam, no calls.
+                  <p className="text-xs text-surface-800/40 mt-1.5">
+                    We&apos;ll send a one-time code to verify — no password needed.
                   </p>
                 </div>
                 {error && <p className="text-sm text-red-600">{error}</p>}
-                <Button variant="primary" onClick={handleSendOtp} disabled={phone.length !== 10 || loading}>
+                <Button
+                  variant="primary"
+                  onClick={handleSendOtp}
+                  disabled={!isValidEmail || loading}
+                  className="w-full mt-1"
+                >
                   {loading ? 'Sending...' : 'Send OTP'}
                 </Button>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 <p className="text-sm text-surface-800/70 text-center">
-                  Enter OTP sent to +91 {phone}
+                  Enter the code sent to{' '}
+                  <span className="font-medium text-surface-900">{email}</span>
                 </p>
-                {devCode && (
-                  <p className="text-xs text-center bg-amber-50 text-amber-800 rounded-lg px-3 py-2">
-                    Dev mode (no SMS provider configured) — your code is <span className="font-mono font-semibold">{devCode}</span>
-                  </p>
-                )}
                 <div className="flex justify-center gap-2">
                   {otp.map((digit, i) => (
                     <input
@@ -201,7 +223,7 @@ export default function LoginPage() {
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
                       onPaste={handleOtpPaste}
-                      className="w-11 h-12 text-center text-lg font-display font-semibold bg-surface-100 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+                      className="w-10 h-12 text-center text-lg font-display font-semibold bg-surface-100 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     />
                   ))}
                 </div>
@@ -210,27 +232,39 @@ export default function LoginPage() {
                   variant="primary"
                   onClick={handleVerify}
                   disabled={otp.some((d) => !d) || loading}
+                  className="w-full"
                 >
                   {loading ? 'Verifying...' : 'Verify'}
                 </Button>
-                <div className="text-center text-sm">
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-surface-800/50">
+                    Didn&apos;t receive the code?
+                  </span>
                   {countdown > 0 ? (
-                    <span className="text-surface-800/50">Resend OTP in {countdown}s</span>
+                    <span className="text-surface-800/40 text-sm">Resend in {countdown}s</span>
                   ) : (
-                    <button onClick={handleResend} className="text-brand-600 hover:text-brand-700 font-medium">
-                      Resend OTP
+                    <button onClick={handleResend} className="text-brand-600 font-medium hover:text-brand-700">
+                      Resend
                     </button>
                   )}
                 </div>
+                <button
+                  onClick={() => { setStep(1); setOtp(['', '', '', '', '', '', '', '']); setError(null) }}
+                  className="text-sm text-brand-600 text-center hover:text-brand-700"
+                >
+                  Change email
+                </button>
               </div>
             )}
 
-            <p className="text-sm text-center mt-6 text-surface-800/60">
-              Are you a venue owner?{' '}
-              <a href="/dashboard/login" className="text-brand-600 font-medium hover:underline">
-                Login here
-              </a>
-            </p>
+            <div className="border-t border-surface-100 mt-6 pt-4">
+              <p className="text-sm text-surface-800/60 text-center">
+                Are you a venue owner?
+              </p>
+              <p className="text-xs text-surface-800/40 text-center mt-1">
+                Login with your owner email (e.g. urvilk1542@gmail.com) and you&apos;ll be redirected to your dashboard automatically.
+              </p>
+            </div>
           </div>
         </div>
       </main>

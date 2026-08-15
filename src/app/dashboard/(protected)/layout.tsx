@@ -92,10 +92,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-xs font-medium text-white shrink-0">
               {initials(displayName)}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-white truncate">{displayName}</p>
               <p className="text-xs text-white/40 truncate">{displayEmail}</p>
             </div>
+            <button
+              onClick={signOut}
+              className="text-xs text-white/40 hover:text-white transition-colors shrink-0"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>

@@ -5,8 +5,7 @@ export async function middleware(request: NextRequest) {
   const { user, supabaseResponse, supabase } = await updateSession(request)
   const pathname = request.nextUrl.pathname
 
-  // Public routes — no protection needed
-  const publicRoutes = ['/', '/login', '/venues', '/list-venue', '/dashboard/login', '/admin/login']
+  const publicRoutes = ['/', '/login', '/venues', '/list-venue']
   const isPublicRoute = publicRoutes.some(route =>
     pathname === route || pathname.startsWith('/venues/')
   )
@@ -15,7 +14,6 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Protected: /bookings, /wishlist — require any logged-in user
   if (pathname === '/bookings' || pathname === '/wishlist') {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
@@ -23,12 +21,10 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Protected: /dashboard/* — requires role = 'owner'
   if (pathname.startsWith('/dashboard')) {
     if (!user) {
-      return NextResponse.redirect(new URL('/dashboard/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
-    // Check role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -36,15 +32,14 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile?.role !== 'owner' && profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
     return supabaseResponse
   }
 
-  // Protected: /admin/* — requires role = 'admin'
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+  if (pathname.startsWith('/admin')) {
     if (!user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
     const { data: profile } = await supabase
       .from('profiles')
@@ -53,7 +48,7 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
     return supabaseResponse
   }

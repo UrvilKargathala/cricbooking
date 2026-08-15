@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { Car, Droplet, Bath, Armchair, Lightbulb, Shirt, Cross, Coffee, Dumbbell, Wifi } from 'lucide-react'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -41,6 +42,19 @@ export const AMENITY_LABELS: Record<string, string> = {
   cafe: 'Cafeteria',
   equipment: 'Equipment Rental',
   wifi: 'WiFi',
+}
+
+export const AMENITY_ICONS: Record<string, typeof Car> = {
+  parking: Car,
+  drinking_water: Droplet,
+  restrooms: Bath,
+  seating: Armchair,
+  lighting: Lightbulb,
+  changing_room: Shirt,
+  first_aid: Cross,
+  cafe: Coffee,
+  equipment: Dumbbell,
+  wifi: Wifi,
 }
 
 export const SPORT_LABELS: Record<string, string> = {

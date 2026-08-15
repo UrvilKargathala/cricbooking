@@ -12,10 +12,10 @@ interface OccupancyHeatmapProps {
 const DAYS = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i))
 
 const LEVELS = [
-  { label: 'Low', max: 25, className: 'bg-surface-100 text-surface-800/60' },
-  { label: 'Medium', max: 50, className: 'bg-brand-200 text-brand-900' },
-  { label: 'High', max: 75, className: 'bg-brand-400 text-white' },
-  { label: 'Fully Occupied', max: 101, className: 'bg-brand-600 text-white' },
+  { label: 'Low', max: 25, bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  { label: 'Medium', max: 50, bg: 'bg-amber-100', text: 'text-amber-800' },
+  { label: 'High', max: 75, bg: 'bg-orange-200', text: 'text-orange-900' },
+  { label: 'Full', max: 101, bg: 'bg-brand-500', text: 'text-white' },
 ]
 
 function levelFor(pct: number) {
@@ -26,13 +26,14 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs border-separate border-spacing-1">
+        <table className="w-full text-xs border-separate border-spacing-1.5">
           <thead>
             <tr>
-              <th className="text-left font-medium text-surface-800/50 pr-2 whitespace-nowrap">Court</th>
+              <th className="text-left font-medium text-surface-800/50 pr-2 whitespace-nowrap pb-2">Court</th>
               {DAYS.map((day) => (
-                <th key={day.toISOString()} className="font-medium text-surface-800/50 pb-1">
-                  {format(day, 'EEE d')}
+                <th key={day.toISOString()} className="font-medium text-surface-800/50 pb-2 text-center">
+                  <span className="block">{format(day, 'EEE')}</span>
+                  <span className="block text-surface-900 font-semibold">{format(day, 'd')}</span>
                 </th>
               ))}
             </tr>
@@ -40,7 +41,7 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
           <tbody>
             {courts.map((court) => (
               <tr key={court.id}>
-                <td className="text-surface-800 font-medium whitespace-nowrap pr-2">{court.name}</td>
+                <td className="text-sm text-surface-800 font-medium whitespace-nowrap pr-3">{court.name}</td>
                 {DAYS.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd')
                   const slots = generateDemoSlots(court.id, dateStr)
@@ -50,8 +51,8 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
                   return (
                     <td key={dateStr}>
                       <div
-                        title={`${court.name} — ${format(day, 'MMM d')}: ${pct}% booked (${level.label})`}
-                        className={cn('w-full h-8 rounded-md flex items-center justify-center font-medium', level.className)}
+                        title={`${court.name} — ${format(day, 'MMM d')}: ${pct}% booked`}
+                        className={cn('h-10 rounded-lg flex items-center justify-center font-semibold text-xs', level.bg, level.text)}
                       >
                         {pct}%
                       </div>
@@ -64,10 +65,10 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
         </table>
       </div>
 
-      <div className="flex gap-4 mt-3 text-xs text-surface-800/50 flex-wrap">
+      <div className="flex gap-5 mt-3 text-xs text-surface-800/50 flex-wrap">
         {LEVELS.map((level) => (
           <span key={level.label} className="flex items-center gap-1.5">
-            <span className={cn('w-3 h-3 rounded', level.className)} />
+            <span className={cn('w-3 h-3 rounded-sm', level.bg)} />
             {level.label}
           </span>
         ))}

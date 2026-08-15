@@ -5,7 +5,6 @@ import { Check, Upload, X, Plus } from 'lucide-react'
 import { cn, formatPrice, SPORT_LABELS, SURFACE_LABELS, AMENITY_LABELS } from '@/lib/utils'
 import { DEMO_AREAS } from '@/lib/demo-data'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import type { CourtFormData, VenueFormData, SurfaceType, SportType } from '@/types'
 
 interface VenueFormProps {

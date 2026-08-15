@@ -5,6 +5,7 @@ type BadgeVariant =
   | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
   | 'pending' | 'approved' | 'rejected' | 'suspended'
   | 'online' | 'walkin' | 'phone'
+  | 'paid' | 'refunded'
 
 const variantClasses: Record<BadgeVariant, { bg: string; dot: string }> = {
   confirmed: { bg: 'bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500' },
@@ -18,6 +19,8 @@ const variantClasses: Record<BadgeVariant, { bg: string; dot: string }> = {
   online: { bg: 'bg-blue-50 text-blue-800', dot: 'bg-blue-500' },
   walkin: { bg: 'bg-brand-50 text-brand-800', dot: 'bg-brand-400' },
   phone: { bg: 'bg-purple-50 text-purple-800', dot: 'bg-purple-500' },
+  paid: { bg: 'bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500' },
+  refunded: { bg: 'bg-red-50 text-red-800', dot: 'bg-red-500' },
 }
 
 interface BadgeProps {

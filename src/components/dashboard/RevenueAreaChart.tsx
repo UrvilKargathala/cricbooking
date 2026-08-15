@@ -1,61 +1,51 @@
 'use client'
 
-import { useId } from 'react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatPrice } from '@/lib/utils'
 
 interface RevenueAreaChartProps {
-  data: [string, number][]
+  data: { date: string; revenue: number }[]
 }
 
-const WIDTH = 100
-const HEIGHT = 40
-const TOP_PAD = 4
-const BASELINE = HEIGHT - 4
-
 export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
-  const gradientId = useId()
-  const max = Math.max(...data.map(([, amount]) => amount), 1)
-
-  const points = data.map(([date, amount], i) => {
-    const x = data.length > 1 ? (i / (data.length - 1)) * WIDTH : WIDTH / 2
-    const y = BASELINE - (amount / max) * (BASELINE - TOP_PAD)
-    return { x, y, date, amount }
-  })
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-  const areaPath = points.length
-    ? `${linePath} L ${points[points.length - 1].x} ${BASELINE} L ${points[0].x} ${BASELINE} Z`
-    : ''
-
   return (
-    <div>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" className="w-full h-32">
+    <ResponsiveContainer width="100%" height={280}>
+      <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
         <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fb923c" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#fb923c" stopOpacity="0" />
+          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ea580c" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#ea580c" stopOpacity={0} />
           </linearGradient>
         </defs>
-
-        {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />}
-        {linePath && (
-          <path d={linePath} fill="none" stroke="#ea580c" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-        )}
-
-        {points.map((p) => (
-          <circle key={p.date} cx={p.x} cy={p.y} r="1.4" fill="#ea580c" vectorEffect="non-scaling-stroke">
-            <title>{`${p.date}: ${formatPrice(p.amount)}`}</title>
-          </circle>
-        ))}
-      </svg>
-
-      <div className="flex justify-between mt-1.5">
-        {data.map(([date]) => (
-          <span key={date} className="text-[10px] text-surface-800/50 whitespace-nowrap">
-            {date.slice(5)}
-          </span>
-        ))}
-      </div>
-    </div>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 12, fill: '#737373' }}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 12, fill: '#737373' }}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+          width={50}
+        />
+        <Tooltip
+          contentStyle={{ borderRadius: 12, border: '1px solid #e5e5e5', fontSize: 13 }}
+          formatter={(value) => [formatPrice(value as number), 'Revenue']}
+          labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+        />
+        <Area
+          type="monotone"
+          dataKey="revenue"
+          stroke="#ea580c"
+          strokeWidth={2.5}
+          fill="url(#revenueGrad)"
+          dot={{ r: 4, fill: '#ea580c', strokeWidth: 2, stroke: '#fff' }}
+          activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   )
 }

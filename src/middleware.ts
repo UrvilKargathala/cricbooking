@@ -15,8 +15,8 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Protected: /bookings — requires any logged-in user
-  if (pathname === '/bookings') {
+  // Protected: /bookings, /wishlist — require any logged-in user
+  if (pathname === '/bookings' || pathname === '/wishlist') {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }

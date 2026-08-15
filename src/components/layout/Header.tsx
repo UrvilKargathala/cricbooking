@@ -209,6 +209,13 @@ export function Header() {
                   >
                     My Bookings
                   </Link>
+                  <Link
+                    href="/wishlist"
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
+                  >
+                    Wishlist
+                  </Link>
                   <div className="border-t border-surface-100 mt-1 pt-1">
                     <button
                       onClick={() => {
@@ -287,6 +294,9 @@ export function Header() {
               </div>
               <Link href="/bookings" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
                 My Bookings
+              </Link>
+              <Link href="/wishlist" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
+                Wishlist
               </Link>
               <button
                 onClick={() => { closeMenu(); signOut() }}

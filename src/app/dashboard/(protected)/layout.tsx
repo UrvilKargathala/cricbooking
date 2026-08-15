@@ -7,6 +7,7 @@ import { LayoutDashboard, MapPin, Calendar, Clock, Menu, X, Bell, Settings, LogO
 import { cn, formatPrice } from '@/lib/utils'
 import { DEMO_OWNER_BOOKINGS } from '@/lib/demo-data'
 import { useAuth } from '@/hooks/useAuth'
+import { Toaster } from '@/components/ui/Toaster'
 
 function initials(name: string) {
   const parts = name.trim().split(' ')
@@ -43,13 +44,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-surface-900 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-surface-900 border-r border-white/5 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="h-16 border-b border-white/10 px-5 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center shadow-sm shadow-brand-900/40">
               <span className="text-white font-bold">C</span>
             </div>
             <span className="font-display font-bold text-lg text-white">Owner Panel</span>
@@ -59,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        <nav className="p-4 space-y-1 flex-1">
+        <nav className="p-3 space-y-1 flex-1">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -68,16 +69,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  isActive ? 'bg-brand-600 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
+                  isActive ? 'bg-brand-600 text-white shadow-sm shadow-brand-900/30' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                 )}
               >
-                <item.icon className="w-4 h-4" />
+                <span
+                  className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                    isActive ? 'bg-white/15' : 'bg-white/5'
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                </span>
                 {item.label}
               </Link>
             )
           })}
         </nav>
+
+        <div className="p-3 border-t border-white/10 shrink-0">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
+            <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-xs font-medium text-white shrink-0">
+              {initials(displayName)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">{displayName}</p>
+              <p className="text-xs text-white/40 truncate">{displayEmail}</p>
+            </div>
+          </div>
+        </div>
       </aside>
 
       <div className="flex-1 min-w-0">
@@ -177,6 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         <main className="p-4 sm:p-6">{children}</main>
       </div>
+      <Toaster />
     </div>
   )
 }

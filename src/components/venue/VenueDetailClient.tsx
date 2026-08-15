@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
-  ChevronLeft,
+  ChevronRight,
   Star,
   MapPin,
   Clock,
@@ -14,24 +15,42 @@ import {
   Heart,
   MessageCircle,
   Navigation,
+  Users,
+  Ruler,
 } from 'lucide-react'
 import { SlotPicker } from '@/components/booking/SlotPicker'
 import { VenueGallery } from '@/components/venue/VenueGallery'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { DEMO_VENUES, DEMO_VENUE_REVIEWS, generateDemoSlots } from '@/lib/demo-data'
-import { AMENITY_LABELS, SPORT_LABELS, SURFACE_LABELS, formatPrice, formatTime } from '@/lib/utils'
+import { AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS, formatPrice, formatTime } from '@/lib/utils'
+import { useFavorites } from '@/hooks/useFavorites'
 import type { Slot, Venue } from '@/types'
 
+type ReviewSort = 'recent' | 'highest' | 'lowest'
+
 export function VenueDetailClient({ venue }: { venue: Venue }) {
+  const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
-  const [isFavorite, setIsFavorite] = useState(false)
+  const [reviewSort, setReviewSort] = useState<ReviewSort>('recent')
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const favorite = isFavorite(venue.id)
+
+  const handleToggleFavorite = async () => {
+    const result = await toggleFavorite(venue.id)
+    if (result === 'signed_out') router.push('/login')
+  }
 
   const slots = useMemo(
     () => (venue.courts ?? []).flatMap((court) => generateDemoSlots(court.id, selectedDate)),
     [venue.courts, selectedDate]
   )
 
-  const reviews = DEMO_VENUE_REVIEWS.filter((r) => r.venue_id === venue.id)
+  const reviews = useMemo(() => {
+    const list = DEMO_VENUE_REVIEWS.filter((r) => r.venue_id === venue.id)
+    if (reviewSort === 'highest') return [...list].sort((a, b) => b.rating - a.rating)
+    if (reviewSort === 'lowest') return [...list].sort((a, b) => a.rating - b.rating)
+    return [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [venue.id, reviewSort])
 
   const similarVenues = DEMO_VENUES.filter(
     (v) => v.id !== venue.id && (v.area?.slug === venue.area?.slug || v.sports.some((s) => venue.sports.includes(s)))
@@ -64,10 +83,19 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 lg:pb-8">
-        <Link href="/venues" className="inline-flex items-center gap-1 text-sm text-surface-800/60 hover:text-surface-800 mb-6">
-          <ChevronLeft className="w-4 h-4" />
-          Back to Venues
-        </Link>
+        <nav className="flex items-center flex-wrap gap-1 text-sm text-surface-800/60 mb-6">
+          <Link href="/" className="hover:text-surface-800">Home</Link>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <Link href="/venues" className="hover:text-surface-800">Venues</Link>
+          {venue.area && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <Link href={`/venues?area=${venue.area.slug}`} className="hover:text-surface-800">{venue.area.name}</Link>
+            </>
+          )}
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="text-surface-800 font-medium">{venue.name}</span>
+        </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 flex flex-col gap-6">
@@ -94,11 +122,11 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
 
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => setIsFavorite((v) => !v)}
-                    aria-label="Save venue"
+                    onClick={handleToggleFavorite}
+                    aria-label={favorite ? 'Remove from wishlist' : 'Save venue'}
                     className="w-9 h-9 flex items-center justify-center rounded-lg border border-surface-200 hover:bg-surface-100"
                   >
-                    <Heart className={isFavorite ? 'w-4 h-4 fill-red-500 text-red-500' : 'w-4 h-4 text-surface-800/60'} />
+                    <Heart className={favorite ? 'w-4 h-4 fill-red-500 text-red-500' : 'w-4 h-4 text-surface-800/60'} />
                   </button>
                   <button
                     onClick={handleShare}
@@ -135,6 +163,20 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                   </span>
                 )}
               </div>
+
+              <a
+                href={directionsHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block rounded-lg overflow-hidden border border-surface-200 h-40"
+              >
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(venue.address)}&output=embed`}
+                  className="w-full h-full pointer-events-none"
+                  loading="lazy"
+                  title={`Map showing location of ${venue.name}`}
+                />
+              </a>
 
               {venue.phone && (
                 <div className="mt-4 flex gap-2">
@@ -178,12 +220,19 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
             <div className="bg-white rounded-xl border border-surface-200 p-5">
               <h2 className="font-display font-semibold text-surface-900 mb-3">Amenities</h2>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                {venue.amenities.map((amenity) => (
-                  <span key={amenity} className="flex items-center gap-2 text-sm text-surface-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
-                    {AMENITY_LABELS[amenity] ?? amenity}
-                  </span>
-                ))}
+                {venue.amenities.map((amenity) => {
+                  const Icon = AMENITY_ICONS[amenity]
+                  return (
+                    <span key={amenity} className="flex items-center gap-2 text-sm text-surface-800">
+                      {Icon ? (
+                        <Icon className="w-4 h-4 text-brand-600 shrink-0" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+                      )}
+                      {AMENITY_LABELS[amenity] ?? amenity}
+                    </span>
+                  )
+                })}
               </div>
             </div>
 
@@ -197,6 +246,20 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                       <p className="text-xs text-surface-800/60">
                         {SURFACE_LABELS[court.surface]} · {SPORT_LABELS[court.sport]}
                       </p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-800/50">
+                        {court.max_players > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            Up to {court.max_players} players
+                          </span>
+                        )}
+                        {court.dimensions && (
+                          <span className="flex items-center gap-1">
+                            <Ruler className="w-3 h-3" />
+                            {court.dimensions}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-display font-semibold text-brand-700">{formatPrice(court.price_per_slot)}</p>
@@ -230,13 +293,26 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
             </div>
 
             <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                 <h2 className="font-display font-semibold text-surface-900">Reviews</h2>
-                <span className="flex items-center gap-1 text-sm text-surface-800">
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  {venue.rating.toFixed(1)}
-                  <span className="text-surface-800/50">({venue.total_reviews})</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-sm text-surface-800">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    {venue.rating.toFixed(1)}
+                    <span className="text-surface-800/50">({venue.total_reviews})</span>
+                  </span>
+                  {reviews.length > 1 && (
+                    <select
+                      value={reviewSort}
+                      onChange={(e) => setReviewSort(e.target.value as ReviewSort)}
+                      className="px-2 py-1 bg-surface-100 border border-surface-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-400"
+                    >
+                      <option value="recent">Most Recent</option>
+                      <option value="highest">Highest Rated</option>
+                      <option value="lowest">Lowest Rated</option>
+                    </select>
+                  )}
+                </div>
               </div>
               {reviews.length > 0 ? (
                 <div className="flex flex-col gap-4">

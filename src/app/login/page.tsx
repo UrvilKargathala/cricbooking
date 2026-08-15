@@ -23,8 +23,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (submittingRef.current) return
     if (!authLoading && user) {
-      if (user.role === 'admin') router.push('/admin')
-      else if (user.role === 'owner') router.push('/dashboard')
+      if (user.role === 'owner') router.push('/dashboard')
       else router.push('/')
     }
   }, [user, authLoading, router])
@@ -132,9 +131,7 @@ export default function LoginPage() {
       profile = { role: 'user' as const }
     }
 
-    if (profile.role === 'admin') {
-      router.push('/admin')
-    } else if (profile.role === 'owner') {
+    if (profile.role === 'owner') {
       router.push('/dashboard')
     } else {
       router.push('/')

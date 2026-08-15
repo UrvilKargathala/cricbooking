@@ -179,10 +179,10 @@ export function Header() {
               </Button>
             </Link>
           )}
-          {user && (user.role === 'owner' || user.role === 'admin') ? (
-            <Link href={user.role === 'admin' ? '/admin' : '/dashboard'}>
+          {user && user.role === 'owner' ? (
+            <Link href="/dashboard">
               <Button variant="primary" size="sm">
-                {user.role === 'admin' ? 'Admin Panel' : 'Go to Dashboard'}
+                Go to Dashboard
               </Button>
             </Link>
           ) : user ? (
@@ -275,10 +275,10 @@ export function Header() {
           <Link href="/list-venue" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
             List Your Venue
           </Link>
-          {user && (user.role === 'owner' || user.role === 'admin') ? (
-            <Link href={user.role === 'admin' ? '/admin' : '/dashboard'} onClick={closeMenu}>
+          {user && user.role === 'owner' ? (
+            <Link href="/dashboard" onClick={closeMenu}>
               <Button variant="primary" className="w-full">
-                {user.role === 'admin' ? 'Admin Panel' : 'Go to Dashboard'}
+                Go to Dashboard
               </Button>
             </Link>
           ) : user ? (

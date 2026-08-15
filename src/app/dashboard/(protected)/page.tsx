@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Calendar, IndianRupee, TrendingUp, Users, Clock,
+  Calendar, IndianRupee, TrendingUp, Clock,
   ArrowUp, ArrowDown, CalendarCheck, Percent,
 } from 'lucide-react'
 import { formatPrice, formatTime } from '@/lib/utils'
@@ -27,7 +27,6 @@ const previousDayBookings = previousDate ? activeBookings.filter((b) => b.slot?.
 const todaysRevenue = todaysBookings.reduce((sum, b) => sum + b.amount, 0)
 const previousDayRevenue = previousDayBookings.reduce((sum, b) => sum + b.amount, 0)
 const monthRevenue = activeBookings.reduce((sum, b) => sum + b.amount, 0)
-const uniqueCustomers = new Set(activeBookings.map((b) => b.user?.full_name || b.customer_name)).size
 
 const midpoint = Math.floor(activeBookings.length / 2)
 const sortedByDate = [...activeBookings].sort((a, b) => (a.slot?.date ?? '').localeCompare(b.slot?.date ?? ''))
@@ -35,8 +34,6 @@ const firstHalf = sortedByDate.slice(0, midpoint)
 const secondHalf = sortedByDate.slice(midpoint)
 const firstHalfRevenue = firstHalf.reduce((sum, b) => sum + b.amount, 0)
 const secondHalfRevenue = secondHalf.reduce((sum, b) => sum + b.amount, 0)
-const firstHalfCustomers = new Set(firstHalf.map((b) => b.user?.full_name || b.customer_name))
-const newCustomersInSecondHalf = new Set(secondHalf.map((b) => b.user?.full_name || b.customer_name).filter((name) => !firstHalfCustomers.has(name))).size
 
 const occupancyRate = Math.round((activeBookings.length / (activeBookings.length + 4)) * 100)
 

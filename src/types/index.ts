@@ -4,7 +4,7 @@ export type BookingSource = 'online' | 'walkin' | 'phone'
 export type SlotStatus = 'available' | 'booked' | 'blocked'
 export type VenueStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type SurfaceType = 'turf' | 'mat' | 'cement' | 'natural_grass' | 'synthetic'
-export type SportType = 'turf' | 'cricket_ground'
+export type SportType = 'box_cricket' | 'cricket' | 'football' | 'badminton' | 'tennis' | 'multi_sport'
 
 export interface Profile {
   id: string; full_name: string; phone: string | null; email: string | null

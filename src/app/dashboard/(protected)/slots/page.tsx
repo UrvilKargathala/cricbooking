@@ -1,16 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Lock, Repeat, Clock, CheckCircle2, XCircle, Calendar } from 'lucide-react'
-import { generateDemoSlots, DEMO_VENUES } from '@/lib/demo-data'
+import { createClient } from '@/lib/supabase'
+import { fetchOwnerVenues, fetchSlots } from '@/lib/supabase-queries'
 import { formatTime, formatPrice, cn } from '@/lib/utils'
 import { DateSelector } from '@/components/booking/DateSelector'
 import { Button } from '@/components/ui/Button'
 import { useToastStore } from '@/store/useToastStore'
 import { Modal } from '@/components/ui/Modal'
-import type { Slot } from '@/types'
-
-const COURTS = DEMO_VENUES.slice(0, 2).flatMap((venue) => venue.courts ?? [])
+import type { Court, Slot } from '@/types'
 
 function todayStr() {
   return new Date().toISOString().split('T')[0]
@@ -39,7 +38,7 @@ function SlotDetailModal({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-surface-500">Price</span>
-          <span className="font-semibold text-surface-900">{formatPrice(slot.price)}</span>
+          <span className="font-semibold text-surface-900">{formatPrice(Number(slot.price))}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-surface-500">Status</span>
@@ -52,27 +51,6 @@ function SlotDetailModal({
             {slot.status[0].toUpperCase() + slot.status.slice(1)}
           </span>
         </div>
-
-        {slot.status === 'booked' && (
-          <div className="border-t border-surface-100 pt-3 mt-1 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-surface-500">Customer</span>
-              <span className="font-medium text-surface-900">Raj Patel</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-surface-500">Phone</span>
-              <span className="text-surface-700">+91 98765 43210</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-surface-500">Source</span>
-              <span className="text-surface-700">Online</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-surface-500">Code</span>
-              <span className="font-mono text-xs text-surface-500">CB-260809-A1X2</span>
-            </div>
-          </div>
-        )}
 
         {slot.status === 'blocked' && slot.blocked_reason && (
           <div className="border-t border-surface-100 pt-3 mt-1">
@@ -124,14 +102,64 @@ function SlotDetailModal({
 }
 
 export default function DashboardSlotsPage() {
-  const [activeCourt, setActiveCourt] = useState(COURTS[0]?.id ?? '')
+  const [courts, setCourts] = useState<Court[]>([])
+  const [activeCourt, setActiveCourt] = useState('')
   const [selectedDate, setSelectedDate] = useState(todayStr())
+  const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
+  const [loading, setLoading] = useState(true)
   const showToast = useToastStore((s) => s.showToast)
 
-  const activeCourtObj = COURTS.find((c) => c.id === activeCourt)
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const venues = await fetchOwnerVenues(user.id)
+        const allCourts = venues.flatMap((v) => v.courts ?? [])
+        setCourts(allCourts)
+        if (allCourts.length > 0) setActiveCourt(allCourts[0].id)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  useEffect(() => {
+    if (!activeCourt) return
+    fetchSlots(activeCourt, selectedDate).then(setSlots)
+  }, [activeCourt, selectedDate])
+
+  useEffect(() => {
+    if (!activeCourt) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`owner-slots-${activeCourt}-${selectedDate}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'slots', filter: `court_id=eq.${activeCourt}` },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setSlots((prev) => prev.map((s) =>
+              s.id === payload.new.id
+                ? { ...s, status: payload.new.status, blocked_reason: payload.new.blocked_reason }
+                : s
+            ))
+            showToast('Slot updated in real-time', 'info')
+          } else if (payload.eventType === 'INSERT' && payload.new.date === selectedDate) {
+            setSlots((prev) => {
+              if (prev.some((s) => s.id === payload.new.id)) return prev
+              return [...prev, payload.new as Slot].sort((a, b) => a.start_time.localeCompare(b.start_time))
+            })
+          }
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [activeCourt, selectedDate, showToast])
+
+  const activeCourtObj = courts.find((c) => c.id === activeCourt)
   const activeCourtName = activeCourtObj?.name ?? ''
-  const slots = generateDemoSlots(activeCourt, selectedDate)
 
   const availableCount = slots.filter((s) => s.status === 'available').length
   const bookedCount = slots.filter((s) => s.status === 'booked').length
@@ -139,11 +167,40 @@ export default function DashboardSlotsPage() {
   const totalSlots = slots.length
   const occupancyPct = totalSlots > 0 ? Math.round((bookedCount / totalSlots) * 100) : 0
 
-  const handleSlotAction = (action: string) => {
-    if (action === 'block') showToast('Slot blocked successfully.', 'success')
-    else if (action === 'unblock') showToast('Slot unblocked.', 'info')
-    else if (action === 'cancel') showToast('Booking cancellation coming in backend phase.', 'info')
+  const handleSlotAction = async (action: string) => {
+    if (!selectedSlot) return
+    const supabase = createClient()
+
+    if (action === 'block') {
+      await supabase.from('slots').update({ status: 'blocked', blocked_reason: 'Blocked by owner' }).eq('id', selectedSlot.id)
+      showToast('Slot blocked successfully.', 'success')
+    } else if (action === 'unblock') {
+      await supabase.from('slots').update({ status: 'available', blocked_reason: null }).eq('id', selectedSlot.id)
+      showToast('Slot unblocked.', 'info')
+    } else if (action === 'cancel') {
+      showToast('Booking cancellation coming soon.', 'info')
+    }
+
     setSelectedSlot(null)
+    if (activeCourt) fetchSlots(activeCourt, selectedDate).then(setSlots)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (courts.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <Calendar className="w-12 h-12 text-surface-200 mx-auto" />
+        <p className="text-surface-500 mt-3 font-medium">No courts found</p>
+        <p className="text-sm text-surface-400 mt-1">Add a venue with courts first to manage slots.</p>
+      </div>
+    )
   }
 
   const STATS = [
@@ -173,7 +230,7 @@ export default function DashboardSlotsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => showToast('Recurring block setting coming in backend phase.', 'info')}
+            onClick={() => showToast('Recurring block setting coming soon.', 'info')}
             className="flex items-center gap-1.5"
           >
             <Repeat className="w-3.5 h-3.5" />
@@ -199,7 +256,7 @@ export default function DashboardSlotsPage() {
       <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-surface-100">
           <div className="flex items-center gap-2 flex-wrap">
-            {COURTS.map((court) => (
+            {courts.map((court) => (
               <button
                 key={court.id}
                 onClick={() => setActiveCourt(court.id)}
@@ -230,42 +287,46 @@ export default function DashboardSlotsPage() {
             </h2>
           </div>
 
-          <div className="slot-grid">
-            {slots.map((slot) => {
-              const isBooked = slot.status === 'booked'
-              const isBlocked = slot.status === 'blocked'
+          {slots.length > 0 ? (
+            <div className="slot-grid">
+              {slots.map((slot) => {
+                const isBooked = slot.status === 'booked'
+                const isBlocked = slot.status === 'blocked'
 
-              return (
-                <button
-                  key={slot.id}
-                  onClick={() => setSelectedSlot(slot)}
-                  className={cn(
-                    'flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border text-xs transition-all',
-                    isBooked && 'bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-sm',
-                    isBlocked && 'bg-red-50 border-red-200 hover:border-red-300 hover:shadow-sm',
-                    !isBooked && !isBlocked && 'bg-white border-surface-200 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm',
-                  )}
-                >
-                  <span className={cn(
-                    'font-semibold',
-                    isBooked && 'text-blue-800',
-                    isBlocked && 'text-red-800',
-                    !isBooked && !isBlocked && 'text-surface-900',
-                  )}>
-                    {formatTime(slot.start_time)}
-                  </span>
-                  <span className={cn(
-                    'text-[10px] font-medium',
-                    isBooked && 'text-blue-600',
-                    isBlocked && 'text-red-600',
-                    !isBooked && !isBlocked && 'text-surface-400',
-                  )}>
-                    {isBooked ? 'Booked' : isBlocked ? 'Blocked' : formatPrice(slot.price)}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                return (
+                  <button
+                    key={slot.id}
+                    onClick={() => setSelectedSlot(slot)}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border text-xs transition-all',
+                      isBooked && 'bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-sm',
+                      isBlocked && 'bg-red-50 border-red-200 hover:border-red-300 hover:shadow-sm',
+                      !isBooked && !isBlocked && 'bg-white border-surface-200 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm',
+                    )}
+                  >
+                    <span className={cn(
+                      'font-semibold',
+                      isBooked && 'text-blue-800',
+                      isBlocked && 'text-red-800',
+                      !isBooked && !isBlocked && 'text-surface-900',
+                    )}>
+                      {formatTime(slot.start_time)}
+                    </span>
+                    <span className={cn(
+                      'text-[10px] font-medium',
+                      isBooked && 'text-blue-600',
+                      isBlocked && 'text-red-600',
+                      !isBooked && !isBlocked && 'text-surface-400',
+                    )}>
+                      {isBooked ? 'Booked' : isBlocked ? 'Blocked' : formatPrice(Number(slot.price))}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-surface-500 text-center py-8">No slots found for this date. Slots may need to be generated.</p>
+          )}
 
           <div className="flex gap-5 mt-5 pt-4 border-t border-surface-100 text-xs text-surface-500 flex-wrap">
             <span className="flex items-center gap-1.5">

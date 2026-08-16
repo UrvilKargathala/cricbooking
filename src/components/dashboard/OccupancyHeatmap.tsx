@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { addDays, format } from 'date-fns'
-import { generateDemoSlots } from '@/lib/demo-data'
+import { fetchSlots } from '@/lib/supabase-queries'
 import { cn } from '@/lib/utils'
 import type { Court } from '@/types'
 
@@ -22,7 +23,29 @@ function levelFor(pct: number) {
   return LEVELS.find((l) => pct < l.max) ?? LEVELS[LEVELS.length - 1]
 }
 
+type HeatmapData = Record<string, Record<string, number>>
+
 export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
+  const [data, setData] = useState<HeatmapData>({})
+
+  useEffect(() => {
+    const load = async () => {
+      const result: HeatmapData = {}
+      for (const court of courts) {
+        result[court.id] = {}
+        for (const day of DAYS) {
+          const dateStr = format(day, 'yyyy-MM-dd')
+          const slots = await fetchSlots(court.id, dateStr)
+          const total = slots.length
+          const booked = slots.filter((s) => s.status === 'booked').length
+          result[court.id][dateStr] = total > 0 ? Math.round((booked / total) * 100) : 0
+        }
+      }
+      setData(result)
+    }
+    if (courts.length > 0) load()
+  }, [courts])
+
   return (
     <div>
       <div className="overflow-x-auto">
@@ -44,9 +67,7 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
                 <td className="text-sm text-surface-800 font-medium whitespace-nowrap pr-3">{court.name}</td>
                 {DAYS.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd')
-                  const slots = generateDemoSlots(court.id, dateStr)
-                  const bookedCount = slots.filter((s) => s.status === 'booked').length
-                  const pct = Math.round((bookedCount / slots.length) * 100)
+                  const pct = data[court.id]?.[dateStr] ?? 0
                   const level = levelFor(pct)
                   return (
                     <td key={dateStr}>

@@ -3,71 +3,18 @@
 import { useEffect, useState } from 'react'
 import {
   MapPin, Plus, Edit2, Trash2, Users, Ruler, Star,
-  BarChart3, IndianRupee, Building2, ChevronDown, ChevronUp, Eye,
+  IndianRupee, Building2, ChevronDown, ChevronUp, Eye,
 } from 'lucide-react'
 import Link from 'next/link'
-import { DEMO_VENUES, DEMO_ADMIN_VENUES, DEMO_AREAS } from '@/lib/demo-data'
-import { loadLocalVenues, saveLocalVenues } from '@/lib/local-venues'
+import { createClient } from '@/lib/supabase'
+import { fetchOwnerVenues, fetchAreas } from '@/lib/supabase-queries'
 import { SPORT_LABELS, AMENITY_LABELS, AMENITY_ICONS, formatPrice } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { VenueForm } from '@/components/venue/VenueForm'
 import { VenueEditForm } from '@/components/venue/VenueEditForm'
 import { useToastStore } from '@/store/useToastStore'
-import type { Venue, VenueFormData } from '@/types'
-
-function performanceFor(venue: Venue) {
-  const adminMatch = DEMO_ADMIN_VENUES.find((v) => v.name === venue.name)
-  if (adminMatch) return { bookings: adminMatch.bookings_count, revenue: adminMatch.revenue }
-  const price = venue.courts?.[0]?.price_per_slot ?? 700
-  return { bookings: venue.total_reviews, revenue: venue.total_reviews * price }
-}
-
-function formDataToVenue(data: VenueFormData): Venue {
-  const area = DEMO_AREAS.find((a) => a.slug === data.area)
-  const images = data.photos.map((f) => URL.createObjectURL(f))
-  return {
-    id: crypto.randomUUID(),
-    owner_id: 'owner1',
-    name: data.name,
-    slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    description: data.description || null,
-    address: data.address,
-    area_id: area?.id ?? null,
-    city: 'Surat',
-    phone: data.phone ? `+91${data.phone}` : null,
-    cover_image: images[0] ?? null,
-    images,
-    amenities: data.amenities,
-    sports: data.sports,
-    opening_time: data.opening_time,
-    closing_time: data.closing_time,
-    slot_duration_mins: data.slot_duration,
-    min_advance_hours: data.min_advance_hours,
-    max_advance_days: data.max_advance_days,
-    cancellation_hours: data.cancellation_hours,
-    cancellation_refund_pct: data.cancellation_refund_pct,
-    rating: 0,
-    total_reviews: 0,
-    status: 'approved',
-    is_featured: false,
-    created_at: new Date().toISOString(),
-    area,
-    courts: data.courts.map((c) => ({
-      id: c.id,
-      venue_id: '',
-      name: c.name,
-      surface: c.surface,
-      sport: c.sport,
-      max_players: c.max_players,
-      dimensions: c.dimensions || null,
-      price_per_slot: c.price_per_slot,
-      weekend_price: c.weekend_price || null,
-      night_price: c.night_price || null,
-      is_active: true,
-    })),
-  }
-}
+import type { Area, Venue, VenueFormData } from '@/types'
 
 function VenueCard({
   venue,
@@ -79,7 +26,6 @@ function VenueCard({
   onDelete: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const performance = performanceFor(venue)
 
   return (
     <div className="bg-white rounded-xl border border-surface-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -121,7 +67,7 @@ function VenueCard({
           <div className="flex flex-wrap gap-1.5 mt-3">
             {venue.sports.map((sport) => (
               <span key={sport} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700 border border-brand-100">
-                {SPORT_LABELS[sport]}
+                {SPORT_LABELS[sport] ?? sport}
               </span>
             ))}
             <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-surface-100 text-surface-600">
@@ -132,14 +78,10 @@ function VenueCard({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-surface-100">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-surface-100">
             <div>
-              <p className="text-xs text-surface-400">Bookings</p>
-              <p className="font-display font-bold text-surface-900 mt-0.5">{performance.bookings}</p>
-            </div>
-            <div>
-              <p className="text-xs text-surface-400">Revenue</p>
-              <p className="font-display font-bold text-emerald-600 mt-0.5">{formatPrice(performance.revenue)}</p>
+              <p className="text-xs text-surface-400">Courts</p>
+              <p className="font-display font-bold text-surface-900 mt-0.5">{venue.courts?.length ?? 0}</p>
             </div>
             <div>
               <p className="text-xs text-surface-400">Amenities</p>
@@ -243,48 +185,122 @@ function VenueCard({
 }
 
 export default function DashboardVenuesPage() {
-  const [myVenues, setMyVenues] = useState(() => DEMO_VENUES.slice(0, 2))
+  const [myVenues, setMyVenues] = useState<Venue[]>([])
+  const [areas, setAreas] = useState<Area[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [ownerId, setOwnerId] = useState<string | null>(null)
   const showToast = useToastStore((s) => s.showToast)
 
   useEffect(() => {
-    setMyVenues((prev) => [...prev, ...loadLocalVenues()])
+    const load = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setOwnerId(user.id)
+        const [venues, areaList] = await Promise.all([
+          fetchOwnerVenues(user.id),
+          fetchAreas(),
+        ])
+        setMyVenues(venues)
+        setAreas(areaList)
+      }
+      setLoading(false)
+    }
+    load()
   }, [])
 
-  const totalCourts = myVenues.reduce((s, v) => s + (v.courts?.length ?? 0), 0)
-  const totalBookings = myVenues.reduce((s, v) => s + performanceFor(v).bookings, 0)
-  const totalRevenue = myVenues.reduce((s, v) => s + performanceFor(v).revenue, 0)
+  const reload = async () => {
+    if (!ownerId) return
+    const venues = await fetchOwnerVenues(ownerId)
+    setMyVenues(venues)
+  }
 
-  const handleSubmit = (data: VenueFormData) => {
-    const venue = formDataToVenue(data)
-    setMyVenues((prev) => {
-      const next = [...prev, venue]
-      saveLocalVenues(next.filter((v) => !DEMO_VENUES.some((d) => d.id === v.id)))
-      return next
-    })
+  const totalCourts = myVenues.reduce((s, v) => s + (v.courts?.length ?? 0), 0)
+
+  const handleSubmit = async (data: VenueFormData) => {
+    if (!ownerId) return
+    const supabase = createClient()
+    const area = areas.find((a) => a.slug === data.area)
+    const { data: venueData, error } = await supabase.from('venues').insert({
+      owner_id: ownerId,
+      name: data.name,
+      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: data.description || null,
+      address: data.address,
+      area_id: area?.id ?? null,
+      phone: data.phone ? `+91${data.phone}` : null,
+      amenities: data.amenities,
+      sports: data.sports,
+      opening_time: data.opening_time,
+      closing_time: data.closing_time,
+      slot_duration_mins: data.slot_duration,
+      min_advance_hours: data.min_advance_hours,
+      max_advance_days: data.max_advance_days,
+      cancellation_hours: data.cancellation_hours,
+      cancellation_refund_pct: data.cancellation_refund_pct,
+    }).select().single()
+
+    if (error) {
+      showToast(`Error adding venue: ${error.message}`, 'error')
+      return
+    }
+
+    if (venueData && data.courts.length > 0) {
+      await supabase.from('courts').insert(
+        data.courts.map((c) => ({
+          venue_id: venueData.id,
+          name: c.name,
+          surface: c.surface,
+          sport: c.sport,
+          max_players: c.max_players,
+          dimensions: c.dimensions || null,
+          price_per_slot: c.price_per_slot,
+          weekend_price: c.weekend_price || null,
+          night_price: c.night_price || null,
+        }))
+      )
+    }
+
     showToast(`"${data.name}" has been added to your account.`, 'success')
     setShowForm(false)
+    reload()
   }
 
-  const handleSaveEdit = (updated: Venue) => {
-    setMyVenues((prev) => {
-      const next = prev.map((v) => (v.id === updated.id ? updated : v))
-      saveLocalVenues(next.filter((v) => !DEMO_VENUES.some((d) => d.id === v.id)))
-      return next
-    })
+  const handleSaveEdit = async (updated: Venue) => {
+    const supabase = createClient()
+    await supabase.from('venues').update({
+      name: updated.name,
+      description: updated.description,
+      address: updated.address,
+      phone: updated.phone,
+      amenities: updated.amenities,
+      sports: updated.sports,
+      opening_time: updated.opening_time,
+      closing_time: updated.closing_time,
+    }).eq('id', updated.id)
+
     setEditingVenue(null)
     showToast(`"${updated.name}" has been updated.`, 'success')
+    reload()
   }
 
-  const handleDelete = (venue: Venue) => {
+  const handleDelete = async (venue: Venue) => {
     if (!window.confirm(`Delete "${venue.name}"? This can't be undone.`)) return
-    setMyVenues((prev) => {
-      const next = prev.filter((v) => v.id !== venue.id)
-      saveLocalVenues(next.filter((v) => !DEMO_VENUES.some((d) => d.id === v.id)))
-      return next
-    })
+    const supabase = createClient()
+    await supabase.from('courts').delete().eq('venue_id', venue.id)
+    await supabase.from('venues').delete().eq('id', venue.id)
     showToast(`"${venue.name}" has been deleted.`, 'info')
+    reload()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   if (editingVenue) {
@@ -293,6 +309,7 @@ export default function DashboardVenuesPage() {
         venue={editingVenue}
         onSave={handleSaveEdit}
         onCancel={() => setEditingVenue(null)}
+        areas={areas}
       />
     )
   }
@@ -304,7 +321,7 @@ export default function DashboardVenuesPage() {
           <h3 className="font-display font-semibold text-lg text-surface-900">Add New Venue</h3>
           <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
         </div>
-        <VenueForm isInsideDashboard onSubmit={handleSubmit} />
+        <VenueForm isInsideDashboard onSubmit={handleSubmit} areas={areas} />
       </div>
     )
   }
@@ -312,8 +329,8 @@ export default function DashboardVenuesPage() {
   const STATS = [
     { label: 'Total Venues', value: String(myVenues.length), icon: Building2, bg: 'bg-blue-100', text: 'text-blue-600' },
     { label: 'Total Courts', value: String(totalCourts), icon: MapPin, bg: 'bg-purple-100', text: 'text-purple-600' },
-    { label: 'Total Bookings', value: String(totalBookings), icon: BarChart3, bg: 'bg-emerald-100', text: 'text-emerald-600' },
-    { label: 'Total Revenue', value: formatPrice(totalRevenue), icon: IndianRupee, bg: 'bg-orange-100', text: 'text-orange-600' },
+    { label: 'Avg Rating', value: myVenues.length ? (myVenues.reduce((s, v) => s + v.rating, 0) / myVenues.length).toFixed(1) : '0', icon: Star, bg: 'bg-amber-100', text: 'text-amber-600' },
+    { label: 'Avg Price', value: formatPrice(Math.round(myVenues.flatMap((v) => v.courts ?? []).reduce((s, c) => s + c.price_per_slot, 0) / Math.max(totalCourts, 1))), icon: IndianRupee, bg: 'bg-orange-100', text: 'text-orange-600' },
   ]
 
   return (

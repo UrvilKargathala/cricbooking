@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Plus, Clock, Search, X, Download, Filter,
   CalendarCheck, CalendarX, IndianRupee, Calendar,
 } from 'lucide-react'
-import { DEMO_OWNER_BOOKINGS } from '@/lib/demo-data'
+import { createClient } from '@/lib/supabase'
+import { fetchOwnerBookings, fetchOwnerVenues } from '@/lib/supabase-queries'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -13,15 +14,19 @@ import { BookingDetailsModal } from '@/components/dashboard/BookingDetailsModal'
 import { useToastStore } from '@/store/useToastStore'
 import type { Booking } from '@/types'
 
-const COURTS = ['All Courts', 'Box-1 Turf', 'Box-2 Mat']
 const STATUSES = ['All', 'confirmed', 'cancelled', 'completed']
 const SOURCES = ['All', 'online', 'walkin', 'phone']
-const PAYMENTS = ['All', 'paid', 'pending', 'refunded']
+const PAYMENTS = ['All', 'paid', 'pending', 'refunded', 'full_paid']
 
 const selectClass =
   'px-3 py-2 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none cursor-pointer'
 
 export default function DashboardBookingsPage() {
+  const [allBookings, setAllBookings] = useState<Booking[]>([])
+  const [courtNames, setCourtNames] = useState<string[]>([])
+  const [venueIds, setVenueIds] = useState<string[]>([])
+  const [ownerId, setOwnerId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [date, setDate] = useState('')
   const [court, setCourt] = useState('All Courts')
@@ -32,7 +37,52 @@ export default function DashboardBookingsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const showToast = useToastStore((s) => s.showToast)
 
-  const filtered = useMemo(() => DEMO_OWNER_BOOKINGS.filter((booking) => {
+  const fetchBookings = async (userId: string) => {
+    const [bookings, venues] = await Promise.all([
+      fetchOwnerBookings(userId),
+      fetchOwnerVenues(userId),
+    ])
+    setAllBookings(bookings)
+    const names = venues.flatMap((v) => v.courts ?? []).map((c) => c.name)
+    setCourtNames(Array.from(new Set(names)))
+    setVenueIds(venues.map((v) => v.id))
+  }
+
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setOwnerId(user.id)
+        await fetchBookings(user.id)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  useEffect(() => {
+    if (!ownerId || venueIds.length === 0) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel('owner-bookings-list')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        (payload) => {
+          if (payload.eventType === 'INSERT' && venueIds.includes(payload.new.venue_id)) {
+            fetchBookings(ownerId)
+            showToast('New booking received!', 'success')
+          } else if (payload.eventType === 'UPDATE' && venueIds.includes(payload.new.venue_id)) {
+            fetchBookings(ownerId)
+          }
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [ownerId, venueIds, showToast])
+
+  const filtered = useMemo(() => allBookings.filter((booking) => {
     if (date && booking.slot?.date !== date) return false
     if (court !== 'All Courts' && booking.court?.name !== court) return false
     if (status !== 'All' && booking.status !== status) return false
@@ -45,14 +95,14 @@ export default function DashboardBookingsPage() {
       if (!name.includes(q) && !code.includes(q)) return false
     }
     return true
-  }), [date, court, status, source, payment, searchQuery])
+  }), [allBookings, date, court, status, source, payment, searchQuery])
 
   const activeFilterCount = [date, court !== 'All Courts', status !== 'All', source !== 'All', payment !== 'All', searchQuery].filter(Boolean).length
 
-  const confirmedCount = DEMO_OWNER_BOOKINGS.filter((b) => b.status === 'confirmed').length
-  const pendingPaymentCount = DEMO_OWNER_BOOKINGS.filter((b) => b.payment_status === 'pending' && b.status !== 'cancelled').length
-  const cancelledCount = DEMO_OWNER_BOOKINGS.filter((b) => b.status === 'cancelled').length
-  const totalRevenue = DEMO_OWNER_BOOKINGS.filter((b) => b.payment_status === 'paid' && b.status !== 'cancelled').reduce((s, b) => s + b.amount, 0)
+  const confirmedCount = allBookings.filter((b) => b.status === 'confirmed').length
+  const pendingPaymentCount = allBookings.filter((b) => b.payment_status === 'pending' && b.status !== 'cancelled').length
+  const cancelledCount = allBookings.filter((b) => b.status === 'cancelled').length
+  const totalRevenue = allBookings.filter((b) => b.payment_status !== 'pending' && b.status !== 'cancelled').reduce((s, b) => s + b.amount, 0)
 
   const allSelected = filtered.length > 0 && filtered.every((b) => selectedIds.has(b.id))
 
@@ -83,8 +133,16 @@ export default function DashboardBookingsPage() {
     setSelectedIds(new Set())
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   const STATS = [
-    { label: 'Total Bookings', value: String(DEMO_OWNER_BOOKINGS.length), icon: Calendar, bg: 'bg-blue-100', text: 'text-blue-600' },
+    { label: 'Total Bookings', value: String(allBookings.length), icon: Calendar, bg: 'bg-blue-100', text: 'text-blue-600' },
     { label: 'Confirmed', value: String(confirmedCount), icon: CalendarCheck, bg: 'bg-emerald-100', text: 'text-emerald-600' },
     { label: 'Pending Payment', value: String(pendingPaymentCount), icon: IndianRupee, bg: 'bg-amber-100', text: 'text-amber-600' },
     { label: 'Cancelled', value: String(cancelledCount), icon: CalendarX, bg: 'bg-red-100', text: 'text-red-600' },
@@ -101,7 +159,7 @@ export default function DashboardBookingsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => showToast('CSV export coming in backend phase.', 'info')}
+            onClick={() => showToast('CSV export coming soon.', 'info')}
             className="flex items-center gap-1.5"
           >
             <Download className="w-4 h-4" />
@@ -109,7 +167,7 @@ export default function DashboardBookingsPage() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => showToast('Walk-in booking form coming in backend phase.', 'info')}
+            onClick={() => showToast('Walk-in booking form coming soon.', 'info')}
             className="flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
@@ -147,7 +205,8 @@ export default function DashboardBookingsPage() {
             </div>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={selectClass} />
             <select value={court} onChange={(e) => setCourt(e.target.value)} className={selectClass}>
-              {COURTS.map((c) => <option key={c} value={c}>{c}</option>)}
+              <option value="All Courts">All Courts</option>
+              {courtNames.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
               {STATUSES.map((s) => <option key={s} value={s}>{s === 'All' ? 'All Status' : s[0].toUpperCase() + s.slice(1)}</option>)}
@@ -198,7 +257,7 @@ export default function DashboardBookingsPage() {
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <p className="text-sm text-surface-500">
-            Showing <span className="font-medium text-surface-700">{filtered.length}</span> of {DEMO_OWNER_BOOKINGS.length} bookings
+            Showing <span className="font-medium text-surface-700">{filtered.length}</span> of {allBookings.length} bookings
           </p>
           <p className="text-xs text-surface-400">
             Revenue: <span className="font-semibold text-surface-700">{formatPrice(totalRevenue)}</span>
@@ -261,10 +320,12 @@ export default function DashboardBookingsPage() {
                     <td className="py-3.5 text-surface-600">{booking.court?.name}</td>
                     <td className="py-3.5">
                       <p className="text-surface-900">{booking.slot?.date}</p>
-                      <p className="text-xs text-surface-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" />
-                        {formatTime(booking.slot!.start_time)} – {formatTime(booking.slot!.end_time)}
-                      </p>
+                      {booking.slot && (
+                        <p className="text-xs text-surface-400 flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(booking.slot.start_time)} – {formatTime(booking.slot.end_time)}
+                        </p>
+                      )}
                     </td>
                     <td className="py-3.5 font-semibold text-surface-900">{formatPrice(booking.amount)}</td>
                     <td className="py-3.5">

@@ -3,13 +3,13 @@
 import { useMemo, useRef, useState } from 'react'
 import { Check, Upload, X, Plus } from 'lucide-react'
 import { cn, formatPrice, SPORT_LABELS, SURFACE_LABELS, AMENITY_LABELS } from '@/lib/utils'
-import { DEMO_AREAS } from '@/lib/demo-data'
 import { Button } from '@/components/ui/Button'
-import type { CourtFormData, VenueFormData, SurfaceType, SportType } from '@/types'
+import type { Area, CourtFormData, VenueFormData, SurfaceType, SportType } from '@/types'
 
 interface VenueFormProps {
   onSubmit: (data: VenueFormData) => void
   isInsideDashboard?: boolean
+  areas?: Area[]
 }
 
 const STEPS = [
@@ -34,7 +34,7 @@ function emptyCourt(): CourtFormData {
     id: crypto.randomUUID(),
     name: '',
     surface: 'turf',
-    sport: 'turf',
+    sport: 'box_cricket',
     max_players: 12,
     dimensions: '',
     price_per_slot: 0,
@@ -48,7 +48,7 @@ function initialFormData(): VenueFormData {
     name: '', address: '', area: '', phone: '', description: '',
     photos: [],
     courts: [emptyCourt()],
-    sports: ['turf'],
+    sports: ['box_cricket'],
     amenities: [],
     opening_time: '06:00', closing_time: '23:00',
     slot_duration: 60,
@@ -91,7 +91,7 @@ function CheckboxPill({ label, checked, onClick }: { label: string; checked: boo
   )
 }
 
-export function VenueForm({ onSubmit, isInsideDashboard = false }: VenueFormProps) {
+export function VenueForm({ onSubmit, isInsideDashboard = false, areas = [] }: VenueFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<VenueFormData>(initialFormData)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -157,7 +157,7 @@ export function VenueForm({ onSubmit, isInsideDashboard = false }: VenueFormProp
   const goBack = () => setCurrentStep((s) => Math.max(1, s - 1))
   const jumpTo = (step: number) => setCurrentStep(step)
 
-  const areaName = DEMO_AREAS.find((a) => a.slug === formData.area)?.name
+  const areaName = areas.find((a) => a.slug === formData.area)?.name
 
   return (
     <div className="flex flex-col gap-6">
@@ -225,7 +225,7 @@ export function VenueForm({ onSubmit, isInsideDashboard = false }: VenueFormProp
                 onChange={(e) => updateField('area', e.target.value)}
               >
                 <option value="">Select area...</option>
-                {DEMO_AREAS.map((area) => (
+                {areas.map((area) => (
                   <option key={area.slug} value={area.slug}>{area.name}</option>
                 ))}
               </select>

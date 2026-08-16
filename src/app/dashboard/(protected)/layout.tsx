@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, MapPin, Calendar, Clock, Menu, X, Bell, Settings, LogOut } from 'lucide-react'
 import { cn, formatPrice } from '@/lib/utils'
-import { DEMO_OWNER_BOOKINGS } from '@/lib/demo-data'
+import { createClient } from '@/lib/supabase'
+import { fetchOwnerBookings } from '@/lib/supabase-queries'
 import { useAuth } from '@/hooks/useAuth'
 import { Toaster } from '@/components/ui/Toaster'
+import type { Booking } from '@/types'
 
 function initials(name: string) {
   const parts = name.trim().split(' ')
@@ -21,14 +23,25 @@ const NAV_ITEMS = [
   { href: '/dashboard/slots', icon: Clock, label: 'Slot Management' },
 ]
 
-const pendingPayments = DEMO_OWNER_BOOKINGS.filter((b) => b.payment_status === 'pending' && b.status !== 'cancelled')
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [pendingPayments, setPendingPayments] = useState<Booking[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        const bookings = await fetchOwnerBookings(authUser.id)
+        setPendingPayments(bookings.filter((b) => b.payment_status === 'pending' && b.status !== 'cancelled'))
+      }
+    }
+    load()
+  }, [])
 
   const displayName = user?.full_name || 'Venue Owner'
   const displayEmail = user?.email || ''

@@ -24,10 +24,9 @@ import { CountUp } from '@/components/ui/CountUp'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { AreaSelector } from '@/components/venue/AreaSelector'
 import { VenueCard } from '@/components/venue/VenueCard'
-import { DEMO_AREAS, DEMO_VENUES, DEMO_TESTIMONIALS } from '@/lib/demo-data'
-import { loadLocalVenues } from '@/lib/local-venues'
+import { fetchAreas, fetchVenues, fetchBookingCount } from '@/lib/supabase-queries'
 import { SPORT_LABELS } from '@/lib/utils'
-import type { SportType, Venue } from '@/types'
+import type { Area, SportType, Venue } from '@/types'
 
 const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
 
@@ -42,6 +41,24 @@ const TRUST_BAR = [
   { icon: IndianRupee, label: 'No Hidden Fees' },
   { icon: ShieldCheck, label: 'Verified Venues' },
   { icon: Clock, label: '24/7 Booking' },
+]
+
+const TESTIMONIALS = [
+  {
+    id: 't1', name: 'Rohan Patel', area: 'Vesu', rating: 5,
+    comment: 'Booked a slot in under a minute. No more calling five different turfs to check availability — this just works.',
+    venue_name: 'Surat Cricket Arena',
+  },
+  {
+    id: 't2', name: 'Priya Trivedi', area: 'Adajan', rating: 5,
+    comment: 'Our office group plays every Sunday now. The slot picker makes it so easy to see what is free before we commit.',
+    venue_name: 'Champion Turf Ground',
+  },
+  {
+    id: 't3', name: 'Kunal Shah', area: 'Varachha', rating: 4,
+    comment: 'Good variety of grounds near Varachha. Prices are clearly listed upfront, no surprises when we show up.',
+    venue_name: 'Green Pitch Sports',
+  },
 ]
 
 const FAQS = [
@@ -69,12 +86,14 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [heroArea, setHeroArea] = useState('')
   const [heroSport, setHeroSport] = useState('')
-  const [allVenues, setAllVenues] = useState<Venue[]>(DEMO_VENUES)
+  const [areas, setAreas] = useState<Area[]>([])
+  const [allVenues, setAllVenues] = useState<Venue[]>([])
+  const [bookingCount, setBookingCount] = useState(0)
 
-  // Merge in browser-local venues after mount only, so the server-rendered HTML
-  // (which never sees localStorage) matches the client's first paint.
   useEffect(() => {
-    setAllVenues([...DEMO_VENUES, ...loadLocalVenues()])
+    fetchAreas().then(setAreas)
+    fetchVenues().then(setAllVenues)
+    fetchBookingCount().then(setBookingCount)
   }, [])
 
   const handleHeroSearch = () => {
@@ -88,7 +107,7 @@ export default function Home() {
     ? allVenues.filter((v) => v.area?.slug === selectedArea)
     : allVenues
 
-  const areaVenueCounts = DEMO_AREAS.map((area) => ({
+  const areaVenueCounts = areas.map((area) => ({
     ...area,
     count: allVenues.filter((v) => v.area?.slug === area.slug).length,
   })).filter((area) => area.count > 0)
@@ -126,7 +145,7 @@ export default function Home() {
                     className="w-full pl-10 pr-8 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none"
                   >
                     <option value="">Any area</option>
-                    {DEMO_AREAS.map((area) => (
+                    {areas.map((area) => (
                       <option key={area.slug} value={area.slug}>{area.name}</option>
                     ))}
                   </select>
@@ -180,7 +199,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="font-display font-bold text-2xl text-surface-900">
-                    <CountUp value={DEMO_AREAS.length} />
+                    <CountUp value={areas.length} />
                   </p>
                   <p className="text-sm text-surface-800/50">Areas</p>
                 </div>
@@ -192,7 +211,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="font-display font-bold text-2xl text-surface-900">
-                    <CountUp value={1000} suffix="+" />
+                    <CountUp value={bookingCount || 1000} suffix="+" />
                   </p>
                   <p className="text-sm text-surface-800/50">Bookings</p>
                 </div>
@@ -225,37 +244,35 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-          <h2 className="font-display font-bold text-xl text-surface-900 text-center mb-10">Popular Areas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {areaVenueCounts.map((area, index) => (
-              <ScrollReveal key={area.slug} delay={(index % 3) * 100}>
-                <Link
-                  href={`/venues?area=${area.slug}`}
-                  className="group block bg-white rounded-xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
-                >
-                  <div className="relative aspect-[16/10]">
-                    {area.image ? (
-                      <img src={area.image} alt={area.name} className="w-full h-full object-cover" />
-                    ) : (
+        {areaVenueCounts.length > 0 && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+            <h2 className="font-display font-bold text-xl text-surface-900 text-center mb-10">Popular Areas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {areaVenueCounts.map((area, index) => (
+                <ScrollReveal key={area.slug} delay={(index % 3) * 100}>
+                  <Link
+                    href={`/venues?area=${area.slug}`}
+                    className="group block bg-white rounded-xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="relative aspect-[16/10]">
                       <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600 flex items-center justify-center">
                         <MapPin className="w-10 h-10 text-white/80" />
                       </div>
-                    )}
-                  </div>
-                  <div className="p-4 flex items-center justify-between">
-                    <h3 className="font-display font-semibold text-surface-900 group-hover:text-brand-700 transition-colors">
-                      {area.name}
-                    </h3>
-                    <span className="text-sm text-surface-800/50">
-                      {area.count} venue{area.count > 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
-        </section>
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                      <h3 className="font-display font-semibold text-surface-900 group-hover:text-brand-700 transition-colors">
+                        {area.name}
+                      </h3>
+                      <span className="text-sm text-surface-800/50">
+                        {area.count} venue{area.count > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </Link>
+                </ScrollReveal>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <div className="flex items-center justify-between mb-6">
@@ -266,7 +283,7 @@ export default function Home() {
           </div>
 
           <div className="mb-6">
-            <AreaSelector areas={DEMO_AREAS} selectedArea={selectedArea} onChange={setSelectedArea} />
+            <AreaSelector areas={areas} selectedArea={selectedArea} onChange={setSelectedArea} />
           </div>
 
           {filteredVenues.length > 0 ? (
@@ -291,7 +308,7 @@ export default function Home() {
               What Players Are Saying
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {DEMO_TESTIMONIALS.map((testimonial, index) => (
+              {TESTIMONIALS.map((testimonial, index) => (
                 <ScrollReveal key={testimonial.id} delay={(index % 3) * 100}>
                   <div className="bg-white rounded-xl border border-surface-200 p-5">
                     <div className="flex items-center gap-0.5 mb-3">

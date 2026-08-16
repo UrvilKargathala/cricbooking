@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -21,10 +21,12 @@ import {
 import { SlotPicker } from '@/components/booking/SlotPicker'
 import { VenueGallery } from '@/components/venue/VenueGallery'
 import { VenueCard } from '@/components/venue/VenueCard'
-import { DEMO_VENUES, DEMO_VENUE_REVIEWS, generateDemoSlots } from '@/lib/demo-data'
+import { createClient } from '@/lib/supabase'
+import { fetchSlots, fetchVenueReviews, fetchVenues } from '@/lib/supabase-queries'
 import { AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS, formatPrice, formatTime } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
-import type { Slot, Venue } from '@/types'
+import { useToastStore } from '@/store/useToastStore'
+import type { Slot, Venue, Review } from '@/types'
 
 type ReviewSort = 'recent' | 'highest' | 'lowest'
 
@@ -32,29 +34,77 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
   const [reviewSort, setReviewSort] = useState<ReviewSort>('recent')
+  const [reviews, setReviews] = useState<(Review & { name?: string })[]>([])
+  const [slots, setSlots] = useState<Slot[]>([])
+  const [similarVenues, setSimilarVenues] = useState<Venue[]>([])
+  const [justUpdated, setJustUpdated] = useState<Set<string>>(new Set())
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
+  const showToast = useToastStore((s) => s.showToast)
+
+  useEffect(() => {
+    fetchVenueReviews(venue.id).then((data) =>
+      setReviews(data.map((r) => ({ ...r, name: (r as unknown as Record<string, unknown>).user ? ((r as unknown as Record<string, unknown>).user as Record<string, string>).full_name : 'Anonymous' })))
+    )
+    fetchVenues().then((all) =>
+      setSimilarVenues(
+        all.filter((v) => v.id !== venue.id && (v.area?.slug === venue.area?.slug || v.sports.some((s) => venue.sports.includes(s)))).slice(0, 3)
+      )
+    )
+  }, [venue.id, venue.area?.slug, venue.sports])
+
+  useEffect(() => {
+    if (!venue.courts?.length) return
+    Promise.all(venue.courts.map((c) => fetchSlots(c.id, selectedDate))).then((results) =>
+      setSlots(results.flat())
+    )
+  }, [venue.courts, selectedDate])
+
+  useEffect(() => {
+    if (!venue.courts?.length) return
+    const supabase = createClient()
+    const courtIds = venue.courts.map((c) => c.id)
+    const channels = courtIds.map((courtId) =>
+      supabase
+        .channel(`slots-${courtId}-${selectedDate}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'slots', filter: `court_id=eq.${courtId}` },
+          (payload) => {
+            if (payload.eventType === 'UPDATE') {
+              setSlots((prev) => prev.map((s) =>
+                s.id === payload.new.id
+                  ? { ...s, status: payload.new.status, blocked_reason: payload.new.blocked_reason }
+                  : s
+              ))
+              setJustUpdated((prev) => new Set(prev).add(payload.new.id))
+              setTimeout(() => setJustUpdated((prev) => { const next = new Set(prev); next.delete(payload.new.id); return next }), 2000)
+              if (payload.new.status === 'booked' || payload.new.status === 'blocked') {
+                showToast('A slot was just updated by another user', 'info')
+              }
+            } else if (payload.eventType === 'INSERT' && payload.new.date === selectedDate) {
+              setSlots((prev) => {
+                if (prev.some((s) => s.id === payload.new.id)) return prev
+                return [...prev, payload.new as Slot].sort((a, b) => a.start_time.localeCompare(b.start_time))
+              })
+            }
+          }
+        )
+        .subscribe()
+    )
+    return () => { channels.forEach((ch) => supabase.removeChannel(ch)) }
+  }, [venue.courts, selectedDate, showToast])
 
   const handleToggleFavorite = async () => {
     const result = await toggleFavorite(venue.id)
     if (result === 'signed_out') router.push('/login')
   }
 
-  const slots = useMemo(
-    () => (venue.courts ?? []).flatMap((court) => generateDemoSlots(court.id, selectedDate)),
-    [venue.courts, selectedDate]
-  )
-
-  const reviews = useMemo(() => {
-    const list = DEMO_VENUE_REVIEWS.filter((r) => r.venue_id === venue.id)
-    if (reviewSort === 'highest') return [...list].sort((a, b) => b.rating - a.rating)
-    if (reviewSort === 'lowest') return [...list].sort((a, b) => a.rating - b.rating)
-    return [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }, [venue.id, reviewSort])
-
-  const similarVenues = DEMO_VENUES.filter(
-    (v) => v.id !== venue.id && (v.area?.slug === venue.area?.slug || v.sports.some((s) => venue.sports.includes(s)))
-  ).slice(0, 3)
+  const sortedReviews = useMemo(() => {
+    if (reviewSort === 'highest') return [...reviews].sort((a, b) => b.rating - a.rating)
+    if (reviewSort === 'lowest') return [...reviews].sort((a, b) => a.rating - b.rating)
+    return [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }, [reviews, reviewSort])
 
   const handleBook = (selectedSlots: Slot[], totalAmount: number) => {
     alert(`Booked ${selectedSlots.length} slot(s) for ${formatPrice(totalAmount)}. Confirmation coming soon!`)
@@ -66,7 +116,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
       try {
         await navigator.share({ title: venue.name, url })
       } catch {
-        // user cancelled share sheet, nothing to do
+        // user cancelled
       }
     } else {
       await navigator.clipboard.writeText(url)
@@ -211,7 +261,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
               <div className="flex flex-wrap gap-2">
                 {venue.sports.map((sport) => (
                   <span key={sport} className="bg-brand-50 text-brand-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                    {SPORT_LABELS[sport]}
+                    {SPORT_LABELS[sport] ?? sport}
                   </span>
                 ))}
               </div>
@@ -244,7 +294,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                     <div>
                       <p className="text-sm font-medium text-surface-900">{court.name}</p>
                       <p className="text-xs text-surface-800/60">
-                        {SURFACE_LABELS[court.surface]} · {SPORT_LABELS[court.sport]}
+                        {SURFACE_LABELS[court.surface] ?? court.surface} · {SPORT_LABELS[court.sport] ?? court.sport}
                       </p>
                       <div className="flex items-center gap-3 mt-1 text-xs text-surface-800/50">
                         {court.max_players > 0 && (
@@ -301,7 +351,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                     {venue.rating.toFixed(1)}
                     <span className="text-surface-800/50">({venue.total_reviews})</span>
                   </span>
-                  {reviews.length > 1 && (
+                  {sortedReviews.length > 1 && (
                     <select
                       value={reviewSort}
                       onChange={(e) => setReviewSort(e.target.value as ReviewSort)}
@@ -314,16 +364,16 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                   )}
                 </div>
               </div>
-              {reviews.length > 0 ? (
+              {sortedReviews.length > 0 ? (
                 <div className="flex flex-col gap-4">
-                  {reviews.map((review) => (
+                  {sortedReviews.map((review) => (
                     <div key={review.id} className="flex gap-3">
                       <div className="w-9 h-9 rounded-full bg-brand-50 text-brand-700 font-display font-semibold text-sm flex items-center justify-center shrink-0">
-                        {review.name.charAt(0)}
+                        {(review.name ?? 'A').charAt(0)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-surface-900">{review.name}</p>
+                          <p className="text-sm font-medium text-surface-900">{review.name ?? 'Anonymous'}</p>
                           <span className="text-xs text-surface-800/40">
                             {new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                           </span>
@@ -354,6 +404,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                   selectedDate={selectedDate}
                   onDateChange={setSelectedDate}
                   onBook={handleBook}
+                  justUpdated={justUpdated}
                 />
               ) : (
                 <p className="text-sm text-surface-800/60">No courts available for this venue.</p>

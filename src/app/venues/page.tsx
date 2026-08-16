@@ -8,10 +8,9 @@ import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
-import { DEMO_AREAS, DEMO_VENUES } from '@/lib/demo-data'
-import { loadLocalVenues } from '@/lib/local-venues'
+import { fetchAreas, fetchVenues } from '@/lib/supabase-queries'
 import { SPORT_LABELS } from '@/lib/utils'
-import type { SportType, Venue } from '@/types'
+import type { Area, SportType, Venue } from '@/types'
 
 const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
 
@@ -33,12 +32,12 @@ function VenuesPageContent() {
   )
   const [sort, setSort] = useState<SortOption>('default')
   const [query, setQuery] = useState('')
-  const [allVenues, setAllVenues] = useState<Venue[]>(DEMO_VENUES)
+  const [areas, setAreas] = useState<Area[]>([])
+  const [allVenues, setAllVenues] = useState<Venue[]>([])
 
-  // Merge in browser-local venues after mount only, so the server-rendered HTML
-  // (which never sees localStorage) matches the client's first paint.
   useEffect(() => {
-    setAllVenues([...DEMO_VENUES, ...loadLocalVenues()])
+    fetchAreas().then(setAreas)
+    fetchVenues().then(setAllVenues)
   }, [])
 
   const venueMinPrice = (venue: Venue) =>
@@ -99,7 +98,7 @@ function VenuesPageContent() {
               className="px-3 py-2 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               <option value="">All Areas</option>
-              {DEMO_AREAS.map((area) => (
+              {areas.map((area) => (
                 <option key={area.slug} value={area.slug}>{area.name}</option>
               ))}
             </select>

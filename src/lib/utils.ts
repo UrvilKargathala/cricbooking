@@ -58,8 +58,12 @@ export const AMENITY_ICONS: Record<string, typeof Car> = {
 }
 
 export const SPORT_LABELS: Record<string, string> = {
-  turf: 'Turf',
-  cricket_ground: 'Cricket Ground',
+  box_cricket: 'Box Cricket',
+  cricket: 'Cricket',
+  football: 'Football',
+  badminton: 'Badminton',
+  tennis: 'Tennis',
+  multi_sport: 'Multi Sport',
 }
 
 export const SURFACE_LABELS: Record<string, string> = {

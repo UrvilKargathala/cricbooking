@@ -7,19 +7,16 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { VenueCard } from '@/components/venue/VenueCard'
-import { DEMO_VENUES } from '@/lib/demo-data'
-import { loadLocalVenues } from '@/lib/local-venues'
+import { fetchVenues } from '@/lib/supabase-queries'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { Venue } from '@/types'
 
 export default function WishlistPage() {
   const { favoriteIds, loading } = useFavorites()
-  const [allVenues, setAllVenues] = useState<Venue[]>(DEMO_VENUES)
+  const [allVenues, setAllVenues] = useState<Venue[]>([])
 
-  // Merge in browser-local venues after mount only, so the server-rendered HTML
-  // (which never sees localStorage) matches the client's first paint.
   useEffect(() => {
-    setAllVenues([...DEMO_VENUES, ...loadLocalVenues()])
+    fetchVenues().then(setAllVenues)
   }, [])
 
   const savedVenues = allVenues.filter((v) => favoriteIds.has(v.id))

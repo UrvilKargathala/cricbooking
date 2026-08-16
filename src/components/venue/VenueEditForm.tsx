@@ -3,15 +3,15 @@
 import { useState } from 'react'
 import { Check, Plus, Users, Ruler } from 'lucide-react'
 import { cn, formatPrice, AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS } from '@/lib/utils'
-import { DEMO_AREAS } from '@/lib/demo-data'
 import { Button } from '@/components/ui/Button'
 import { VenueGallery } from '@/components/venue/VenueGallery'
-import type { Venue, Court, SportType, SurfaceType } from '@/types'
+import type { Area, Venue, Court, SportType, SurfaceType } from '@/types'
 
 interface VenueEditFormProps {
   venue: Venue
   onSave: (venue: Venue) => void
   onCancel: () => void
+  areas?: Area[]
 }
 
 const inputClass =
@@ -28,7 +28,7 @@ function emptyCourt(venueId: string): Court {
     venue_id: venueId,
     name: '',
     surface: 'turf',
-    sport: 'turf',
+    sport: 'box_cricket',
     max_players: 12,
     dimensions: '',
     price_per_slot: 0,
@@ -57,7 +57,7 @@ function Pill({ label, checked, onClick, icon: Icon }: { label: string; checked:
   )
 }
 
-export function VenueEditForm({ venue, onSave, onCancel }: VenueEditFormProps) {
+export function VenueEditForm({ venue, onSave, onCancel, areas = [] }: VenueEditFormProps) {
   const [form, setForm] = useState<Venue>(venue)
 
   const update = <K extends keyof Venue>(field: K, value: Venue[K]) => setForm((prev) => ({ ...prev, [field]: value }))
@@ -76,7 +76,7 @@ export function VenueEditForm({ venue, onSave, onCancel }: VenueEditFormProps) {
   }
 
   const setArea = (slug: string) => {
-    const area = DEMO_AREAS.find((a) => a.slug === slug)
+    const area = areas.find((a) => a.slug === slug)
     setForm((prev) => ({ ...prev, area_id: area?.id ?? null, area }))
   }
 
@@ -115,7 +115,7 @@ export function VenueEditForm({ venue, onSave, onCancel }: VenueEditFormProps) {
           <label className="block text-sm font-medium text-surface-800 mb-1.5">Area in Surat</label>
           <select className={inputClass} value={form.area?.slug ?? ''} onChange={(e) => setArea(e.target.value)}>
             <option value="">Select area...</option>
-            {DEMO_AREAS.map((area) => (
+            {areas.map((area) => (
               <option key={area.slug} value={area.slug}>{area.name}</option>
             ))}
           </select>

@@ -13,6 +13,7 @@ interface SlotPickerProps {
   selectedDate: string
   onDateChange: (date: string) => void
   onBook: (selectedSlots: Slot[], totalAmount: number) => void
+  justUpdated?: Set<string>
 }
 
 const TIME_GROUPS = [
@@ -31,7 +32,7 @@ function groupByTimeOfDay(slots: Slot[]) {
   })).filter((group) => group.slots.length > 0)
 }
 
-export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook }: SlotPickerProps) {
+export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook, justUpdated }: SlotPickerProps) {
   const [activeCourt, setActiveCourt] = useState(courts[0]?.id ?? '')
   const [selectedSlots, setSelectedSlots] = useState<Slot[]>([])
 
@@ -41,6 +42,13 @@ export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook }
 
   const courtSlots = slots.filter((s) => s.court_id === activeCourt)
   const slotGroups = groupByTimeOfDay(courtSlots)
+
+  useEffect(() => {
+    setSelectedSlots((prev) => prev.filter((s) => {
+      const current = slots.find((sl) => sl.id === s.id)
+      return current?.status === 'available'
+    }))
+  }, [slots])
 
   const toggleSlot = (slot: Slot) => {
     if (slot.status !== 'available') return
@@ -105,7 +113,8 @@ export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook }
                       'flex flex-col items-center justify-center gap-0.5 py-2.5 px-2 rounded-lg border text-xs font-medium transition-colors',
                       isSelected && 'bg-brand-600 text-white border-brand-600 ring-2 ring-brand-300',
                       isDisabled && 'bg-surface-100 text-surface-800/30 border-surface-200 line-through cursor-not-allowed',
-                      !isSelected && !isDisabled && 'bg-white text-surface-800 border-surface-200 hover:border-brand-400 hover:bg-brand-50'
+                      !isSelected && !isDisabled && 'bg-white text-surface-800 border-surface-200 hover:border-brand-400 hover:bg-brand-50',
+                      justUpdated?.has(slot.id) && 'animate-pulse ring-2 ring-amber-400'
                     )}
                   >
                     <span className="flex items-center gap-1">

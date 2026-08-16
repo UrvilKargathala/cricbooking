@@ -1,31 +1,55 @@
-import type { Metadata } from 'next'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { MapPin } from 'lucide-react'
+import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { VenueDetailClient } from '@/components/venue/VenueDetailClient'
-import { LocalVenueDetail } from '@/components/venue/LocalVenueDetail'
-import { DEMO_VENUES } from '@/lib/demo-data'
+import { fetchVenueBySlug } from '@/lib/supabase-queries'
+import type { Venue } from '@/types'
 
-interface VenuePageProps {
-  params: { slug: string }
-}
+export default function VenueDetailPage({ params }: { params: { slug: string } }) {
+  const [venue, setVenue] = useState<Venue | null | undefined>(undefined)
 
-export function generateMetadata({ params }: VenuePageProps): Metadata {
-  const venue = DEMO_VENUES.find((v) => v.slug === params.slug)
-  if (!venue) return { title: 'Venue Not Found - CricBooking' }
+  useEffect(() => {
+    fetchVenueBySlug(params.slug).then((v) => setVenue(v))
+  }, [params.slug])
 
-  return {
-    title: `${venue.name} - Book Now | CricBooking`,
-    description: venue.description ?? `Book ${venue.name} in ${venue.area?.name ?? 'Surat'} on CricBooking.`,
+  if (venue === undefined) {
+    return (
+      <>
+        <Header />
+        <main className="max-w-xl mx-auto px-4 sm:px-6 py-20 text-center">
+          <div className="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-surface-800/60 mt-4">Loading venue...</p>
+        </main>
+        <Footer />
+      </>
+    )
   }
-}
 
-export default function VenueDetailPage({ params }: VenuePageProps) {
-  const venue = DEMO_VENUES.find((v) => v.slug === params.slug)
+  if (!venue) {
+    return (
+      <>
+        <Header />
+        <main className="max-w-xl mx-auto px-4 sm:px-6 py-20 text-center">
+          <MapPin className="w-10 h-10 text-surface-800/30 mx-auto mb-3" />
+          <h1 className="font-display font-bold text-xl text-surface-900">Venue not found</h1>
+          <p className="text-sm text-surface-800/60 mt-1">This venue doesn&apos;t exist or has been removed.</p>
+          <Link href="/venues" className="text-brand-600 font-medium hover:underline text-sm mt-4 inline-block">
+            Browse all venues
+          </Link>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
       <Header />
-      {venue ? <VenueDetailClient venue={venue} /> : <LocalVenueDetail slug={params.slug} />}
+      <VenueDetailClient venue={venue} />
       <Footer />
     </>
   )

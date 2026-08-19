@@ -36,7 +36,8 @@ async function getVenueContext() {
   }
 
   const venueList = (venues || []).map((v) => {
-    const area = (v.area as { name: string } | null)?.name || 'Surat'
+    const areaData = v.area as unknown as { name: string } | { name: string }[] | null
+    const area = (Array.isArray(areaData) ? areaData[0]?.name : areaData?.name) || 'Surat'
     const prices = (v.courts || []).map((c: { price_per_slot: number }) => c.price_per_slot)
     const minPrice = prices.length ? Math.min(...prices) : 0
     return `- ${v.name} (${area}) | Rating: ${v.rating}/5 | From ₹${minPrice}/slot | Sports: ${(v.sports || []).join(', ')} | Amenities: ${(v.amenities || []).join(', ')} | Book at: /venues/${v.slug}`

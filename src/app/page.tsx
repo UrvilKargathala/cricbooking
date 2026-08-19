@@ -178,67 +178,54 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-b border-surface-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col items-center gap-8">
-            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
-                  <Building2 className="w-6 h-6 text-brand-600" />
-                </div>
-                <div>
-                  <p className="font-display font-bold text-2xl text-surface-900">
+        <section className="relative -mt-6 z-10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 px-6 py-8 sm:px-10 sm:py-10">
+              <div className="grid grid-cols-3 gap-4 sm:gap-8">
+                <div className="text-center">
+                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
                     <CountUp value={allVenues.length} suffix="+" />
                   </p>
-                  <p className="text-sm text-surface-800/50">Venues</p>
+                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Verified Venues</p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
-                  <MapPin className="w-6 h-6 text-brand-600" />
-                </div>
-                <div>
-                  <p className="font-display font-bold text-2xl text-surface-900">
+                <div className="text-center border-x border-surface-200">
+                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
                     <CountUp value={areas.length} />
                   </p>
-                  <p className="text-sm text-surface-800/50">Areas</p>
+                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Areas in Surat</p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-surface-200 shadow-sm p-5 flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
-                  <CalendarCheck className="w-6 h-6 text-brand-600" />
-                </div>
-                <div>
-                  <p className="font-display font-bold text-2xl text-surface-900">
+                <div className="text-center">
+                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
                     <CountUp value={bookingCount || 1000} suffix="+" />
                   </p>
-                  <p className="text-sm text-surface-800/50">Bookings</p>
+                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Bookings Made</p>
                 </div>
               </div>
-            </div>
-
-            <div className="w-full pt-6 border-t border-surface-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {TRUST_BAR.map((item) => (
-                <div key={item.label} className="flex items-center gap-2 justify-center sm:justify-start">
-                  <item.icon className="w-4 h-4 text-brand-600 shrink-0" />
-                  <span className="text-sm text-surface-800/70">{item.label}</span>
-                </div>
-              ))}
+              <div className="mt-6 pt-6 border-t border-surface-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {TRUST_BAR.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 justify-center bg-surface-50 rounded-lg py-2.5 px-3">
+                    <item.icon className="w-4 h-4 text-brand-600 shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium text-surface-800/70">{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-16">
-          <h2 className="font-display font-bold text-xl text-surface-900 text-center mb-10">How It Works</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {HOW_IT_WORKS.map((step) => (
-              <div key={step.title} className="bg-white rounded-xl border border-surface-200 p-6 text-center">
-                <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <step.icon className="w-6 h-6 text-brand-600" />
+        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 py-20 scroll-mt-16">
+          <h2 className="font-display font-bold text-2xl text-surface-900 text-center">How It Works</h2>
+          <p className="text-surface-800/50 text-center mt-2 mb-12">Book your next match in three simple steps</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
+            <div className="hidden sm:block absolute top-10 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px border-t-2 border-dashed border-brand-200" />
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={step.title} className="relative flex flex-col items-center text-center">
+                <div className="relative z-10 w-14 h-14 rounded-full bg-brand-600 text-white flex items-center justify-center mb-5 shadow-md shadow-brand-600/20">
+                  <step.icon className="w-6 h-6" />
                 </div>
-                <h3 className="font-display font-semibold text-surface-900">{step.title}</h3>
-                <p className="text-sm text-surface-800/60 mt-1.5">{step.description}</p>
+                <span className="text-[11px] font-bold tracking-widest text-brand-600 uppercase mb-1.5">Step {i + 1}</span>
+                <h3 className="font-display font-semibold text-lg text-surface-900">{step.title}</h3>
+                <p className="text-sm text-surface-800/60 mt-1.5 max-w-[240px]">{step.description}</p>
               </div>
             ))}
           </div>

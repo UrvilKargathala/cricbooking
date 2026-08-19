@@ -7,8 +7,6 @@ import {
   Search,
   MapPin,
   Calendar,
-  CalendarCheck,
-  Building2,
   Shield,
   Zap,
   IndianRupee,

@@ -20,10 +20,17 @@ export default function LoginPage() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   const submittingRef = useRef(false)
 
+  const getRedirect = () => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('redirect') || null
+  }
+
   useEffect(() => {
     if (submittingRef.current) return
     if (!authLoading && user) {
-      if (user.role === 'owner') router.push('/dashboard')
+      const redirect = getRedirect()
+      if (redirect) router.push(redirect)
+      else if (user.role === 'owner') router.push('/dashboard')
       else router.push('/')
     }
   }, [user, authLoading, router])
@@ -131,7 +138,10 @@ export default function LoginPage() {
       profile = { role: 'user' as const }
     }
 
-    if (profile.role === 'owner') {
+    const redirect = getRedirect()
+    if (redirect) {
+      router.push(redirect)
+    } else if (profile.role === 'owner') {
       router.push('/dashboard')
     } else {
       router.push('/')

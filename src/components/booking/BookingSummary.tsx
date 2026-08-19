@@ -7,9 +7,10 @@ interface BookingSummaryProps {
   selectedCount: number
   totalAmount: number
   onBook: () => void
+  loading?: boolean
 }
 
-export function BookingSummary({ selectedCount, totalAmount, onBook }: BookingSummaryProps) {
+export function BookingSummary({ selectedCount, totalAmount, onBook, loading }: BookingSummaryProps) {
   if (selectedCount === 0) return null
 
   return (
@@ -20,8 +21,8 @@ export function BookingSummary({ selectedCount, totalAmount, onBook }: BookingSu
         </p>
         <p className="font-display font-bold text-xl text-surface-900">{formatPrice(totalAmount)}</p>
       </div>
-      <Button variant="primary" size="lg" onClick={onBook}>
-        Book Now
+      <Button variant="primary" size="lg" onClick={onBook} disabled={loading}>
+        {loading ? 'Processing...' : 'Book Now'}
       </Button>
     </div>
   )

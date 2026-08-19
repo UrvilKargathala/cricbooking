@@ -14,6 +14,7 @@ interface SlotPickerProps {
   onDateChange: (date: string) => void
   onBook: (selectedSlots: Slot[], totalAmount: number) => void
   justUpdated?: Set<string>
+  bookingLoading?: boolean
 }
 
 const TIME_GROUPS = [
@@ -32,7 +33,7 @@ function groupByTimeOfDay(slots: Slot[]) {
   })).filter((group) => group.slots.length > 0)
 }
 
-export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook, justUpdated }: SlotPickerProps) {
+export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook, justUpdated, bookingLoading }: SlotPickerProps) {
   const [activeCourt, setActiveCourt] = useState(courts[0]?.id ?? '')
   const [selectedSlots, setSelectedSlots] = useState<Slot[]>([])
 
@@ -151,6 +152,7 @@ export function SlotPicker({ courts, slots, selectedDate, onDateChange, onBook, 
         selectedCount={selectedSlots.length}
         totalAmount={totalAmount}
         onBook={() => onBook(selectedSlots, totalAmount)}
+        loading={bookingLoading}
       />
     </div>
   )

@@ -26,6 +26,7 @@ import { fetchSlots, fetchVenueReviews, fetchVenues } from '@/lib/supabase-queri
 import { AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS, formatPrice, formatTime } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useToastStore } from '@/store/useToastStore'
+import { useAuth } from '@/hooks/useAuth'
 import type { Slot, Venue, Review } from '@/types'
 
 type ReviewSort = 'recent' | 'highest' | 'lowest'
@@ -38,9 +39,11 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [similarVenues, setSimilarVenues] = useState<Venue[]>([])
   const [justUpdated, setJustUpdated] = useState<Set<string>>(new Set())
+  const [bookingLoading, setBookingLoading] = useState(false)
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
   const showToast = useToastStore((s) => s.showToast)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchVenueReviews(venue.id).then((data) =>
@@ -106,8 +109,88 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
     return [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }, [reviews, reviewSort])
 
-  const handleBook = (selectedSlots: Slot[], totalAmount: number) => {
-    alert(`Booked ${selectedSlots.length} slot(s) for ${formatPrice(totalAmount)}. Confirmation coming soon!`)
+  const handleBook = async (selectedSlots: Slot[], totalAmount: number) => {
+    const supabase = createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+
+    if (!authUser) {
+      router.push(`/login?redirect=${encodeURIComponent(`/venues/${venue.slug}#book-a-slot`)}`)
+      return
+    }
+
+    setBookingLoading(true)
+
+    try {
+      const courtId = selectedSlots[0].court_id
+      const res = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          slot_ids: selectedSlots.map((s) => s.id),
+          venue_id: venue.id,
+          court_id: courtId,
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        showToast(err.error || 'Failed to create order', 'error')
+        setBookingLoading(false)
+        return
+      }
+
+      const { order_id, amount, currency } = await res.json()
+
+      const options: RazorpayOptions = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        amount,
+        currency,
+        name: 'CricBooking',
+        description: `${selectedSlots.length} slot(s) at ${venue.name}`,
+        order_id,
+        prefill: {
+          name: user?.full_name || '',
+          email: user?.email || authUser.email || '',
+          contact: user?.phone || '',
+        },
+        theme: { color: '#16a34a' },
+        handler: async (response: RazorpayResponse) => {
+          const verifyRes = await fetch('/api/razorpay/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...response,
+              slot_ids: selectedSlots.map((s) => s.id),
+              venue_id: venue.id,
+              court_id: courtId,
+              amount: totalAmount,
+            }),
+          })
+
+          if (verifyRes.ok) {
+            const { bookings } = await verifyRes.json()
+            const codes = bookings.map((b: { booking_code: string }) => b.booking_code).join(',')
+            router.push(`/bookings/confirmed?codes=${codes}`)
+          } else {
+            showToast('Payment verified but booking failed. Contact support.', 'error')
+          }
+          setBookingLoading(false)
+        },
+        modal: {
+          ondismiss: () => {
+            setBookingLoading(false)
+            showToast('Payment cancelled', 'info')
+          },
+        },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch {
+      showToast('Something went wrong. Please try again.', 'error')
+      setBookingLoading(false)
+    }
   }
 
   const handleShare = async () => {
@@ -405,6 +488,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                   onDateChange={setSelectedDate}
                   onBook={handleBook}
                   justUpdated={justUpdated}
+                  bookingLoading={bookingLoading}
                 />
               ) : (
                 <p className="text-sm text-surface-800/60">No courts available for this venue.</p>

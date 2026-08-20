@@ -4,7 +4,6 @@ import { useRef, useState } from 'react'
 import { Check, Plus, Upload, X, Users, Ruler } from 'lucide-react'
 import { cn, formatPrice, AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
-import { VenueGallery } from '@/components/venue/VenueGallery'
 import { createClient } from '@/lib/supabase'
 import type { Area, Venue, Court, SportType, SurfaceType } from '@/types'
 

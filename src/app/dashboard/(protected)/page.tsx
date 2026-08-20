@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   Calendar, IndianRupee, TrendingUp, Clock,
-  Percent, Zap, Ban, AlertCircle, MapPin,
+  Zap, Ban, AlertCircle, MapPin,
   Users, BarChart3, ArrowRight,
 } from 'lucide-react'
 import { formatPrice, formatTime } from '@/lib/utils'

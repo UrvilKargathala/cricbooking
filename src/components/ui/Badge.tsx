@@ -29,7 +29,7 @@ interface BadgeProps {
 }
 
 export function Badge({ variant, children }: BadgeProps) {
-  const classes = variantClasses[variant]
+  const classes = variantClasses[variant] || { bg: 'bg-surface-100 text-surface-800', dot: 'bg-gray-400' }
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full', classes.bg)}>
       <span className={cn('w-1.5 h-1.5 rounded-full', classes.dot)} />

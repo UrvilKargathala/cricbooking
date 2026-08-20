@@ -223,10 +223,11 @@ export default function DashboardVenuesPage() {
     if (!ownerId) return
     const supabase = createClient()
     const area = areas.find((a) => a.slug === data.area)
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     const { data: venueData, error } = await supabase.from('venues').insert({
       owner_id: ownerId,
       name: data.name,
-      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug,
       description: data.description || null,
       address: data.address,
       area_id: area?.id ?? null,
@@ -261,6 +262,25 @@ export default function DashboardVenuesPage() {
           night_price: c.night_price || null,
         }))
       )
+    }
+
+    if (venueData && data.photos.length > 0) {
+      const imageUrls: string[] = []
+      for (const file of data.photos) {
+        const ext = file.name.split('.').pop() || 'jpg'
+        const path = `${venueData.id}/${crypto.randomUUID()}.${ext}`
+        const { error: uploadErr } = await supabase.storage.from('venue-images').upload(path, file)
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('venue-images').getPublicUrl(path)
+          imageUrls.push(urlData.publicUrl)
+        }
+      }
+      if (imageUrls.length > 0) {
+        await supabase.from('venues').update({
+          cover_image: imageUrls[0],
+          images: imageUrls,
+        }).eq('id', venueData.id)
+      }
     }
 
     showToast(`"${data.name}" has been added to your account.`, 'success')

@@ -299,7 +299,7 @@ export function VenueForm({ onSubmit, isInsideDashboard = false, areas = [] }: V
           )}
 
           <p className="text-sm text-surface-800/50 mt-3">
-            Photos will be uploaded when your venue is approved. For now, they&apos;re saved locally.
+            Photos will be uploaded automatically when you submit your venue.
           </p>
         </div>
       )}

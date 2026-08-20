@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, Plus, Users, Ruler } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Check, Plus, Upload, X, Users, Ruler } from 'lucide-react'
 import { cn, formatPrice, AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { VenueGallery } from '@/components/venue/VenueGallery'
+import { createClient } from '@/lib/supabase'
 import type { Area, Venue, Court, SportType, SurfaceType } from '@/types'
 
 interface VenueEditFormProps {
@@ -59,6 +60,8 @@ function Pill({ label, checked, onClick, icon: Icon }: { label: string; checked:
 
 export function VenueEditForm({ venue, onSave, onCancel, areas = [] }: VenueEditFormProps) {
   const [form, setForm] = useState<Venue>(venue)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const update = <K extends keyof Venue>(field: K, value: Venue[K]) => setForm((prev) => ({ ...prev, [field]: value }))
 
@@ -94,8 +97,68 @@ export function VenueEditForm({ venue, onSave, onCancel, areas = [] }: VenueEdit
 
       <div className="bg-white rounded-xl border border-surface-200 p-5">
         <h4 className="font-display font-semibold text-surface-900 mb-3">Photos</h4>
-        <VenueGallery images={form.images.length ? form.images : form.cover_image ? [form.cover_image] : []} alt={form.name} />
-        <p className="text-sm text-surface-800/50 mt-3">Photo re-upload isn&apos;t available yet — add new ones by resubmitting via the venue form.</p>
+        {form.images.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+            {form.images.map((url, i) => (
+              <div key={url} className="aspect-square rounded-lg overflow-hidden relative group">
+                <img src={url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = form.images.filter((_, idx) => idx !== i)
+                    const supabase = createClient()
+                    await supabase.from('venues').update({
+                      cover_image: next[0] || null,
+                      images: next,
+                    }).eq('id', form.id)
+                    setForm((prev) => ({ ...prev, images: next, cover_image: next[0] || null }))
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+                {i === 0 && (
+                  <span className="absolute bottom-1 left-1 text-[10px] bg-brand-600 text-white px-1.5 py-0.5 rounded">Cover</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
+          const files = Array.from(e.target.files ?? [])
+          if (!files.length) return
+          e.target.value = ''
+          setUploading(true)
+          const supabase = createClient()
+          const newUrls: string[] = []
+          for (const file of files) {
+            const ext = file.name.split('.').pop() || 'jpg'
+            const path = `${form.id}/${crypto.randomUUID()}.${ext}`
+            const { error } = await supabase.storage.from('venue-images').upload(path, file)
+            if (!error) {
+              const { data } = supabase.storage.from('venue-images').getPublicUrl(path)
+              newUrls.push(data.publicUrl)
+            }
+          }
+          if (newUrls.length > 0) {
+            const allImages = [...form.images, ...newUrls]
+            await supabase.from('venues').update({
+              cover_image: allImages[0],
+              images: allImages,
+            }).eq('id', form.id)
+            setForm((prev) => ({ ...prev, images: allImages, cover_image: allImages[0] }))
+          }
+          setUploading(false)
+        }} />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="border-2 border-dashed border-surface-200 rounded-xl p-6 text-center hover:border-brand-400 hover:bg-brand-50/30 transition-colors cursor-pointer w-full disabled:opacity-50"
+        >
+          <Upload className="w-8 h-8 text-surface-800/30 mx-auto" />
+          <p className="text-sm text-surface-800/60 mt-2">{uploading ? 'Uploading...' : 'Click to add photos'}</p>
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border border-surface-200 p-5 flex flex-col gap-4">

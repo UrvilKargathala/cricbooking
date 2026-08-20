@@ -18,7 +18,10 @@ function todayStr() {
 function addDays(dateStr: string, days: number) {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function isWeekend(dateStr: string) {
@@ -659,7 +662,7 @@ export default function DashboardSlotsPage() {
         onAction={handleSlotAction}
       />
 
-      {activeCourtObj && activeVenue && (
+      {showGenerate && activeCourtObj && activeVenue && (
         <GenerateSlotsModal
           isOpen={showGenerate}
           onClose={() => setShowGenerate(false)}

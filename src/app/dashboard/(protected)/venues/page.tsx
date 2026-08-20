@@ -279,6 +279,10 @@ export default function DashboardVenuesPage() {
       sports: updated.sports,
       opening_time: updated.opening_time,
       closing_time: updated.closing_time,
+      min_advance_hours: updated.min_advance_hours,
+      max_advance_days: updated.max_advance_days,
+      cancellation_hours: updated.cancellation_hours,
+      cancellation_refund_pct: updated.cancellation_refund_pct,
     }).eq('id', updated.id)
 
     setEditingVenue(null)

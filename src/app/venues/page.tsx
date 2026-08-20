@@ -31,13 +31,15 @@ function VenuesPageContent() {
     (searchParams.get('sport') as SportType | null) ?? 'all'
   )
   const [sort, setSort] = useState<SortOption>('default')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [areas, setAreas] = useState<Area[]>([])
   const [allVenues, setAllVenues] = useState<Venue[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAreas().then(setAreas)
-    fetchVenues().then(setAllVenues)
+    Promise.all([fetchAreas().then(setAreas), fetchVenues().then(setAllVenues)]).finally(() =>
+      setLoading(false)
+    )
   }, [])
 
   const venueMinPrice = (venue: Venue) =>
@@ -77,7 +79,7 @@ function VenuesPageContent() {
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-surface-900">All Venues in Surat</h1>
-        <p className="text-sm text-surface-800/60 mt-1">{filteredVenues.length} venues found</p>
+        <p className="text-sm text-surface-800/60 mt-1">{loading ? 'Loading...' : `${filteredVenues.length} venues found`}</p>
 
         <div className="mt-6 bg-white rounded-xl border border-surface-200 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="relative sm:w-56 shrink-0">
@@ -130,7 +132,12 @@ function VenuesPageContent() {
           </div>
         </div>
 
-        {filteredVenues.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-surface-800/60 mt-3">Loading venues...</p>
+          </div>
+        ) : filteredVenues.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {filteredVenues.map((venue, index) => (
               <ScrollReveal key={venue.id} delay={(index % 3) * 100}>

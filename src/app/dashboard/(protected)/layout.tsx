@@ -125,7 +125,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-surface-800">
             <Menu className="w-5 h-5" />
           </button>
-          <h1 className="font-display font-semibold text-surface-900 flex-1">Dashboard</h1>
+          <h1 className="font-display font-semibold text-surface-900 flex-1">
+            {pathname === '/dashboard' ? 'Overview'
+              : pathname === '/dashboard/venues' ? 'My Venues'
+              : pathname === '/dashboard/bookings' ? 'Bookings'
+              : pathname === '/dashboard/slots' ? 'Slot Management'
+              : pathname === '/dashboard/settings' ? 'Settings'
+              : 'Dashboard'}
+          </h1>
 
           <div className="relative">
             <button

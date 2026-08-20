@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Calendar } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -9,6 +10,7 @@ import { Tabs } from '@/components/ui/Tabs'
 import { BookingCard } from '@/components/booking/BookingCard'
 import { createClient } from '@/lib/supabase'
 import { fetchUserBookings } from '@/lib/supabase-queries'
+import { useToastStore } from '@/store/useToastStore'
 import type { Booking } from '@/types'
 
 const TABS = [
@@ -21,6 +23,28 @@ export default function BookingsPage() {
   const [allBookings, setAllBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const router = useRouter()
+  const showToast = useToastStore((s) => s.showToast)
+
+  const handleCancel = async (booking: Booking) => {
+    const supabase = createClient()
+    const { error: bookingError } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', booking.id)
+    if (bookingError) {
+      showToast('Failed to cancel booking', 'error')
+      return
+    }
+    if (booking.slot) {
+      await supabase
+        .from('slots')
+        .update({ status: 'available' })
+        .eq('id', booking.slot.id)
+    }
+    showToast('Booking cancelled', 'success')
+    if (userId) fetchBookings(userId)
+  }
 
   const fetchBookings = async (uid: string) => {
     const data = await fetchUserBookings(uid)
@@ -34,6 +58,9 @@ export default function BookingsPage() {
       if (user) {
         setUserId(user.id)
         await fetchBookings(user.id)
+      } else {
+        router.push('/login?redirect=/bookings')
+        return
       }
       setLoading(false)
     }
@@ -74,7 +101,7 @@ export default function BookingsPage() {
             </div>
           ) : bookings.length > 0 ? (
             bookings.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} showCancel={activeTab === 'upcoming'} />
+              <BookingCard key={booking.id} booking={booking} showCancel={activeTab === 'upcoming'} onCancel={() => handleCancel(booking)} />
             ))
           ) : (
             <div className="text-center py-16">

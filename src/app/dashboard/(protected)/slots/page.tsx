@@ -96,6 +96,7 @@ function GenerateSlotsModal({
 
   const totalDays = getDatesInRange().length
   const totalSlots = totalDays * timeSlots.length
+  const dateRangeExceeded = totalDays > 30
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -268,6 +269,9 @@ function GenerateSlotsModal({
           <p className="text-xs text-surface-500 mt-2">
             {timeSlots.length} slots/day × {totalDays} days = <span className="font-semibold text-surface-700">{totalSlots} total slots</span>
           </p>
+          {dateRangeExceeded && (
+            <p className="text-xs text-red-600 font-medium mt-1">Date range cannot exceed 30 days.</p>
+          )}
         </div>
 
         <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
@@ -282,7 +286,7 @@ function GenerateSlotsModal({
 
         <Button
           onClick={handleGenerate}
-          disabled={generating || totalSlots === 0}
+          disabled={generating || totalSlots === 0 || dateRangeExceeded}
           className="w-full flex items-center justify-center gap-2"
         >
           {generating ? (
@@ -469,7 +473,19 @@ export default function DashboardSlotsPage() {
       await supabase.from('slots').update({ status: 'available', blocked_reason: null }).eq('id', selectedSlot.id)
       showToast('Slot unblocked.', 'info')
     } else if (action === 'cancel') {
-      showToast('Booking cancellation coming soon.', 'info')
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('slot_id', selectedSlot.id)
+        .neq('status', 'cancelled')
+        .single()
+      if (booking) {
+        await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+        await supabase.from('slots').update({ status: 'available' }).eq('id', selectedSlot.id)
+        showToast('Booking cancelled and slot made available.', 'success')
+      } else {
+        showToast('No active booking found for this slot.', 'info')
+      }
     }
 
     setSelectedSlot(null)
@@ -524,7 +540,24 @@ export default function DashboardSlotsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => showToast(`All ${availableCount} available slots on ${selectedDate} for ${activeCourtName} would be blocked.`, 'info')}
+            onClick={async () => {
+              if (availableCount === 0) {
+                showToast('No available slots to block on this date.', 'info')
+                return
+              }
+              const supabase = createClient()
+              const availableSlotIds = slots.filter((s) => s.status === 'available').map((s) => s.id)
+              const { error } = await supabase
+                .from('slots')
+                .update({ status: 'blocked', blocked_reason: 'Day blocked by owner' })
+                .in('id', availableSlotIds)
+              if (error) {
+                showToast(`Error: ${error.message}`, 'error')
+                return
+              }
+              showToast(`Blocked ${availableSlotIds.length} slot(s) on ${selectedDate}.`, 'success')
+              fetchSlots(activeCourt, selectedDate).then(setSlots)
+            }}
             className="flex items-center gap-1.5"
           >
             <Lock className="w-3.5 h-3.5" />

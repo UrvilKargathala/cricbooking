@@ -6,6 +6,7 @@ import {
   Globe, Clock, ChevronRight, Check, Moon, Sun,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
@@ -172,14 +173,28 @@ export default function DashboardSettingsPage() {
               <div className="divide-y divide-surface-100">
                 <SettingRow icon={User} label="Full Name" value={displayName} onClick={() => setEditingProfile(true)} />
                 <SettingRow icon={Mail} label="Email" value={displayEmail} onClick={() => setEditingProfile(true)} />
-                <SettingRow icon={Phone} label="Phone" value="+91 98250 12345" onClick={() => setEditingProfile(true)} />
-                <SettingRow icon={Globe} label="City" value="Surat, Gujarat" onClick={() => setEditingProfile(true)} />
+                <SettingRow icon={Phone} label="Phone" value={user?.phone || 'Not set'} onClick={() => setEditingProfile(true)} />
+                <SettingRow icon={Globe} label="City" value={user?.city || 'Not set'} onClick={() => setEditingProfile(true)} />
               </div>
             </div>
           ) : (
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault()
+                const form = e.currentTarget
+                const fullName = (form.elements.namedItem('full_name') as HTMLInputElement).value
+                const phone = (form.elements.namedItem('phone') as HTMLInputElement).value
+                const city = (form.elements.namedItem('city') as HTMLInputElement).value
+                if (!user) return
+                const supabase = createClient()
+                const { error } = await supabase
+                  .from('profiles')
+                  .update({ full_name: fullName, phone: phone ? `+91${phone}` : null, city })
+                  .eq('id', user.id)
+                if (error) {
+                  showToast(`Error: ${error.message}`, 'error')
+                  return
+                }
                 setEditingProfile(false)
                 showToast('Profile updated successfully.', 'success')
               }}
@@ -187,8 +202,8 @@ export default function DashboardSettingsPage() {
             >
               <h2 className="font-display font-semibold text-surface-900">Edit Profile</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="Full Name" defaultValue={user?.full_name || ''} required />
-                <Input label="Email" type="email" defaultValue={displayEmail} required />
+                <Input name="full_name" label="Full Name" defaultValue={user?.full_name || ''} required />
+                <Input label="Email" type="email" defaultValue={displayEmail} disabled />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-800 mb-1.5">Phone Number</label>
@@ -196,10 +211,10 @@ export default function DashboardSettingsPage() {
                   <span className="flex items-center px-3 bg-surface-100 border border-surface-200 rounded-lg text-sm text-surface-600 font-medium">
                     +91
                   </span>
-                  <Input type="tel" defaultValue="98250 12345" maxLength={10} className="flex-1" required />
+                  <Input name="phone" type="tel" defaultValue={user?.phone?.replace('+91', '') || ''} maxLength={10} className="flex-1" required />
                 </div>
               </div>
-              <Input label="City" defaultValue="Surat, Gujarat" />
+              <Input name="city" label="City" defaultValue={user?.city || ''} />
               <div className="flex gap-2 pt-2">
                 <Button type="submit" variant="primary">Save Changes</Button>
                 <Button type="button" variant="ghost" onClick={() => setEditingProfile(false)}>Cancel</Button>

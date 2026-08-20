@@ -203,7 +203,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
       }
     } else {
       await navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard!')
+      showToast('Link copied to clipboard!', 'info')
     }
   }
 

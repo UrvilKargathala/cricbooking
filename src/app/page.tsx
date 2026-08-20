@@ -87,11 +87,14 @@ export default function Home() {
   const [areas, setAreas] = useState<Area[]>([])
   const [allVenues, setAllVenues] = useState<Venue[]>([])
   const [bookingCount, setBookingCount] = useState(0)
+  const [statsLoaded, setStatsLoaded] = useState(false)
 
   useEffect(() => {
-    fetchAreas().then(setAreas)
-    fetchVenues().then(setAllVenues)
-    fetchBookingCount().then(setBookingCount)
+    Promise.all([
+      fetchAreas().then(setAreas),
+      fetchVenues().then(setAllVenues),
+      fetchBookingCount().then(setBookingCount),
+    ]).finally(() => setStatsLoaded(true))
   }, [])
 
   const handleHeroSearch = () => {
@@ -182,19 +185,19 @@ export default function Home() {
               <div className="grid grid-cols-3 gap-4 sm:gap-8">
                 <div className="text-center">
                   <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    <CountUp value={allVenues.length} suffix="+" />
+                    {statsLoaded ? <CountUp value={allVenues.length} suffix="+" /> : <span className="opacity-0">0</span>}
                   </p>
                   <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Verified Venues</p>
                 </div>
                 <div className="text-center border-x border-surface-200">
                   <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    <CountUp value={areas.length} />
+                    {statsLoaded ? <CountUp value={areas.length} /> : <span className="opacity-0">0</span>}
                   </p>
                   <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Areas in Surat</p>
                 </div>
                 <div className="text-center">
                   <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    <CountUp value={bookingCount || 1000} suffix="+" />
+                    {statsLoaded ? <CountUp value={bookingCount} suffix="+" /> : <span className="opacity-0">0</span>}
                   </p>
                   <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Bookings Made</p>
                 </div>

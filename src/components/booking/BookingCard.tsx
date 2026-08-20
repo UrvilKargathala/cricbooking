@@ -7,9 +7,10 @@ import type { Booking } from '@/types'
 interface BookingCardProps {
   booking: Booking
   showCancel?: boolean
+  onCancel?: () => void
 }
 
-export function BookingCard({ booking, showCancel }: BookingCardProps) {
+export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps) {
   return (
     <div className="bg-white rounded-xl border border-surface-200 p-4">
       <div className="flex items-center justify-between">
@@ -24,7 +25,7 @@ export function BookingCard({ booking, showCancel }: BookingCardProps) {
         <div className="flex items-center gap-4 mt-3 text-sm text-surface-800">
           <span className="flex items-center gap-1.5">
             <Calendar className="w-4 h-4 text-surface-800/50" />
-            {booking.slot.date}
+            {new Date(booking.slot.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-surface-800/50" />
@@ -37,8 +38,8 @@ export function BookingCard({ booking, showCancel }: BookingCardProps) {
         <span className="font-display font-semibold text-brand-700">{formatPrice(booking.amount)}</span>
         <div className="flex items-center gap-2">
           <Badge variant={booking.source}>{booking.source}</Badge>
-          {showCancel && booking.status === 'confirmed' && (
-            <Button variant="outline" size="sm" className="border-red-600 text-red-600 hover:bg-red-50">
+          {showCancel && booking.status === 'confirmed' && onCancel && (
+            <Button variant="outline" size="sm" className="border-red-600 text-red-600 hover:bg-red-50" onClick={onCancel}>
               Cancel
             </Button>
           )}

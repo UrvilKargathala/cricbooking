@@ -128,9 +128,35 @@ export default function DashboardBookingsPage() {
     setPayment('All')
   }
 
-  const runBulkAction = (action: string) => {
-    showToast(`${action} for ${selectedIds.size} booking(s). Backend wiring coming soon.`, 'info')
+  const runBulkAction = async (action: string) => {
+    if (!ownerId || selectedIds.size === 0) return
+    const supabase = createClient()
+    const ids = Array.from(selectedIds)
+
+    if (action === 'mark_paid') {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ payment_status: 'paid' })
+        .in('id', ids)
+      if (error) {
+        showToast(`Error: ${error.message}`, 'error')
+        return
+      }
+      showToast(`Marked ${ids.length} booking(s) as paid.`, 'success')
+    } else if (action === 'cancel') {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .in('id', ids)
+      if (error) {
+        showToast(`Error: ${error.message}`, 'error')
+        return
+      }
+      showToast(`Cancelled ${ids.length} booking(s).`, 'success')
+    }
+
     setSelectedIds(new Set())
+    await fetchBookings(ownerId)
   }
 
   if (loading) {
@@ -159,7 +185,7 @@ export default function DashboardBookingsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => showToast('CSV export coming soon.', 'info')}
+            onClick={() => showToast('Feature coming soon.', 'info')}
             className="flex items-center gap-1.5"
           >
             <Download className="w-4 h-4" />
@@ -167,7 +193,7 @@ export default function DashboardBookingsPage() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => showToast('Walk-in booking form coming soon.', 'info')}
+            onClick={() => showToast('Feature coming soon.', 'info')}
             className="flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
@@ -234,13 +260,13 @@ export default function DashboardBookingsPage() {
             <span className="text-sm font-semibold text-brand-900">{selectedIds.size} selected</span>
             <div className="flex gap-2">
               <button
-                onClick={() => runBulkAction('Marked as paid')}
+                onClick={() => runBulkAction('mark_paid')}
                 className="text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg px-3 py-1.5 transition-colors"
               >
                 Mark Paid
               </button>
               <button
-                onClick={() => runBulkAction('Cancelled')}
+                onClick={() => runBulkAction('cancel')}
                 className="text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-3 py-1.5 transition-colors"
               >
                 Cancel

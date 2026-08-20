@@ -11,14 +11,12 @@ const POPULAR_AREAS = [
 const QUICK_LINKS = [
   { name: 'All Venues', href: '/venues' },
   { name: 'My Bookings', href: '/bookings' },
-  { name: 'About Us', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'Login', href: '/login' },
 ]
 
 const OWNER_LINKS = [
   { name: 'List Your Venue', href: '/list-venue' },
   { name: 'Owner Dashboard', href: '/dashboard' },
-  { name: 'Pricing', href: '/pricing' },
 ]
 
 export function Footer() {

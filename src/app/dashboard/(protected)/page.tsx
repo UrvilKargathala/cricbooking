@@ -1,13 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import Link from 'next/link'
 import {
   Calendar, IndianRupee, TrendingUp, Clock,
-  ArrowUp, ArrowDown, CalendarCheck, Percent,
+  Percent, Zap, Ban, AlertCircle, MapPin,
+  Users, BarChart3, ArrowRight,
 } from 'lucide-react'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerBookings, fetchOwnerVenues } from '@/lib/supabase-queries'
+import type { Slot, Venue } from '@/types'
 import { Badge } from '@/components/ui/Badge'
 import { BookingDetailsModal } from '@/components/dashboard/BookingDetailsModal'
 import { RevenueAreaChart } from '@/components/dashboard/RevenueAreaChart'
@@ -16,15 +19,62 @@ import { PaymentDonutChart } from '@/components/dashboard/PaymentDonutChart'
 import { SourceDonutChart } from '@/components/dashboard/SourceDonutChart'
 import { OccupancyHeatmap } from '@/components/dashboard/OccupancyHeatmap'
 import { useToastStore } from '@/store/useToastStore'
+import { useAuth } from '@/hooks/useAuth'
 import type { Booking, Court } from '@/types'
 
+type DateRange = 'today' | 'week' | 'month' | 'all'
+
+function getDateRangeStart(range: DateRange): string | null {
+  const now = new Date()
+  if (range === 'all') return null
+  if (range === 'today') return now.toISOString().split('T')[0]
+  if (range === 'week') {
+    now.setDate(now.getDate() - 7)
+    return now.toISOString().split('T')[0]
+  }
+  now.setDate(now.getDate() - 30)
+  return now.toISOString().split('T')[0]
+}
+
+function CircularProgress({ value, size = 80, stroke = 8 }: { value: number; size?: number; stroke?: number }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (value / 100) * circumference
+  const color = value >= 75 ? '#10b981' : value >= 40 ? '#f59e0b' : '#ef4444'
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+      <circle
+        cx={size / 2} cy={size / 2} r={radius} fill="none"
+        stroke={color} strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={circumference} strokeDashoffset={offset}
+        className="transition-all duration-700 ease-out"
+      />
+    </svg>
+  )
+}
+
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[280px] text-surface-400">
+      <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
+      <p className="text-sm">{message}</p>
+      <p className="text-xs mt-1">Data will appear as bookings come in</p>
+    </div>
+  )
+}
+
 export default function DashboardOverviewPage() {
+  const { user: authProfile } = useAuth()
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [courts, setCourts] = useState<Court[]>([])
+  const [venues, setVenues] = useState<Venue[]>([])
   const [venueIds, setVenueIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [ownerId, setOwnerId] = useState<string | null>(null)
+  const [todaySlots, setTodaySlots] = useState<Slot[]>([])
+  const [dateRange, setDateRange] = useState<DateRange>('month')
   const showToast = useToastStore((s) => s.showToast)
 
   const fetchDashboardData = async (userId: string) => {
@@ -33,8 +83,21 @@ export default function DashboardOverviewPage() {
       fetchOwnerVenues(userId),
     ])
     setBookings(b)
-    setCourts(v.flatMap((venue) => venue.courts ?? []))
+    setVenues(v)
+    const allCourts = v.flatMap((venue) => venue.courts ?? [])
+    setCourts(allCourts)
     setVenueIds(v.map((venue) => venue.id))
+
+    if (allCourts.length > 0) {
+      const supabase = createClient()
+      const todayDate = new Date().toISOString().split('T')[0]
+      const { data: slotsData } = await supabase
+        .from('slots')
+        .select('id, status, start_time')
+        .in('court_id', allCourts.map((c) => c.id))
+        .eq('date', todayDate)
+      setTodaySlots((slotsData as Slot[]) || [])
+    }
   }
 
   useEffect(() => {
@@ -78,6 +141,46 @@ export default function DashboardOverviewPage() {
     return () => { supabase.removeChannel(channel) }
   }, [ownerId, venueIds, showToast])
 
+  const today = new Date().toISOString().split('T')[0]
+
+  const filteredBookings = useMemo(() => {
+    const rangeStart = getDateRangeStart(dateRange)
+    const active = bookings.filter((b) => b.status !== 'cancelled')
+    if (!rangeStart) return active
+    return active.filter((b) => (b.slot?.date ?? '') >= rangeStart)
+  }, [bookings, dateRange])
+
+  const todaysBookings = useMemo(
+    () => bookings.filter((b) => b.status !== 'cancelled' && b.slot?.date === today),
+    [bookings, today]
+  )
+
+  const pendingPayments = useMemo(
+    () => bookings.filter((b) => b.payment_status === 'pending' && b.status !== 'cancelled'),
+    [bookings]
+  )
+
+  const popularTimeSlots = useMemo(() => {
+    const counts: Record<string, number> = {}
+    filteredBookings.forEach((b) => {
+      if (b.slot?.start_time) {
+        const t = b.slot.start_time.slice(0, 5)
+        counts[t] = (counts[t] ?? 0) + 1
+      }
+    })
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([time, count]) => ({ time, count }))
+  }, [filteredBookings])
+
+  const todaySchedule = useMemo(() => {
+    return todaysBookings
+      .filter((b) => b.slot?.start_time)
+      .sort((a, b) => (a.slot?.start_time ?? '').localeCompare(b.slot?.start_time ?? ''))
+      .slice(0, 6)
+  }, [todaysBookings])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -86,40 +189,24 @@ export default function DashboardOverviewPage() {
     )
   }
 
-  const activeBookings = bookings.filter((b) => b.status !== 'cancelled')
-  const today = new Date().toISOString().split('T')[0]
-  const todaysBookings = activeBookings.filter((b) => b.slot?.date === today)
+  const rangeRevenue = filteredBookings.reduce((sum, b) => sum + b.amount, 0)
   const todaysRevenue = todaysBookings.reduce((sum, b) => sum + b.amount, 0)
-  const monthRevenue = activeBookings.reduce((sum, b) => sum + b.amount, 0)
-  const occupancyRate = activeBookings.length > 0
-    ? Math.round((activeBookings.length / (activeBookings.length + 4)) * 100)
+  const todayTotalSlots = todaySlots.length
+  const todayBookedSlots = todaySlots.filter((s) => s.status === 'booked').length
+  const todayAvailableSlots = todaySlots.filter((s) => s.status === 'available').length
+  const occupancyRate = todayTotalSlots > 0
+    ? Math.round((todayBookedSlots / todayTotalSlots) * 100)
     : 0
 
-  const STATS = [
-    {
-      label: "Today's Bookings", value: String(todaysBookings.length), icon: Calendar,
-      bg: 'bg-blue-50', text: 'text-blue-600', iconBg: 'bg-blue-100',
-      delta: null, deltaSuffix: 'today',
-    },
-    {
-      label: "Today's Revenue", value: formatPrice(todaysRevenue), icon: IndianRupee,
-      bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100',
-      delta: null, deltaSuffix: 'today',
-    },
-    {
-      label: 'Total Revenue', value: formatPrice(monthRevenue), icon: TrendingUp,
-      bg: 'bg-orange-50', text: 'text-orange-600', iconBg: 'bg-orange-100',
-      delta: null, deltaSuffix: 'all time',
-    },
-    {
-      label: 'Occupancy Rate', value: `${occupancyRate}%`, icon: Percent,
-      bg: 'bg-purple-50', text: 'text-purple-600', iconBg: 'bg-purple-100',
-      delta: null, deltaSuffix: `${activeBookings.length} bookings`,
-    },
-  ]
+  const RANGE_LABELS: Record<DateRange, string> = {
+    today: 'Today',
+    week: 'Last 7 Days',
+    month: 'Last 30 Days',
+    all: 'All Time',
+  }
 
   const revenueChartData = Object.entries(
-    activeBookings.reduce<Record<string, number>>((acc, b) => {
+    filteredBookings.reduce<Record<string, number>>((acc, b) => {
       const date = b.slot?.date ?? 'unknown'
       acc[date] = (acc[date] ?? 0) + b.amount
       return acc
@@ -130,7 +217,7 @@ export default function DashboardOverviewPage() {
   }))
 
   const bookingsChartData = Object.entries(
-    activeBookings.reduce<Record<string, number>>((acc, b) => {
+    filteredBookings.reduce<Record<string, number>>((acc, b) => {
       const date = b.slot?.date ?? 'unknown'
       acc[date] = (acc[date] ?? 0) + 1
       return acc
@@ -149,9 +236,9 @@ export default function DashboardOverviewPage() {
     { name: 'Refunded', value: refundedAmount, color: '#ef4444' },
   ].filter((d) => d.value > 0)
 
-  const onlineCount = activeBookings.filter((b) => b.source === 'online').length
-  const walkinCount = activeBookings.filter((b) => b.source === 'walkin').length
-  const phoneCount = activeBookings.filter((b) => b.source === 'phone').length
+  const onlineCount = filteredBookings.filter((b) => b.source === 'online').length
+  const walkinCount = filteredBookings.filter((b) => b.source === 'walkin').length
+  const phoneCount = filteredBookings.filter((b) => b.source === 'phone').length
   const sourceData = [
     { name: 'Online', value: onlineCount, color: '#3b82f6' },
     { name: 'Walk-in', value: walkinCount, color: '#8b5cf6' },
@@ -159,80 +246,304 @@ export default function DashboardOverviewPage() {
   ].filter((d) => d.value > 0)
 
   const recentBookings = bookings.slice(0, 6)
+  const ownerName = authProfile?.full_name?.split(' ')[0] || 'there'
+  const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-bold text-xl text-surface-900">Dashboard Overview</h1>
-          <p className="text-sm text-surface-500 mt-0.5">Here&apos;s what&apos;s happening with your venues today.</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-surface-500">
-          <CalendarCheck className="w-4 h-4" />
-          {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-surface-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-surface-500">{stat.label}</p>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.iconBg} ${stat.text}`}>
-                <stat.icon className="w-5 h-5" />
+    <div className="space-y-6">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-surface-900 via-surface-800 to-surface-900 rounded-2xl p-6 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-1/2 w-40 h-40 bg-brand-500/5 rounded-full translate-y-1/2" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display font-bold text-xl sm:text-2xl">
+              {greeting}, {ownerName}!
+            </h1>
+            <p className="text-white/60 text-sm mt-1">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="flex flex-wrap gap-4 mt-3">
+              <div className="flex items-center gap-1.5 text-sm text-white/70">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{venues.length} venue{venues.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-white/70">
+                <Users className="w-3.5 h-3.5" />
+                <span>{courts.length} court{courts.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-white/70">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{todayTotalSlots} slots today</span>
               </div>
             </div>
-            <p className="font-display font-bold text-2xl text-surface-900">{stat.value}</p>
-            {stat.delta !== null ? (
-              <p className={`flex items-center gap-0.5 text-xs font-medium mt-1 ${stat.delta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {stat.delta >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                {Math.abs(stat.delta)}% {stat.deltaSuffix}
-              </p>
-            ) : (
-              <p className="text-xs text-surface-400 mt-1">{stat.deltaSuffix}</p>
-            )}
           </div>
-        ))}
+          <div className="flex bg-white/15 backdrop-blur-sm rounded-lg p-0.5 self-start">
+            {(['today', 'week', 'month', 'all'] as DateRange[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setDateRange(r)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  dateRange === r
+                    ? 'bg-white text-surface-900 shadow-sm'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : 'All'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {revenueChartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-          <div className="bg-white rounded-xl border border-surface-200 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-semibold text-surface-900">Revenue Trend</h2>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
+            <Zap className="w-5 h-5 text-brand-600" />
+          </div>
+          <p className="text-sm font-semibold text-surface-900">Generate Slots</p>
+          <p className="text-xs text-surface-400 mt-0.5">Create time slots for courts</p>
+        </Link>
+        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-red-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-3 group-hover:bg-red-100 transition-colors">
+            <Ban className="w-5 h-5 text-red-600" />
+          </div>
+          <p className="text-sm font-semibold text-surface-900">Block Day</p>
+          <p className="text-xs text-surface-400 mt-0.5">Block a day for maintenance</p>
+        </Link>
+        <Link href="/dashboard/bookings" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
+            <Calendar className="w-5 h-5 text-blue-600" />
+          </div>
+          <p className="text-sm font-semibold text-surface-900">Bookings</p>
+          <p className="text-xs text-surface-400 mt-0.5">View & manage bookings</p>
+        </Link>
+        <Link href="/dashboard/venues" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-emerald-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
+            <MapPin className="w-5 h-5 text-emerald-600" />
+          </div>
+          <p className="text-sm font-semibold text-surface-900">My Venues</p>
+          <p className="text-xs text-surface-400 mt-0.5">Edit venues & courts</p>
+        </Link>
+      </div>
+
+      {/* Stats Cards with colored left borders */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-blue-500 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-surface-500">Today&apos;s Bookings</p>
+            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Calendar className="w-4.5 h-4.5 text-blue-600" />
             </div>
+          </div>
+          <p className="font-display font-bold text-3xl text-surface-900">{todaysBookings.length}</p>
+          <p className="text-xs text-surface-400 mt-1">{todayAvailableSlots} slots still available</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-emerald-500 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-surface-500">Today&apos;s Revenue</p>
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <IndianRupee className="w-4.5 h-4.5 text-emerald-600" />
+            </div>
+          </div>
+          <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(todaysRevenue)}</p>
+          <p className="text-xs text-surface-400 mt-1">{todaysBookings.length} booking{todaysBookings.length !== 1 ? 's' : ''} today</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-orange-500 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-surface-500">Revenue ({RANGE_LABELS[dateRange]})</p>
+            <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
+              <TrendingUp className="w-4.5 h-4.5 text-orange-600" />
+            </div>
+          </div>
+          <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(rangeRevenue)}</p>
+          <p className="text-xs text-surface-400 mt-1">{filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''}</p>
+        </div>
+
+        {/* Occupancy Card with circular progress */}
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-purple-500 p-5 hover:shadow-md transition-shadow">
+          <p className="text-sm font-medium text-surface-500 mb-2">Occupancy Rate</p>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <CircularProgress value={occupancyRate} size={64} stroke={6} />
+              <span className="absolute inset-0 flex items-center justify-center font-display font-bold text-sm text-surface-900">
+                {occupancyRate}%
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-surface-900">{todayBookedSlots}/{todayTotalSlots}</p>
+              <p className="text-xs text-surface-400">slots booked today</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pending Payments Alert */}
+      {pendingPayments.length > 0 && (
+        <Link
+          href="/dashboard/bookings"
+          className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-3.5 hover:bg-amber-100 transition-colors group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">
+              {pendingPayments.length} pending payment{pendingPayments.length > 1 ? 's' : ''}
+            </p>
+            <p className="text-xs text-amber-600">
+              {formatPrice(pendingPayments.reduce((s, b) => s + b.amount, 0))} awaiting confirmation
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400 group-hover:text-amber-600 transition-colors shrink-0" />
+        </Link>
+      )}
+
+      {/* Charts — always visible */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-semibold text-surface-900">Revenue Trend</h2>
+            <span className="text-xs text-surface-400 bg-surface-50 px-2 py-1 rounded-md">{RANGE_LABELS[dateRange]}</span>
+          </div>
+          {revenueChartData.length > 0 ? (
             <RevenueAreaChart data={revenueChartData} />
-          </div>
+          ) : (
+            <EmptyChart message="No revenue data yet" />
+          )}
+        </div>
 
-          <div className="bg-white rounded-xl border border-surface-200 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-semibold text-surface-900">Daily Bookings</h2>
-            </div>
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-semibold text-surface-900">Daily Bookings</h2>
+            <span className="text-xs text-surface-400 bg-surface-50 px-2 py-1 rounded-md">{RANGE_LABELS[dateRange]}</span>
+          </div>
+          {bookingsChartData.length > 0 ? (
             <BookingsBarChart data={bookingsChartData} />
+          ) : (
+            <EmptyChart message="No booking data yet" />
+          )}
+        </div>
+      </div>
+
+      {/* Today's Schedule + Popular Time Slots */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Today's Schedule */}
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-semibold text-surface-900">Today&apos;s Schedule</h2>
+            <Link href="/dashboard/bookings" className="text-xs text-brand-600 font-medium hover:underline">View All</Link>
           </div>
-        </div>
-      )}
-
-      {(paymentData.length > 0 || sourceData.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
-          {paymentData.length > 0 && (
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-4">Payment Breakdown</h2>
-              <PaymentDonutChart data={paymentData} total={paidAmount + pendingAmount + refundedAmount} />
+          {todaySchedule.length > 0 ? (
+            <div className="space-y-0">
+              {todaySchedule.map((booking, i) => (
+                <div
+                  key={booking.id}
+                  onClick={() => setSelectedBooking(booking)}
+                  className={`flex items-center gap-3 py-3 cursor-pointer hover:bg-surface-50 rounded-lg px-2 -mx-2 transition-colors ${
+                    i < todaySchedule.length - 1 ? 'border-b border-surface-100' : ''
+                  }`}
+                >
+                  <div className="w-12 text-center shrink-0">
+                    <p className="text-xs font-bold text-brand-600">{formatTime(booking.slot!.start_time)}</p>
+                    <p className="text-[10px] text-surface-400">{formatTime(booking.slot!.end_time)}</p>
+                  </div>
+                  <div className="w-0.5 h-8 bg-brand-200 rounded-full shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-surface-900 truncate">
+                      {booking.user?.full_name || booking.customer_name || 'Walk-in'}
+                    </p>
+                    <p className="text-xs text-surface-400 truncate">{booking.court?.name}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-surface-900">{formatPrice(booking.amount)}</p>
+                    <Badge variant={booking.payment_status as 'paid' | 'pending' | 'refunded'}>{booking.payment_status}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-surface-400">
+              <Calendar className="w-10 h-10 mb-2 opacity-30" />
+              <p className="text-sm">No bookings scheduled today</p>
+              <Link href="/dashboard/slots" className="text-xs text-brand-600 font-medium mt-2 hover:underline">
+                Generate slots to get started
+              </Link>
             </div>
           )}
+        </div>
 
-          {sourceData.length > 0 && (
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-4">Booking Sources</h2>
-              <SourceDonutChart data={sourceData} />
+        {/* Popular Time Slots */}
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-semibold text-surface-900">Popular Time Slots</h2>
+            <span className="text-xs text-surface-400 bg-surface-50 px-2 py-1 rounded-md">{RANGE_LABELS[dateRange]}</span>
+          </div>
+          {popularTimeSlots.length > 0 ? (
+            <div className="space-y-4">
+              {popularTimeSlots.map((slot, i) => {
+                const maxCount = popularTimeSlots[0].count
+                const pct = Math.round((slot.count / maxCount) * 100)
+                const colors = ['bg-brand-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500']
+                return (
+                  <div key={slot.time}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-full bg-surface-100 text-[10px] font-bold text-surface-500 flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <Clock className="w-3.5 h-3.5 text-surface-400" />
+                        <span className="text-sm font-medium text-surface-800">{formatTime(slot.time)}</span>
+                      </div>
+                      <span className="text-sm font-bold text-surface-900">{slot.count} booking{slot.count > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="ml-9 h-2.5 bg-surface-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${colors[i] || colors[0]} rounded-full transition-all duration-500`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-surface-400">
+              <Clock className="w-10 h-10 mb-2 opacity-30" />
+              <p className="text-sm">No booking patterns yet</p>
+              <p className="text-xs mt-1">Insights appear as bookings come in</p>
             </div>
           )}
         </div>
-      )}
+      </div>
 
+      {/* Payment + Source Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <h2 className="font-display font-semibold text-surface-900 mb-4">Payment Breakdown</h2>
+          {paymentData.length > 0 ? (
+            <PaymentDonutChart data={paymentData} total={paidAmount + pendingAmount + refundedAmount} />
+          ) : (
+            <EmptyChart message="No payment data yet" />
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
+          <h2 className="font-display font-semibold text-surface-900 mb-4">Booking Sources</h2>
+          {sourceData.length > 0 ? (
+            <SourceDonutChart data={sourceData} />
+          ) : (
+            <EmptyChart message="No source data yet" />
+          )}
+        </div>
+      </div>
+
+      {/* Occupancy Heatmap */}
       {courts.length > 0 && (
-        <div className="bg-white rounded-xl border border-surface-200 p-5 mt-6">
+        <div className="bg-white rounded-xl border border-surface-200 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-semibold text-surface-900">Court Occupancy — Next 7 Days</h2>
           </div>
@@ -240,15 +551,15 @@ export default function DashboardOverviewPage() {
         </div>
       )}
 
-      {recentBookings.length > 0 && (
-        <div className="bg-white rounded-xl border border-surface-200 p-5 mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-display font-semibold text-surface-900">Recent Bookings</h2>
-            <a href="/dashboard/bookings" className="text-sm text-brand-600 font-medium hover:underline">
-              View All
-            </a>
-          </div>
-
+      {/* Recent Bookings */}
+      <div className="bg-white rounded-xl border border-surface-200 p-5">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-display font-semibold text-surface-900">Recent Bookings</h2>
+          <Link href="/dashboard/bookings" className="text-sm text-brand-600 font-medium hover:underline flex items-center gap-1">
+            View All <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        {recentBookings.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -301,8 +612,14 @@ export default function DashboardOverviewPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-surface-400">
+            <Calendar className="w-10 h-10 mb-2 opacity-30" />
+            <p className="text-sm">No bookings yet</p>
+            <p className="text-xs mt-1">Bookings will appear here as they come in</p>
+          </div>
+        )}
+      </div>
 
       <BookingDetailsModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
     </div>

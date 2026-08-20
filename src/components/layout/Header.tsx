@@ -20,12 +20,15 @@ export function Header() {
   const { user, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [desktopQuery, setDesktopQuery] = useState('')
+  const [mobileQuery, setMobileQuery] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
+  const mobileSearchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 0)
@@ -35,6 +38,10 @@ export function Header() {
   }, [])
 
   const closeMenu = () => setMenuOpen(false)
+
+  useEffect(() => {
+    if (menuOpen) mobileSearchRef.current?.focus()
+  }, [menuOpen])
 
   const handleHowItWorks = () => {
     closeMenu()
@@ -155,6 +162,14 @@ export function Header() {
                   <input
                     autoFocus
                     type="text"
+                    value={desktopQuery}
+                    onChange={(e) => setDesktopQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && desktopQuery.trim()) {
+                        setSearchOpen(false)
+                        router.push(`/venues?q=${encodeURIComponent(desktopQuery.trim())}`)
+                      }
+                    }}
                     placeholder="Search venues, areas..."
                     className="w-full pl-10 pr-3 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                   />
@@ -261,7 +276,16 @@ export function Header() {
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
             <input
+              ref={mobileSearchRef}
               type="text"
+              value={mobileQuery}
+              onChange={(e) => setMobileQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && mobileQuery.trim()) {
+                  closeMenu()
+                  router.push(`/venues?q=${encodeURIComponent(mobileQuery.trim())}`)
+                }
+              }}
               placeholder="Search venues, areas..."
               className="w-full pl-10 pr-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
             />

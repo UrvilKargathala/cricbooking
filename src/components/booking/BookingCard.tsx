@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Calendar, Clock, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, ChevronRight, RotateCcw } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatPrice, formatTime } from '@/lib/utils'
@@ -47,6 +47,16 @@ export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps)
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel() }}
               >
                 Cancel
+              </Button>
+            )}
+            {!showCancel && booking.status !== 'confirmed' && booking.venue?.slug && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/venues/${booking.venue!.slug}` }}
+              >
+                <RotateCcw className="w-3 h-3" /> Book Again
               </Button>
             )}
             <ChevronRight className="w-4 h-4 text-surface-800/30 group-hover:text-brand-600 transition-colors" />

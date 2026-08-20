@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Calendar, Clock, MapPin, CreditCard,
-  CheckCircle2, XCircle, AlertCircle, Star,
+  CheckCircle2, XCircle, AlertCircle, Star, RefreshCw, RotateCcw,
 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -217,13 +217,27 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             {/* Actions */}
             <div className="flex flex-wrap gap-3">
               {booking.status === 'confirmed' && (
-                <Button
-                  variant="outline"
-                  className="border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={() => setCancelOpen(true)}
-                >
-                  Cancel Booking
-                </Button>
+                <>
+                  <Link href={`/venues/${booking.venue?.slug}`}>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4" /> Reschedule
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    Cancel Booking
+                  </Button>
+                </>
+              )}
+              {(booking.status === 'completed' || booking.status === 'cancelled') && booking.venue?.slug && (
+                <Link href={`/venues/${booking.venue.slug}`}>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4" /> Book Again
+                  </Button>
+                </Link>
               )}
               {(booking.status === 'completed' || booking.status === 'confirmed') && !existingReview && (
                 <Button variant="outline" onClick={() => setReviewOpen(true)} className="flex items-center gap-2">

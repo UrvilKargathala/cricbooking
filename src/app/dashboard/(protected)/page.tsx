@@ -298,30 +298,30 @@ export default function DashboardOverviewPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
-            <Zap className="w-5 h-5 text-brand-600" />
+        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
+            <Zap className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Generate Slots</p>
           <p className="text-xs text-surface-400 mt-0.5">Create time slots for courts</p>
         </Link>
-        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
-            <Ban className="w-5 h-5 text-brand-600" />
+        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-red-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-3 group-hover:bg-red-100 transition-colors">
+            <Ban className="w-5 h-5 text-red-500" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Block Day</p>
           <p className="text-xs text-surface-400 mt-0.5">Block a day for maintenance</p>
         </Link>
-        <Link href="/dashboard/bookings" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
-            <Calendar className="w-5 h-5 text-brand-600" />
+        <Link href="/dashboard/bookings" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-amber-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
+            <Calendar className="w-5 h-5 text-amber-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Bookings</p>
           <p className="text-xs text-surface-400 mt-0.5">View & manage bookings</p>
         </Link>
-        <Link href="/dashboard/venues" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
-            <MapPin className="w-5 h-5 text-brand-600" />
+        <Link href="/dashboard/venues" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-emerald-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
+            <MapPin className="w-5 h-5 text-emerald-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">My Venues</p>
           <p className="text-xs text-surface-400 mt-0.5">Edit venues & courts</p>
@@ -330,33 +330,33 @@ export default function DashboardOverviewPage() {
 
       {/* Stats Cards with colored left borders */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-500 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-blue-500 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Today&apos;s Bookings</p>
-            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
-              <Calendar className="w-4.5 h-4.5 text-brand-600" />
+            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Calendar className="w-4.5 h-4.5 text-blue-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{todaysBookings.length}</p>
           <p className="text-xs text-surface-400 mt-1">{todayAvailableSlots} slots still available</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-400 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-emerald-500 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Today&apos;s Revenue</p>
-            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
-              <IndianRupee className="w-4.5 h-4.5 text-brand-600" />
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <IndianRupee className="w-4.5 h-4.5 text-emerald-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(todaysRevenue)}</p>
           <p className="text-xs text-surface-400 mt-1">{todaysBookings.length} booking{todaysBookings.length !== 1 ? 's' : ''} today</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-600 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-amber-500 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Revenue ({RANGE_LABELS[dateRange]})</p>
-            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
-              <TrendingUp className="w-4.5 h-4.5 text-brand-600" />
+            <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
+              <TrendingUp className="w-4.5 h-4.5 text-amber-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(rangeRevenue)}</p>
@@ -364,7 +364,7 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Occupancy Card with circular progress */}
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-700 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-purple-500 p-5 hover:shadow-md transition-shadow">
           <p className="text-sm font-medium text-surface-500 mb-2">Occupancy Rate</p>
           <div className="flex items-center gap-4">
             <div className="relative">

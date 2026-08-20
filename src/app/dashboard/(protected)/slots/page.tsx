@@ -105,53 +105,42 @@ function GenerateSlotsModal({
     let created = 0
     let skipped = 0
 
-    for (const date of dates) {
-      if (skipExisting) {
+    if (skipExisting) {
+      const results = await Promise.all(dates.map(async (date) => {
         const { data: existing } = await supabase
           .from('slots')
           .select('start_time')
           .eq('court_id', court.id)
           .eq('date', date)
         const existingTimes = new Set((existing || []).map((s: { start_time: string }) => s.start_time.slice(0, 5)))
-
         const newSlots = timeSlots
           .filter((ts) => !existingTimes.has(ts.start))
           .map((ts) => {
             let price = weekdayPrice
             if (isWeekend(date) && weekendPrice) price = weekendPrice
             if (isNightSlot(ts.start) && nightPrice) price = nightPrice
-            return {
-              court_id: court.id,
-              date,
-              start_time: ts.start,
-              end_time: ts.end,
-              price,
-              status: 'available' as const,
-            }
+            return { court_id: court.id, date, start_time: ts.start, end_time: ts.end, price, status: 'available' as const }
           })
+        return { newSlots, skippedCount: timeSlots.length - newSlots.length }
+      }))
 
-        skipped += timeSlots.length - newSlots.length
-        if (newSlots.length > 0) {
-          const { error } = await supabase.from('slots').insert(newSlots)
-          if (!error) created += newSlots.length
-        }
-      } else {
-        const newSlots = timeSlots.map((ts) => {
+      const allNewSlots = results.flatMap((r) => r.newSlots)
+      skipped = results.reduce((s, r) => s + r.skippedCount, 0)
+      if (allNewSlots.length > 0) {
+        const { error } = await supabase.from('slots').insert(allNewSlots)
+        if (!error) created = allNewSlots.length
+      }
+    } else {
+      const allNewSlots = dates.flatMap((date) =>
+        timeSlots.map((ts) => {
           let price = weekdayPrice
           if (isWeekend(date) && weekendPrice) price = weekendPrice
           if (isNightSlot(ts.start) && nightPrice) price = nightPrice
-          return {
-            court_id: court.id,
-            date,
-            start_time: ts.start,
-            end_time: ts.end,
-            price,
-            status: 'available' as const,
-          }
+          return { court_id: court.id, date, start_time: ts.start, end_time: ts.end, price, status: 'available' as const }
         })
-        const { error } = await supabase.from('slots').insert(newSlots)
-        if (!error) created += newSlots.length
-      }
+      )
+      const { error } = await supabase.from('slots').insert(allNewSlots)
+      if (!error) created = allNewSlots.length
     }
 
     setGenerating(false)
@@ -413,7 +402,13 @@ export default function DashboardSlotsPage() {
         setVenues(ownerVenues)
         const allCourts = ownerVenues.flatMap((v) => v.courts ?? [])
         setCourts(allCourts)
-        if (allCourts.length > 0) setActiveCourt(allCourts[0].id)
+        if (allCourts.length > 0) {
+          setActiveCourt(allCourts[0].id)
+          const params = new URLSearchParams(window.location.search)
+          const action = params.get('action')
+          if (action === 'generate') setShowGenerate(true)
+          else if (action === 'block') setShowRecurring(true)
+        }
       }
       setLoading(false)
     }
@@ -474,14 +469,15 @@ export default function DashboardSlotsPage() {
       await supabase.from('slots').update({ status: 'available', blocked_reason: null }).eq('id', selectedSlot.id)
       showToast('Slot unblocked.', 'info')
     } else if (action === 'cancel') {
-      const { data: booking } = await supabase
+      const { data: bookings, error: bookingError } = await supabase
         .from('bookings')
         .select('id')
         .eq('slot_id', selectedSlot.id)
         .neq('status', 'cancelled')
-        .single()
-      if (booking) {
-        await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+      if (bookingError) {
+        showToast('Failed to look up booking. Please try again.', 'error')
+      } else if (bookings && bookings.length > 0) {
+        await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookings[0].id)
         await supabase.from('slots').update({ status: 'available' }).eq('id', selectedSlot.id)
         showToast('Booking cancelled and slot made available.', 'success')
       } else {
@@ -751,21 +747,14 @@ function RecurringBlockModal({ isOpen, onClose, courtId, courtName, onDone }: {
     const supabase = createClient()
     let totalBlocked = 0
 
-    for (const date of matchingDates) {
-      const { data: dateSlots } = await supabase
-        .from('slots')
-        .select('id')
-        .eq('court_id', courtId)
-        .eq('date', date)
-        .eq('status', 'available')
-      if (dateSlots && dateSlots.length > 0) {
-        await supabase
-          .from('slots')
-          .update({ status: 'blocked', blocked_reason: reason || 'Recurring block' })
-          .in('id', dateSlots.map(s => s.id))
-        totalBlocked += dateSlots.length
-      }
+    const slotResults = await Promise.all(matchingDates.map((date) =>
+      supabase.from('slots').select('id').eq('court_id', courtId).eq('date', date).eq('status', 'available')
+    ))
+    const allSlotIds = slotResults.flatMap((r) => (r.data || []).map((s) => s.id))
+    if (allSlotIds.length > 0) {
+      await supabase.from('slots').update({ status: 'blocked', blocked_reason: reason || 'Recurring block' }).in('id', allSlotIds)
     }
+    totalBlocked = allSlotIds.length
 
     setBlocking(false)
     showToast(`Blocked ${totalBlocked} slots across ${matchingDates.length} day(s).`, 'success')

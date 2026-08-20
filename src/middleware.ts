@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  if (pathname === '/bookings' || pathname === '/wishlist') {
+  if (pathname === '/wishlist' || pathname === '/profile' || pathname.startsWith('/bookings')) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }

@@ -14,10 +14,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { amount, slot_ids, venue_id, court_id } = await req.json()
+  const { slot_ids, venue_id, court_id } = await req.json()
 
-  if (!amount || !slot_ids?.length || !venue_id || !court_id) {
+  if (!slot_ids?.length || !venue_id || !court_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+
+  const { data: court } = await supabase
+    .from('courts')
+    .select('price_per_slot')
+    .eq('id', court_id)
+    .eq('venue_id', venue_id)
+    .single()
+
+  if (!court) {
+    return NextResponse.json({ error: 'Court not found' }, { status: 404 })
   }
 
   const { data: freshSlots } = await supabase
@@ -29,6 +40,8 @@ export async function POST(req: Request) {
   if (unavailable && unavailable.length > 0) {
     return NextResponse.json({ error: 'Some slots are no longer available' }, { status: 409 })
   }
+
+  const amount = court.price_per_slot * slot_ids.length
 
   const order = await razorpay.orders.create({
     amount: Math.round(amount * 100),

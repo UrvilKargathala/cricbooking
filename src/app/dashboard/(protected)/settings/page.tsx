@@ -245,7 +245,12 @@ export default function DashboardSettingsPage() {
                     <button
                       key={opt.key}
                       type="button"
-                      onClick={() => { setTheme(opt.key); localStorage.setItem('cb_theme', opt.key) }}
+                      onClick={() => {
+                        setTheme(opt.key)
+                        localStorage.setItem('cb_theme', opt.key)
+                        if (opt.key === 'system') document.documentElement.removeAttribute('data-theme')
+                        else document.documentElement.setAttribute('data-theme', opt.key)
+                      }}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all',
                         theme === opt.key
@@ -354,20 +359,6 @@ export default function DashboardSettingsPage() {
                   else showToast('Password reset email sent. Check your inbox.', 'success')
                 }}
               />
-              <div className="flex items-center justify-between gap-4 px-4 py-3.5">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-surface-100 flex items-center justify-center">
-                    <Phone className="w-4 h-4 text-surface-600" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-surface-900">Two-factor authentication</p>
-                    <p className="text-xs text-surface-500 mt-0.5">Add an extra layer of security to your account</p>
-                  </div>
-                </div>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                  Not enabled
-                </span>
-              </div>
             </div>
           </div>
 
@@ -412,16 +403,8 @@ export default function DashboardSettingsPage() {
               <div className="border-t border-red-200/40 pt-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-red-800">Delete account</p>
-                  <p className="text-xs text-red-600/70 mt-0.5">Permanently remove your account and all data</p>
+                  <p className="text-xs text-red-600/70 mt-0.5">Contact support at support@cricbooking.in to request account deletion</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => showToast('Account deletion not available in demo.', 'info')}
-                  className="!text-red-600 !border-red-300 hover:!bg-red-100"
-                >
-                  Delete Account
-                </Button>
               </div>
             </div>
           </div>

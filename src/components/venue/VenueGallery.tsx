@@ -57,6 +57,15 @@ export function VenueGallery({ images, alt }: VenueGalleryProps) {
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setLightboxOpen(false)
+            else if (e.key === 'ArrowLeft') step(-1)
+            else if (e.key === 'ArrowRight') step(1)
+          }}
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+          role="dialog"
+          aria-label="Image gallery"
         >
           <button
             onClick={() => setLightboxOpen(false)}

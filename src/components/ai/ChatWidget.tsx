@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -15,13 +17,23 @@ const SUGGESTIONS = [
   'Which venue has the best rating?',
 ]
 
-export function ChatWidget() {
+class ChatErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() { return this.state.hasError ? null : this.props.children }
+}
+
+function ChatWidgetInner() {
+  const pathname = usePathname()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const isDashboard = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
 
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus()
@@ -30,6 +42,8 @@ export function ChatWidget() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, loading])
+
+  if (!user || isDashboard) return null
 
   const send = async (text: string) => {
     if (!text.trim() || loading) return
@@ -173,5 +187,13 @@ export function ChatWidget() {
         </div>
       </div>
     </>
+  )
+}
+
+export function ChatWidget() {
+  return (
+    <ChatErrorBoundary>
+      <ChatWidgetInner />
+    </ChatErrorBoundary>
   )
 }

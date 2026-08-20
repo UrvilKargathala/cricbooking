@@ -30,16 +30,22 @@ export function OccupancyHeatmap({ courts }: OccupancyHeatmapProps) {
 
   useEffect(() => {
     const load = async () => {
-      const result: HeatmapData = {}
-      for (const court of courts) {
-        result[court.id] = {}
-        for (const day of DAYS) {
+      const queries = courts.flatMap((court) =>
+        DAYS.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd')
-          const slots = await fetchSlots(court.id, dateStr)
-          const total = slots.length
-          const booked = slots.filter((s) => s.status === 'booked').length
-          result[court.id][dateStr] = total > 0 ? Math.round((booked / total) * 100) : 0
-        }
+          return fetchSlots(court.id, dateStr).then((slots) => ({
+            courtId: court.id,
+            dateStr,
+            total: slots.length,
+            booked: slots.filter((s) => s.status === 'booked').length,
+          }))
+        })
+      )
+      const results = await Promise.all(queries)
+      const result: HeatmapData = {}
+      for (const r of results) {
+        if (!result[r.courtId]) result[r.courtId] = {}
+        result[r.courtId][r.dateStr] = r.total > 0 ? Math.round((r.booked / r.total) * 100) : 0
       }
       setData(result)
     }

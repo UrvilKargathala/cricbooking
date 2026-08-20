@@ -264,11 +264,11 @@ export function Header() {
           )}
         </div>
 
-        <div className={cn('flex items-center gap-3 md:hidden justify-self-end', transparent && 'text-white')}>
-          <button onClick={() => setMenuOpen(true)} aria-label="Search">
+        <div className={cn('flex items-center gap-1 md:hidden justify-self-end', transparent && 'text-white')}>
+          <button onClick={() => { setMenuOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 100) }} aria-label="Search venues" className="p-2">
             <Search className="w-5 h-5" />
           </button>
-          <button onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu">
+          <button onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu" className="p-2">
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>

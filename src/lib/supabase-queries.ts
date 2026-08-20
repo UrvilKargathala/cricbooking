@@ -4,77 +4,88 @@ import type { Area, Venue, Court, Slot, Booking, Review } from '@/types'
 const supabase = createClient()
 
 export async function fetchAreas(): Promise<Area[]> {
-  const { data } = await supabase.from('areas').select('*').order('name')
+  const { data, error } = await supabase.from('areas').select('*').order('name')
+  if (error) throw new Error(`Failed to load areas: ${error.message}`)
   return data ?? []
 }
 
 export async function fetchVenues(): Promise<Venue[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('venues')
     .select('*, area:areas(*), courts(*)')
     .eq('status', 'approved')
     .order('is_featured', { ascending: false })
     .order('rating', { ascending: false })
+  if (error) throw new Error(`Failed to load venues: ${error.message}`)
   return (data ?? []).map(normalizeVenue)
 }
 
 export async function fetchVenueBySlug(slug: string): Promise<Venue | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('venues')
     .select('*, area:areas(*), courts(*)')
     .eq('slug', slug)
     .single()
+  if (error && error.code !== 'PGRST116') throw new Error(`Failed to load venue: ${error.message}`)
   return data ? normalizeVenue(data) : null
 }
 
 export async function fetchOwnerVenues(ownerId: string): Promise<Venue[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('venues')
     .select('*, area:areas(*), courts(*)')
     .eq('owner_id', ownerId)
     .order('created_at', { ascending: false })
+  if (error) throw new Error(`Failed to load owner venues: ${error.message}`)
   return (data ?? []).map(normalizeVenue)
 }
 
 export async function fetchSlots(courtId: string, date: string): Promise<Slot[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('slots')
     .select('*')
     .eq('court_id', courtId)
     .eq('date', date)
     .order('start_time')
+  if (error) throw new Error(`Failed to load slots: ${error.message}`)
   return data ?? []
 }
 
 export async function fetchUserBookings(userId: string): Promise<Booking[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
     .select('*, venue:venues(*, area:areas(*)), court:courts(*), slot:slots(*)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+  if (error) throw new Error(`Failed to load bookings: ${error.message}`)
   return (data ?? []).map(normalizeBooking)
 }
 
 export async function fetchOwnerBookings(ownerId: string): Promise<Booking[]> {
-  const { data } = await supabase
+  const authed = await supabase.auth.getUser()
+  if (authed.data.user?.id !== ownerId) return []
+  const { data, error } = await supabase
     .from('bookings')
     .select('*, venue:venues!inner(*, area:areas(*)), court:courts(*), slot:slots(*), user:profiles!bookings_user_id_fkey(*)')
     .eq('venue.owner_id', ownerId)
     .order('created_at', { ascending: false })
+  if (error) throw new Error(`Failed to load owner bookings: ${error.message}`)
   return (data ?? []).map(normalizeBooking)
 }
 
 export async function fetchVenueReviews(venueId: string): Promise<Review[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('reviews')
     .select('*, user:profiles(*)')
     .eq('venue_id', venueId)
     .order('created_at', { ascending: false })
+  if (error) throw new Error(`Failed to load reviews: ${error.message}`)
   return data ?? []
 }
 
 export async function fetchBookingCount(): Promise<number> {
-  const { count } = await supabase.from('bookings').select('*', { count: 'exact', head: true })
+  const { count, error } = await supabase.from('bookings').select('*', { count: 'exact', head: true })
+  if (error) throw new Error(`Failed to load booking count: ${error.message}`)
   return count ?? 0
 }
 

@@ -15,7 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('cb_theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()` }} />
+      </head>
       <body className="min-h-screen bg-surface-50">
         {children}
         <ChatWidget />

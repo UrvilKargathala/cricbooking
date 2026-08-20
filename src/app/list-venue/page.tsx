@@ -86,6 +86,7 @@ export default function ListVenuePage() {
     mobile: '',
     email: '',
     password: '',
+    confirmPassword: '',
     businessName: '',
     businessAddress: '',
     city: 'Surat',
@@ -123,6 +124,7 @@ export default function ListVenuePage() {
     if (!/^\d{10}$/.test(formData.mobile)) errs.mobile = 'Enter a valid 10-digit number'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Enter a valid email'
     if (formData.password.length < 8) errs.password = 'Minimum 8 characters'
+    if (formData.confirmPassword !== formData.password) errs.confirmPassword = 'Passwords do not match'
     if (!formData.businessName.trim()) errs.businessName = 'Business name is required'
     if (!formData.businessAddress.trim()) errs.businessAddress = 'Address is required'
     if (!/^\d{6}$/.test(formData.pincode)) errs.pincode = 'Enter a valid 6-digit pincode'
@@ -145,7 +147,11 @@ export default function ListVenuePage() {
     })
 
     if (authError) {
-      setError(authError.message)
+      if (authError.message.toLowerCase().includes('already registered') || authError.message.toLowerCase().includes('already been registered')) {
+        setError('An account with this email already exists. Please log in and use the Owner Dashboard to add your venue.')
+      } else {
+        setError(authError.message)
+      }
       setLoading(false)
       return
     }
@@ -316,6 +322,17 @@ export default function ListVenuePage() {
                   </div>
                   <p className="text-xs text-surface-800/40 mt-1">Minimum 8 characters</p>
                   {fieldErrors.password && <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-800 mb-1.5">Confirm Password *</label>
+                  <input
+                    type="password"
+                    className={cn(inputClass, fieldErrors.confirmPassword && errorClass)}
+                    placeholder="Re-enter password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => update('confirmPassword', e.target.value)}
+                  />
+                  {fieldErrors.confirmPassword && <p className="text-xs text-red-600 mt-1">{fieldErrors.confirmPassword}</p>}
                 </div>
               </div>
 

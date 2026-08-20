@@ -126,7 +126,6 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: totalAmount,
           slot_ids: selectedSlots.map((s) => s.id),
           venue_id: venue.id,
           court_id: courtId,
@@ -164,7 +163,6 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
               slot_ids: selectedSlots.map((s) => s.id),
               venue_id: venue.id,
               court_id: courtId,
-              amount: totalAmount,
             }),
           })
 
@@ -304,7 +302,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
                 className="mt-3 block rounded-lg overflow-hidden border border-surface-200 h-40"
               >
                 <iframe
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(venue.address)}&output=embed`}
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(venue.address)}&z=15&output=embed`}
                   className="w-full h-full pointer-events-none"
                   loading="lazy"
                   title={`Map showing location of ${venue.name}`}
@@ -429,11 +427,13 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
               <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                 <h2 className="font-display font-semibold text-surface-900">Reviews</h2>
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 text-sm text-surface-800">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    {venue.rating.toFixed(1)}
-                    <span className="text-surface-800/50">({venue.total_reviews})</span>
-                  </span>
+                  {venue.total_reviews > 0 && (
+                    <span className="flex items-center gap-1 text-sm text-surface-800">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      {venue.rating.toFixed(1)}
+                      <span className="text-surface-800/50">({venue.total_reviews})</span>
+                    </span>
+                  )}
                   {sortedReviews.length > 1 && (
                     <select
                       value={reviewSort}

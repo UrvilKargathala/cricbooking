@@ -89,12 +89,14 @@ export default function Home() {
   const [bookingCount, setBookingCount] = useState(0)
   const [statsLoaded, setStatsLoaded] = useState(false)
 
+  const [statsError, setStatsError] = useState(false)
+
   useEffect(() => {
     Promise.all([
       fetchAreas().then(setAreas),
       fetchVenues().then(setAllVenues),
       fetchBookingCount().then(setBookingCount),
-    ]).finally(() => setStatsLoaded(true))
+    ]).catch(() => setStatsError(true)).finally(() => setStatsLoaded(true))
   }, [])
 
   const handleHeroSearch = () => {
@@ -182,26 +184,30 @@ export default function Home() {
         <section className="relative -mt-6 z-10">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <div className="bg-white rounded-2xl shadow-lg border border-surface-200/60 px-6 py-8 sm:px-10 sm:py-10">
-              <div className="grid grid-cols-3 gap-4 sm:gap-8">
-                <div className="text-center">
-                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    {statsLoaded ? <CountUp value={allVenues.length} suffix="+" /> : <span className="opacity-0">0</span>}
-                  </p>
-                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Verified Venues</p>
+              {statsError ? (
+                <p className="text-sm text-surface-800/50 text-center py-4">Could not load stats right now. Please refresh the page.</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-4 sm:gap-8">
+                  <div className="text-center">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                      {statsLoaded ? <CountUp value={allVenues.length} suffix="+" /> : <span className="opacity-0">0</span>}
+                    </p>
+                    <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Verified Venues</p>
+                  </div>
+                  <div className="text-center border-x border-surface-200">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                      {statsLoaded ? <CountUp value={areas.length} /> : <span className="opacity-0">0</span>}
+                    </p>
+                    <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Areas in Surat</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                      {statsLoaded ? <CountUp value={bookingCount} suffix="+" /> : <span className="opacity-0">0</span>}
+                    </p>
+                    <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Bookings Made</p>
+                  </div>
                 </div>
-                <div className="text-center border-x border-surface-200">
-                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    {statsLoaded ? <CountUp value={areas.length} /> : <span className="opacity-0">0</span>}
-                  </p>
-                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Areas in Surat</p>
-                </div>
-                <div className="text-center">
-                  <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
-                    {statsLoaded ? <CountUp value={bookingCount} suffix="+" /> : <span className="opacity-0">0</span>}
-                  </p>
-                  <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Bookings Made</p>
-                </div>
-              </div>
+              )}
               <div className="mt-6 pt-6 border-t border-surface-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {TRUST_BAR.map((item) => (
                   <div key={item.label} className="flex items-center gap-2 justify-center bg-surface-50 rounded-lg py-2.5 px-3">
@@ -246,8 +252,8 @@ export default function Home() {
                       {area.image ? (
                         <img src={area.image} alt={area.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <div className="w-full h-full bg-surface-100 flex items-center justify-center">
-                          <MapPin className="w-8 h-8 text-surface-300" />
+                        <div className="w-full h-full bg-gradient-to-br from-brand-100 via-brand-200 to-brand-400 flex items-center justify-center">
+                          <MapPin className="w-10 h-10 text-white/60" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />

@@ -71,8 +71,21 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
     load()
   }, [params.id, router])
 
+  const canCancelBooking = () => {
+    if (!booking?.slot || !booking.venue) return true
+    const cancelHours = booking.venue.cancellation_hours ?? 0
+    if (cancelHours === 0) return true
+    const slotStart = new Date(`${booking.slot.date}T${booking.slot.start_time}`)
+    const hoursUntilSlot = (slotStart.getTime() - Date.now()) / (1000 * 60 * 60)
+    return hoursUntilSlot >= cancelHours
+  }
+
   const handleCancel = async () => {
     if (!booking) return
+    if (!canCancelBooking()) {
+      showToast(`Cannot cancel within ${booking.venue?.cancellation_hours} hours of the slot`, 'error')
+      return
+    }
     setCancelling(true)
     const supabase = createClient()
     const { error } = await supabase
@@ -218,11 +231,17 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             <div className="flex flex-wrap gap-3">
               {booking.status === 'confirmed' && (
                 <>
-                  <Link href={`/venues/${booking.venue?.slug}`}>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4" /> Reschedule
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    onClick={async () => {
+                      if (!confirm('This will cancel your current booking and take you to the venue page to book a new slot. Continue?')) return
+                      await handleCancel()
+                      router.push(`/venues/${booking.venue?.slug}`)
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4" /> Reschedule
+                  </Button>
                   <Button
                     variant="outline"
                     className="border-red-600 text-red-600 hover:bg-red-50"
@@ -261,6 +280,11 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
 
       {/* Cancel Confirmation */}
       <Modal isOpen={cancelOpen} onClose={() => setCancelOpen(false)} title="Cancel Booking">
+        {!canCancelBooking() && booking?.venue && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800">
+            Cancellation is not allowed within {booking.venue.cancellation_hours} hours of the slot start time.
+          </div>
+        )}
         <p className="text-sm text-surface-800/70 mb-4">
           Are you sure you want to cancel this booking? This action cannot be undone.
         </p>
@@ -279,7 +303,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
           <Button
             variant="primary"
             onClick={handleCancel}
-            disabled={cancelling}
+            disabled={cancelling || !canCancelBooking()}
             className="flex-1 !bg-red-600 hover:!bg-red-700"
           >
             {cancelling ? 'Cancelling...' : 'Yes, Cancel'}

@@ -11,34 +11,34 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient()
 
-    async function getUser() {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (authUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single()
-        setUser(profile)
-      }
-      setLoading(false)
-    }
-    getUser()
+    let cancelled = false
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (cancelled) return
+      if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
-        setUser(profile)
-      } else if (event === 'SIGNED_OUT') {
+        if (!cancelled) setUser(profile)
+      } else {
         setUser(null)
+      }
+      if (!cancelled) setLoading(false)
+    })
+
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      if (cancelled) return
+      if (authUser) {
+        supabase.from('profiles').select('*').eq('id', authUser.id).single()
+          .then(({ data: profile }) => { if (!cancelled) { setUser(profile); setLoading(false) } })
+      } else {
+        setLoading(false)
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => { cancelled = true; subscription.unsubscribe() }
   }, [])
 
   const signOut = async () => {

@@ -264,9 +264,9 @@ export default function DashboardOverviewPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-brand-800 rounded-2xl p-6 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-1/2 w-40 h-40 bg-brand-500/5 rounded-full translate-y-1/2" />
+      <div className="relative overflow-hidden rounded-2xl p-6 text-white">
+        <img src="/dashboard-banner.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-900/90 via-brand-800/80 to-brand-900/60" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="font-display font-bold text-xl sm:text-2xl">
@@ -356,14 +356,14 @@ export default function DashboardOverviewPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
+        <Link href="/dashboard/slots?action=generate" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
             <Zap className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Generate Slots</p>
           <p className="text-xs text-surface-400 mt-0.5">Create time slots for courts</p>
         </Link>
-        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-red-300 hover:shadow-md transition-all">
+        <Link href="/dashboard/slots?action=block" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-red-300 hover:shadow-md transition-all">
           <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-3 group-hover:bg-red-100 transition-colors">
             <Ban className="w-5 h-5 text-red-500" />
           </div>

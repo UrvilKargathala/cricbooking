@@ -38,6 +38,7 @@ export default function DashboardBookingsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [venues, setVenues] = useState<Venue[]>([])
   const [walkinOpen, setWalkinOpen] = useState(false)
+  const [pageSize, setPageSize] = useState(20)
   const showToast = useToastStore((s) => s.showToast)
 
   const fetchBookings = async (userId: string) => {
@@ -148,6 +149,7 @@ export default function DashboardBookingsPage() {
       }
       showToast(`Marked ${ids.length} booking(s) as paid.`, 'success')
     } else if (action === 'cancel') {
+      if (!confirm(`Cancel ${ids.length} booking(s)? This cannot be undone.`)) return
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'cancelled' })
@@ -331,24 +333,24 @@ export default function DashboardBookingsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm text-left table-auto">
               <thead>
                 <tr className="text-left text-surface-500 border-b border-surface-100 bg-surface-50/50">
                   <th className="py-3 pl-5 font-medium w-8">
                     <input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4 accent-brand-600 rounded" />
                   </th>
-                  <th className="py-3 font-medium">Code</th>
-                  <th className="py-3 font-medium">Customer</th>
-                  <th className="py-3 font-medium">Court</th>
-                  <th className="py-3 font-medium">Date & Time</th>
-                  <th className="py-3 font-medium">Amount</th>
-                  <th className="py-3 font-medium">Source</th>
-                  <th className="py-3 font-medium">Payment</th>
+                  <th className="py-3 pr-4 font-medium whitespace-nowrap">Code</th>
+                  <th className="py-3 pr-4 font-medium">Customer</th>
+                  <th className="py-3 pr-4 font-medium">Court</th>
+                  <th className="py-3 pr-6 font-medium whitespace-nowrap">Date & Time</th>
+                  <th className="py-3 pr-6 font-medium">Amount</th>
+                  <th className="py-3 pr-4 font-medium">Source</th>
+                  <th className="py-3 pr-4 font-medium">Payment</th>
                   <th className="py-3 pr-5 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100">
-                {filtered.map((booking) => (
+                {filtered.slice(0, pageSize).map((booking) => (
                   <tr
                     key={booking.id}
                     onClick={() => setSelectedBooking(booking)}
@@ -362,8 +364,8 @@ export default function DashboardBookingsPage() {
                         className="w-4 h-4 accent-brand-600 rounded"
                       />
                     </td>
-                    <td className="py-3.5 font-mono text-xs text-surface-500">{booking.booking_code}</td>
-                    <td className="py-3.5">
+                    <td className="py-3.5 pr-4 font-mono text-xs text-surface-500 whitespace-nowrap">{booking.booking_code}</td>
+                    <td className="py-3.5 pr-4">
                       <p className="font-medium text-surface-900">
                         {booking.user?.full_name || booking.customer_name || 'Walk-in'}
                       </p>
@@ -371,21 +373,17 @@ export default function DashboardBookingsPage() {
                         <p className="text-xs text-surface-400 mt-0.5">{booking.customer_phone}</p>
                       )}
                     </td>
-                    <td className="py-3.5 text-surface-600">{booking.court?.name}</td>
-                    <td className="py-3.5">
-                      <p className="text-surface-900">{booking.slot?.date}</p>
-                      {booking.slot && (
-                        <p className="text-xs text-surface-400 flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          {formatTime(booking.slot.start_time)} – {formatTime(booking.slot.end_time)}
-                        </p>
+                    <td className="py-3.5 pr-4 text-surface-600">{booking.court?.name}</td>
+                    <td className="py-3.5 pr-6 text-surface-900 whitespace-nowrap">
+                      {booking.slot?.date} {booking.slot && (
+                        <span className="text-surface-500">· {formatTime(booking.slot.start_time)} – {formatTime(booking.slot.end_time)}</span>
                       )}
                     </td>
-                    <td className="py-3.5 font-semibold text-surface-900">{formatPrice(booking.amount)}</td>
-                    <td className="py-3.5">
+                    <td className="py-3.5 pr-6 font-semibold text-surface-900 whitespace-nowrap">{formatPrice(booking.amount)}</td>
+                    <td className="py-3.5 pr-4">
                       <Badge variant={booking.source}>{booking.source}</Badge>
                     </td>
-                    <td className="py-3.5">
+                    <td className="py-3.5 pr-4">
                       <Badge variant={booking.payment_status as 'paid' | 'pending' | 'refunded'}>{booking.payment_status}</Badge>
                     </td>
                     <td className="py-3.5 pr-5">
@@ -395,6 +393,16 @@ export default function DashboardBookingsPage() {
                 ))}
               </tbody>
             </table>
+            {pageSize < filtered.length && (
+              <div className="text-center py-4 border-t border-surface-100">
+                <button
+                  onClick={() => setPageSize((s) => s + 20)}
+                  className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                >
+                  Show more ({filtered.length - pageSize} remaining)
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

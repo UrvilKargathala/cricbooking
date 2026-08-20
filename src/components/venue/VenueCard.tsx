@@ -83,11 +83,15 @@ export function VenueCard({ venue }: VenueCardProps) {
           </div>
 
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-surface-200">
-            <span className="flex items-center gap-1 text-sm text-surface-800">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              {venue.rating.toFixed(1)}
-              <span className="text-surface-800/50">({venue.total_reviews})</span>
-            </span>
+            {venue.total_reviews > 0 ? (
+              <span className="flex items-center gap-1 text-sm text-surface-800">
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                {venue.rating.toFixed(1)}
+                <span className="text-surface-800/50">({venue.total_reviews})</span>
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">New</span>
+            )}
             <span className="flex items-center gap-1 text-xs text-surface-800/60">
               <Clock className="w-3.5 h-3.5" />
               {formatTime(venue.opening_time)} - {formatTime(venue.closing_time)}

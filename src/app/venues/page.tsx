@@ -35,6 +35,7 @@ function VenuesPageContent() {
   const [areas, setAreas] = useState<Area[]>([])
   const [allVenues, setAllVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(12)
 
   useEffect(() => {
     Promise.all([fetchAreas().then(setAreas), fetchVenues().then(setAllVenues)]).finally(() =>
@@ -138,13 +139,22 @@ function VenuesPageContent() {
             <p className="text-sm text-surface-800/60 mt-3">Loading venues...</p>
           </div>
         ) : filteredVenues.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {filteredVenues.map((venue, index) => (
-              <ScrollReveal key={venue.id} delay={(index % 3) * 100}>
-                <VenueCard venue={venue} />
-              </ScrollReveal>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {filteredVenues.slice(0, visibleCount).map((venue, index) => (
+                <ScrollReveal key={venue.id} delay={(index % 3) * 100}>
+                  <VenueCard venue={venue} />
+                </ScrollReveal>
+              ))}
+            </div>
+            {visibleCount < filteredVenues.length && (
+              <div className="text-center mt-8">
+                <Button variant="outline" onClick={() => setVisibleCount((c) => c + 12)}>
+                  Show More ({filteredVenues.length - visibleCount} remaining)
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20">
             <MapPin className="w-10 h-10 text-surface-800/30 mx-auto mb-3" />

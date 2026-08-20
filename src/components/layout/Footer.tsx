@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
 
 const POPULAR_AREAS = [
   { name: 'Vesu', slug: 'vesu' },
@@ -8,18 +11,20 @@ const POPULAR_AREAS = [
   { name: 'Katargam', slug: 'katargam' },
 ]
 
-const QUICK_LINKS = [
-  { name: 'All Venues', href: '/venues' },
-  { name: 'My Bookings', href: '/bookings' },
-  { name: 'Login', href: '/login' },
-]
-
 const OWNER_LINKS = [
   { name: 'List Your Venue', href: '/list-venue' },
   { name: 'Owner Dashboard', href: '/dashboard' },
 ]
 
 export function Footer() {
+  const { user } = useAuth()
+
+  const quickLinks = [
+    { name: 'All Venues', href: '/venues' },
+    { name: 'My Bookings', href: '/bookings' },
+    ...(user ? [] : [{ name: 'Login', href: '/login' }]),
+  ]
+
   return (
     <footer className="bg-surface-900 text-surface-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -50,7 +55,7 @@ export function Footer() {
           <div>
             <h3 className="font-display font-semibold text-white text-sm mb-3">Quick Links</h3>
             <ul className="flex flex-col gap-2">
-              {QUICK_LINKS.map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-surface-200/60 hover:text-white">
                     {link.name}

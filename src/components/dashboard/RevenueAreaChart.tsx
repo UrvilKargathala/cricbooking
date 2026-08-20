@@ -28,7 +28,7 @@ export function RevenueAreaChart({ data }: RevenueAreaChartProps) {
           tick={{ fontSize: 12, fill: '#737373' }}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+          tickFormatter={(v) => v >= 1000 ? `₹${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `₹${v}`}
           width={50}
         />
         <Tooltip

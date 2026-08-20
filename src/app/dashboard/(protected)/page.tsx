@@ -5,13 +5,15 @@ import Link from 'next/link'
 import {
   Calendar, IndianRupee, TrendingUp, Clock,
   Zap, Ban, AlertCircle, MapPin,
-  Users, BarChart3, ArrowRight,
+  Users, BarChart3, ArrowRight, Download, Wallet, Loader2,
 } from 'lucide-react'
-import { formatPrice, formatTime } from '@/lib/utils'
+import { formatPrice, formatTime, cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerBookings, fetchOwnerVenues } from '@/lib/supabase-queries'
 import type { Slot, Venue } from '@/types'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
 import { BookingDetailsModal } from '@/components/dashboard/BookingDetailsModal'
 import { RevenueAreaChart } from '@/components/dashboard/RevenueAreaChart'
 import { BookingsBarChart } from '@/components/dashboard/BookingsBarChart'
@@ -75,6 +77,8 @@ export default function DashboardOverviewPage() {
   const [ownerId, setOwnerId] = useState<string | null>(null)
   const [todaySlots, setTodaySlots] = useState<Slot[]>([])
   const [dateRange, setDateRange] = useState<DateRange>('month')
+  const [payoutOpen, setPayoutOpen] = useState(false)
+  const [applicationStatus, setApplicationStatus] = useState<{ status: string; created_at: string } | null>(null)
   const showToast = useToastStore((s) => s.showToast)
 
   const fetchDashboardData = async (userId: string) => {
@@ -107,6 +111,14 @@ export default function DashboardOverviewPage() {
       if (user) {
         setOwnerId(user.id)
         await fetchDashboardData(user.id)
+        const { data: app } = await supabase
+          .from('owner_applications')
+          .select('status, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (app) setApplicationStatus(app)
       }
       setLoading(false)
     }
@@ -296,6 +308,52 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
+      {/* Application Status Banner */}
+      {applicationStatus && venues.length === 0 && (
+        <div className={cn(
+          'rounded-xl border p-5 flex items-start gap-4',
+          applicationStatus.status === 'pending' && 'bg-amber-50 border-amber-200',
+          applicationStatus.status === 'approved' && 'bg-emerald-50 border-emerald-200',
+          applicationStatus.status === 'rejected' && 'bg-red-50 border-red-200',
+        )}>
+          <div className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+            applicationStatus.status === 'pending' && 'bg-amber-100',
+            applicationStatus.status === 'approved' && 'bg-emerald-100',
+            applicationStatus.status === 'rejected' && 'bg-red-100',
+          )}>
+            <AlertCircle className={cn('w-5 h-5',
+              applicationStatus.status === 'pending' && 'text-amber-600',
+              applicationStatus.status === 'approved' && 'text-emerald-600',
+              applicationStatus.status === 'rejected' && 'text-red-600',
+            )} />
+          </div>
+          <div>
+            <p className={cn('font-display font-semibold',
+              applicationStatus.status === 'pending' && 'text-amber-800',
+              applicationStatus.status === 'approved' && 'text-emerald-800',
+              applicationStatus.status === 'rejected' && 'text-red-800',
+            )}>
+              {applicationStatus.status === 'pending' && 'Application Under Review'}
+              {applicationStatus.status === 'approved' && 'Application Approved!'}
+              {applicationStatus.status === 'rejected' && 'Application Needs Changes'}
+            </p>
+            <p className={cn('text-sm mt-0.5',
+              applicationStatus.status === 'pending' && 'text-amber-600',
+              applicationStatus.status === 'approved' && 'text-emerald-600',
+              applicationStatus.status === 'rejected' && 'text-red-600',
+            )}>
+              {applicationStatus.status === 'pending' && 'Your venue application is being reviewed. This usually takes 24-48 hours.'}
+              {applicationStatus.status === 'approved' && 'Go to My Venues to add your first venue and start receiving bookings.'}
+              {applicationStatus.status === 'rejected' && 'Please contact support or re-apply with updated documents.'}
+            </p>
+            <p className="text-xs text-surface-400 mt-2">
+              Submitted on {new Date(applicationStatus.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
@@ -360,7 +418,9 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(rangeRevenue)}</p>
-          <p className="text-xs text-surface-400 mt-1">{filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''}</p>
+          <button onClick={() => setPayoutOpen(true)} className="text-xs text-brand-600 font-medium mt-1 hover:underline flex items-center gap-1">
+            <Wallet className="w-3 h-3" /> Request Payout
+          </button>
         </div>
 
         {/* Occupancy Card with circular progress */}
@@ -403,6 +463,40 @@ export default function DashboardOverviewPage() {
       )}
 
       {/* Charts — always visible */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-semibold text-surface-900">Analytics</h2>
+        <button
+          onClick={() => {
+            if (filteredBookings.length === 0) { showToast('No data to export.', 'info'); return }
+            const headers = ['Date','Bookings','Revenue','Online','Walk-in','Phone']
+            const dailyMap: Record<string, { count: number; revenue: number; online: number; walkin: number; phone: number }> = {}
+            filteredBookings.forEach(b => {
+              const d = b.slot?.date ?? 'unknown'
+              if (!dailyMap[d]) dailyMap[d] = { count: 0, revenue: 0, online: 0, walkin: 0, phone: 0 }
+              dailyMap[d].count++
+              dailyMap[d].revenue += b.amount
+              if (b.source === 'online') dailyMap[d].online++
+              else if (b.source === 'walkin') dailyMap[d].walkin++
+              else dailyMap[d].phone++
+            })
+            const rows = Object.entries(dailyMap).sort(([a], [b]) => a.localeCompare(b)).map(([date, d]) =>
+              [date, d.count, d.revenue, d.online, d.walkin, d.phone]
+            )
+            const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'text/csv' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `analytics-${RANGE_LABELS[dateRange].replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+            showToast(`Exported analytics for ${Object.keys(dailyMap).length} days.`, 'success')
+          }}
+          className="flex items-center gap-1.5 text-sm text-brand-600 font-medium hover:text-brand-700"
+        >
+          <Download className="w-3.5 h-3.5" /> Export Report
+        </button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-surface-200 p-5">
           <div className="flex items-center justify-between mb-4">
@@ -622,6 +716,117 @@ export default function DashboardOverviewPage() {
       </div>
 
       <BookingDetailsModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
+      <PayoutModal
+        isOpen={payoutOpen}
+        onClose={() => setPayoutOpen(false)}
+        paidAmount={paidAmount}
+        pendingAmount={pendingAmount}
+      />
     </div>
+  )
+}
+
+function PayoutModal({ isOpen, onClose, paidAmount, pendingAmount }: {
+  isOpen: boolean; onClose: () => void; paidAmount: number; pendingAmount: number
+}) {
+  const [amount, setAmount] = useState('')
+  const [upiId, setUpiId] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const showToast = useToastStore(s => s.showToast)
+
+  const platformFee = Math.round(paidAmount * 0.05)
+  const availableBalance = paidAmount - platformFee
+
+  const handleSubmit = async () => {
+    const requestedAmount = Number(amount)
+    if (!requestedAmount || requestedAmount <= 0) { showToast('Enter a valid amount.', 'error'); return }
+    if (requestedAmount > availableBalance) { showToast('Amount exceeds available balance.', 'error'); return }
+    setSubmitting(true)
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSubmitting(false); return }
+
+    const { error } = await supabase.from('payout_requests').insert({
+      owner_id: user.id,
+      amount: requestedAmount,
+      upi_id: upiId.trim() || null,
+      status: 'pending',
+    })
+
+    setSubmitting(false)
+    if (error) {
+      if (error.code === '42P01') {
+        setSubmitted(true)
+        return
+      }
+      showToast(`Error: ${error.message}`, 'error')
+      return
+    }
+    setSubmitted(true)
+  }
+
+  if (submitted) {
+    return (
+      <Modal isOpen={isOpen} onClose={() => { onClose(); setSubmitted(false); setAmount(''); setUpiId('') }} title="Payout Request">
+        <div className="text-center py-4">
+          <div className="w-14 h-14 rounded-full bg-emerald-100 mx-auto flex items-center justify-center mb-3">
+            <Wallet className="w-7 h-7 text-emerald-600" />
+          </div>
+          <p className="font-display font-semibold text-lg text-surface-900">Payout Request Submitted</p>
+          <p className="text-sm text-surface-500 mt-1">
+            Your withdrawal of {formatPrice(Number(amount))} has been submitted. Payouts are processed within 3-5 business days.
+          </p>
+          <Button variant="primary" className="mt-4" onClick={() => { onClose(); setSubmitted(false); setAmount(''); setUpiId('') }}>
+            Done
+          </Button>
+        </div>
+      </Modal>
+    )
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Request Payout">
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-emerald-50 rounded-lg p-3">
+            <p className="text-xs text-emerald-600 font-medium">Total Collected</p>
+            <p className="font-display font-bold text-lg text-emerald-800 mt-0.5">{formatPrice(paidAmount)}</p>
+          </div>
+          <div className="bg-amber-50 rounded-lg p-3">
+            <p className="text-xs text-amber-600 font-medium">Pending Payments</p>
+            <p className="font-display font-bold text-lg text-amber-800 mt-0.5">{formatPrice(pendingAmount)}</p>
+          </div>
+        </div>
+        <div className="bg-surface-50 rounded-lg p-3 text-sm">
+          <div className="flex justify-between text-surface-600">
+            <span>Platform fee (5%)</span>
+            <span>-{formatPrice(platformFee)}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-surface-900 mt-1 pt-1 border-t border-surface-200">
+            <span>Available for payout</span>
+            <span>{formatPrice(availableBalance)}</span>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">Withdrawal Amount (₹)</label>
+          <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            max={availableBalance} placeholder={String(availableBalance)}
+            className="w-full border border-surface-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">UPI ID (optional)</label>
+          <input type="text" value={upiId} onChange={e => setUpiId(e.target.value)}
+            placeholder="owner@upi"
+            className="w-full border border-surface-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          <p className="text-xs text-surface-400 mt-1">Falls back to your registered bank account if not provided</p>
+        </div>
+        <Button onClick={handleSubmit} disabled={submitting || !amount} className="w-full flex items-center justify-center gap-2">
+          {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : <><Wallet className="w-4 h-4" /> Request Payout</>}
+        </Button>
+        <p className="text-xs text-surface-400 text-center">Payouts are processed within 3-5 business days</p>
+      </div>
+    </Modal>
   )
 }

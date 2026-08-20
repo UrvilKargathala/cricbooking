@@ -2,17 +2,18 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import {
-  Plus, Clock, Search, X, Download, Filter,
+  Plus, Clock, Search, X, Download, Filter, Loader2,
   CalendarCheck, CalendarX, IndianRupee, Calendar,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { fetchOwnerBookings, fetchOwnerVenues } from '@/lib/supabase-queries'
-import { formatPrice, formatTime } from '@/lib/utils'
+import { fetchOwnerBookings, fetchOwnerVenues, fetchSlots } from '@/lib/supabase-queries'
+import { formatPrice, formatTime, generateBookingCode, cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
 import { BookingDetailsModal } from '@/components/dashboard/BookingDetailsModal'
 import { useToastStore } from '@/store/useToastStore'
-import type { Booking } from '@/types'
+import type { Booking, Venue, Slot } from '@/types'
 
 const STATUSES = ['All', 'confirmed', 'cancelled', 'completed']
 const SOURCES = ['All', 'online', 'walkin', 'phone']
@@ -35,6 +36,8 @@ export default function DashboardBookingsPage() {
   const [payment, setPayment] = useState('All')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [venues, setVenues] = useState<Venue[]>([])
+  const [walkinOpen, setWalkinOpen] = useState(false)
   const showToast = useToastStore((s) => s.showToast)
 
   const fetchBookings = async (userId: string) => {
@@ -43,6 +46,7 @@ export default function DashboardBookingsPage() {
       fetchOwnerVenues(userId),
     ])
     setAllBookings(bookings)
+    setVenues(venues)
     const names = venues.flatMap((v) => v.courts ?? []).map((c) => c.name)
     setCourtNames(Array.from(new Set(names)))
     setVenueIds(venues.map((v) => v.id))
@@ -185,7 +189,31 @@ export default function DashboardBookingsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => showToast('Feature coming soon.', 'info')}
+            onClick={() => {
+              if (filtered.length === 0) { showToast('No bookings to export.', 'info'); return }
+              const headers = ['Booking Code','Customer','Phone','Court','Date','Time','Amount','Source','Payment','Status']
+              const rows = filtered.map(b => [
+                b.booking_code,
+                b.user?.full_name || b.customer_name || 'Walk-in',
+                b.customer_phone || '',
+                b.court?.name || '',
+                b.slot?.date || '',
+                b.slot ? `${formatTime(b.slot.start_time)} - ${formatTime(b.slot.end_time)}` : '',
+                String(b.amount),
+                b.source,
+                b.payment_status,
+                b.status,
+              ])
+              const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+              const blob = new Blob([csv], { type: 'text/csv' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`
+              a.click()
+              URL.revokeObjectURL(url)
+              showToast(`Exported ${filtered.length} bookings.`, 'success')
+            }}
             className="flex items-center gap-1.5"
           >
             <Download className="w-4 h-4" />
@@ -193,7 +221,7 @@ export default function DashboardBookingsPage() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => showToast('Feature coming soon.', 'info')}
+            onClick={() => setWalkinOpen(true)}
             className="flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
@@ -372,6 +400,154 @@ export default function DashboardBookingsPage() {
       </div>
 
       <BookingDetailsModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
+      <WalkinModal
+        isOpen={walkinOpen}
+        onClose={() => setWalkinOpen(false)}
+        venues={venues}
+        onCreated={() => { if (ownerId) fetchBookings(ownerId) }}
+      />
     </div>
+  )
+}
+
+function WalkinModal({ isOpen, onClose, venues, onCreated }: {
+  isOpen: boolean; onClose: () => void; venues: Venue[]; onCreated: () => void
+}) {
+  const allCourts = venues.flatMap(v => (v.courts ?? []).map(c => ({ ...c, venueName: v.name, venueId: v.id })))
+  const [courtId, setCourtId] = useState(allCourts[0]?.id || '')
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [slots, setSlots] = useState<Slot[]>([])
+  const [slotId, setSlotId] = useState('')
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [loadingSlots, setLoadingSlots] = useState(false)
+  const showToast = useToastStore(s => s.showToast)
+
+  useEffect(() => {
+    if (!courtId || !date || !isOpen) return
+    setLoadingSlots(true)
+    fetchSlots(courtId, date).then(s => {
+      setSlots(s.filter(sl => sl.status === 'available'))
+      setSlotId('')
+      setLoadingSlots(false)
+    })
+  }, [courtId, date, isOpen])
+
+  useEffect(() => {
+    if (isOpen && allCourts.length > 0 && !courtId) setCourtId(allCourts[0].id)
+  }, [isOpen])
+
+  const selectedSlot = slots.find(s => s.id === slotId)
+  const selectedCourt = allCourts.find(c => c.id === courtId)
+
+  const handleSubmit = async () => {
+    if (!slotId || !selectedCourt || !selectedSlot) return
+    setSubmitting(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSubmitting(false); return }
+
+    const code = generateBookingCode()
+    const { error } = await supabase.from('bookings').insert({
+      booking_code: code,
+      user_id: null,
+      venue_id: selectedCourt.venueId,
+      court_id: courtId,
+      slot_id: slotId,
+      booked_by: user.id,
+      source: 'walkin',
+      customer_name: customerName.trim() || 'Walk-in Customer',
+      customer_phone: customerPhone ? `+91${customerPhone}` : null,
+      amount: Number(selectedSlot.price),
+      payment_status: 'paid',
+      status: 'confirmed',
+    })
+
+    if (error) {
+      showToast(`Error: ${error.message}`, 'error')
+      setSubmitting(false)
+      return
+    }
+
+    await supabase.from('slots').update({ status: 'booked' }).eq('id', slotId)
+    showToast(`Walk-in booking ${code} created!`, 'success')
+    setSubmitting(false)
+    setCustomerName('')
+    setCustomerPhone('')
+    setSlotId('')
+    onCreated()
+    onClose()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Create Walk-in Booking">
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">Court</label>
+          <select value={courtId} onChange={e => setCourtId(e.target.value)}
+            className="w-full px-3 py-2 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
+            {allCourts.map(c => <option key={c.id} value={c.id}>{c.venueName} — {c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">Date</label>
+          <input type="date" value={date} min={new Date().toISOString().split('T')[0]}
+            onChange={e => setDate(e.target.value)}
+            className="w-full px-3 py-2 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">Available Slot</label>
+          {loadingSlots ? (
+            <div className="flex items-center gap-2 text-sm text-surface-500 py-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading slots...
+            </div>
+          ) : slots.length === 0 ? (
+            <p className="text-sm text-surface-400 py-2">No available slots for this date.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+              {slots.map(s => (
+                <button key={s.id} type="button" onClick={() => setSlotId(s.id)}
+                  className={cn('text-xs py-2 px-2 rounded-lg border text-center transition-all',
+                    slotId === s.id ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-surface-200 hover:border-brand-400'
+                  )}>
+                  {formatTime(s.start_time)}
+                  <span className="block text-[10px] mt-0.5 opacity-70">{formatPrice(Number(s.price))}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-surface-800 mb-1.5">Customer Name</label>
+            <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)}
+              placeholder="Walk-in Customer"
+              className="w-full px-3 py-2 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-800 mb-1.5">Phone</label>
+            <div className="flex">
+              <span className="bg-surface-100 border border-surface-200 rounded-l-lg px-2 flex items-center text-xs text-surface-500 shrink-0">+91</span>
+              <input type="tel" maxLength={10} value={customerPhone}
+                onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="9876543210"
+                className="w-full px-3 py-2 bg-white border border-surface-200 rounded-r-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+            </div>
+          </div>
+        </div>
+        {selectedSlot && selectedCourt && (
+          <div className="bg-brand-50 rounded-lg p-3 text-sm">
+            <p className="font-medium text-brand-800">{selectedCourt.venueName} — {selectedCourt.name}</p>
+            <p className="text-brand-600 text-xs mt-0.5">
+              {formatTime(selectedSlot.start_time)} – {formatTime(selectedSlot.end_time)} · {formatPrice(Number(selectedSlot.price))}
+            </p>
+          </div>
+        )}
+        <Button onClick={handleSubmit} disabled={!slotId || submitting} className="w-full flex items-center justify-center gap-2">
+          {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : <><Plus className="w-4 h-4" /> Create Booking</>}
+        </Button>
+      </div>
+    </Modal>
   )
 }

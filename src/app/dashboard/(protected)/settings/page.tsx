@@ -111,11 +111,18 @@ export default function DashboardSettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [editingProfile, setEditingProfile] = useState(false)
   const [prefs, setPrefs] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cb_notification_prefs')
+      if (saved) try { return JSON.parse(saved) } catch {}
+    }
     const defaults: Record<string, boolean> = {}
     NOTIFICATION_GROUPS.forEach((g) => g.items.forEach((i) => { defaults[i.key] = i.default }))
     return defaults
   })
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('cb_theme') as 'light' | 'dark' | 'system') || 'system'
+    return 'system'
+  })
 
   const displayName = user?.full_name || 'Venue Owner'
   const displayEmail = user?.email || ''
@@ -238,7 +245,7 @@ export default function DashboardSettingsPage() {
                     <button
                       key={opt.key}
                       type="button"
-                      onClick={() => setTheme(opt.key)}
+                      onClick={() => { setTheme(opt.key); localStorage.setItem('cb_theme', opt.key) }}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all',
                         theme === opt.key
@@ -320,7 +327,7 @@ export default function DashboardSettingsPage() {
           <div className="flex justify-end">
             <Button
               variant="primary"
-              onClick={() => showToast('Notification preferences saved.', 'success')}
+              onClick={() => { localStorage.setItem('cb_notification_prefs', JSON.stringify(prefs)); showToast('Notification preferences saved.', 'success') }}
             >
               Save Preferences
             </Button>
@@ -338,8 +345,14 @@ export default function DashboardSettingsPage() {
               <SettingRow
                 icon={Shield}
                 label="Change Password"
-                value="Last changed 30 days ago"
-                onClick={() => showToast('Password change not available in demo.', 'info')}
+                value="Send a password reset link to your email"
+                onClick={async () => {
+                  if (!user?.email) return
+                  const supabase = createClient()
+                  const { error } = await supabase.auth.resetPasswordForEmail(user.email)
+                  if (error) showToast(`Error: ${error.message}`, 'error')
+                  else showToast('Password reset email sent. Check your inbox.', 'success')
+                }}
               />
               <div className="flex items-center justify-between gap-4 px-4 py-3.5">
                 <div className="flex items-center gap-3">

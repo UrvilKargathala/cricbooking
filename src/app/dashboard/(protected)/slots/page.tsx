@@ -400,6 +400,7 @@ export default function DashboardSlotsPage() {
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [showGenerate, setShowGenerate] = useState(false)
+  const [showRecurring, setShowRecurring] = useState(false)
   const [loading, setLoading] = useState(true)
   const showToast = useToastStore((s) => s.showToast)
 
@@ -566,7 +567,7 @@ export default function DashboardSlotsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => showToast('Recurring block setting coming soon.', 'info')}
+            onClick={() => setShowRecurring(true)}
             className="flex items-center gap-1.5"
           >
             <Repeat className="w-3.5 h-3.5" />
@@ -704,6 +705,124 @@ export default function DashboardSlotsPage() {
           onGenerated={handleSlotsGenerated}
         />
       )}
+
+      {showRecurring && activeCourt && (
+        <RecurringBlockModal
+          isOpen={showRecurring}
+          onClose={() => setShowRecurring(false)}
+          courtId={activeCourt}
+          courtName={activeCourtName}
+          onDone={() => fetchSlots(activeCourt, selectedDate).then(setSlots)}
+        />
+      )}
     </div>
+  )
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+
+function RecurringBlockModal({ isOpen, onClose, courtId, courtName, onDone }: {
+  isOpen: boolean; onClose: () => void; courtId: string; courtName: string; onDone: () => void
+}) {
+  const [selectedDays, setSelectedDays] = useState<number[]>([])
+  const [fromDate, setFromDate] = useState(todayStr())
+  const [toDate, setToDate] = useState(addDays(todayStr(), 27))
+  const [reason, setReason] = useState('Weekly maintenance')
+  const [blocking, setBlocking] = useState(false)
+  const showToast = useToastStore(s => s.showToast)
+
+  const toggleDay = (d: number) => setSelectedDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])
+
+  const matchingDates = (() => {
+    if (selectedDays.length === 0) return []
+    const dates: string[] = []
+    let current = fromDate
+    while (current <= toDate) {
+      const dayOfWeek = new Date(current + 'T00:00:00').getDay()
+      if (selectedDays.includes(dayOfWeek)) dates.push(current)
+      current = addDays(current, 1)
+    }
+    return dates
+  })()
+
+  const handleBlock = async () => {
+    if (matchingDates.length === 0) return
+    setBlocking(true)
+    const supabase = createClient()
+    let totalBlocked = 0
+
+    for (const date of matchingDates) {
+      const { data: dateSlots } = await supabase
+        .from('slots')
+        .select('id')
+        .eq('court_id', courtId)
+        .eq('date', date)
+        .eq('status', 'available')
+      if (dateSlots && dateSlots.length > 0) {
+        await supabase
+          .from('slots')
+          .update({ status: 'blocked', blocked_reason: reason || 'Recurring block' })
+          .in('id', dateSlots.map(s => s.id))
+        totalBlocked += dateSlots.length
+      }
+    }
+
+    setBlocking(false)
+    showToast(`Blocked ${totalBlocked} slots across ${matchingDates.length} day(s).`, 'success')
+    onDone()
+    onClose()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Recurring Block">
+      <div className="flex flex-col gap-4">
+        <div className="bg-brand-50 rounded-lg p-3 text-sm">
+          <p className="font-medium text-brand-800">{courtName}</p>
+          <p className="text-brand-600 text-xs mt-0.5">Block all available slots on selected days</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-2">Days of Week</label>
+          <div className="flex gap-2">
+            {DAY_NAMES.map((name, i) => (
+              <button key={i} type="button" onClick={() => toggleDay(i)}
+                className={cn('w-10 h-10 rounded-lg text-xs font-semibold transition-all',
+                  selectedDays.includes(i)
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
+                )}>
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-surface-500 block mb-1">From</label>
+            <input type="date" value={fromDate} min={todayStr()} onChange={e => setFromDate(e.target.value)}
+              className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+          <div>
+            <label className="text-xs text-surface-500 block mb-1">To</label>
+            <input type="date" value={toDate} min={fromDate} onChange={e => setToDate(e.target.value)}
+              className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-surface-800 mb-1.5">Reason</label>
+          <input type="text" value={reason} onChange={e => setReason(e.target.value)}
+            placeholder="e.g. Weekly maintenance"
+            className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+        </div>
+        {matchingDates.length > 0 && (
+          <p className="text-xs text-surface-500">
+            Will block available slots on <span className="font-semibold text-surface-700">{matchingDates.length} day(s)</span> ({selectedDays.map(d => DAY_NAMES[d]).join(', ')})
+          </p>
+        )}
+        <Button onClick={handleBlock} disabled={selectedDays.length === 0 || blocking}
+          className="w-full flex items-center justify-center gap-2">
+          {blocking ? <><Loader2 className="w-4 h-4 animate-spin" /> Blocking...</> : <><Lock className="w-3.5 h-3.5" /> Block {matchingDates.length} Day(s)</>}
+        </Button>
+      </div>
+    </Modal>
   )
 }

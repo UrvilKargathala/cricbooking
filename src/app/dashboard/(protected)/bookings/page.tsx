@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import {
-  Plus, Clock, Search, X, Download, Filter, Loader2,
+  Plus, Search, X, Download, Filter, Loader2,
   CalendarCheck, CalendarX, IndianRupee, Calendar,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, MapPin, Calendar, Clock, Menu, X, Bell, Settings, LogOut, ChevronLeft, HelpCircle } from 'lucide-react'
+import { LayoutDashboard, MapPin, Calendar, Clock, Menu, Bell, Settings, LogOut, ChevronLeft, HelpCircle } from 'lucide-react'
 import { cn, formatPrice } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerBookings } from '@/lib/supabase-queries'

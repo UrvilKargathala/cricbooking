@@ -109,7 +109,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
     return [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }, [reviews, reviewSort])
 
-  const handleBook = async (selectedSlots: Slot[], totalAmount: number) => {
+  const handleBook = async (selectedSlots: Slot[], _totalAmount: number) => {
     const supabase = createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
 

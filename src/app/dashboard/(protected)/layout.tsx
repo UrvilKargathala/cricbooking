@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const displayEmail = user?.email || ''
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex dashboard-theme">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-surface-900 border-r border-white/5 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-brand-800 border-r border-white/5 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

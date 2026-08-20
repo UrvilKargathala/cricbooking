@@ -240,9 +240,9 @@ export default function DashboardOverviewPage() {
   const walkinCount = filteredBookings.filter((b) => b.source === 'walkin').length
   const phoneCount = filteredBookings.filter((b) => b.source === 'phone').length
   const sourceData = [
-    { name: 'Online', value: onlineCount, color: '#3b82f6' },
-    { name: 'Walk-in', value: walkinCount, color: '#8b5cf6' },
-    { name: 'Phone', value: phoneCount, color: '#f59e0b' },
+    { name: 'Online', value: onlineCount, color: '#1d8ad7' },
+    { name: 'Walk-in', value: walkinCount, color: '#3ea2ea' },
+    { name: 'Phone', value: phoneCount, color: '#73b7e8' },
   ].filter((d) => d.value > 0)
 
   const recentBookings = bookings.slice(0, 6)
@@ -252,7 +252,7 @@ export default function DashboardOverviewPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-surface-900 via-surface-800 to-surface-900 rounded-2xl p-6 text-white">
+      <div className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-brand-800 rounded-2xl p-6 text-white">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-1/2 w-40 h-40 bg-brand-500/5 rounded-full translate-y-1/2" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -305,23 +305,23 @@ export default function DashboardOverviewPage() {
           <p className="text-sm font-semibold text-surface-900">Generate Slots</p>
           <p className="text-xs text-surface-400 mt-0.5">Create time slots for courts</p>
         </Link>
-        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-red-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-3 group-hover:bg-red-100 transition-colors">
-            <Ban className="w-5 h-5 text-red-600" />
+        <Link href="/dashboard/slots" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
+            <Ban className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Block Day</p>
           <p className="text-xs text-surface-400 mt-0.5">Block a day for maintenance</p>
         </Link>
-        <Link href="/dashboard/bookings" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-blue-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-            <Calendar className="w-5 h-5 text-blue-600" />
+        <Link href="/dashboard/bookings" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
+            <Calendar className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">Bookings</p>
           <p className="text-xs text-surface-400 mt-0.5">View & manage bookings</p>
         </Link>
-        <Link href="/dashboard/venues" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-emerald-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-100 transition-colors">
-            <MapPin className="w-5 h-5 text-emerald-600" />
+        <Link href="/dashboard/venues" className="group bg-white rounded-xl border border-surface-200 p-4 hover:border-brand-300 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center mb-3 group-hover:bg-brand-100 transition-colors">
+            <MapPin className="w-5 h-5 text-brand-600" />
           </div>
           <p className="text-sm font-semibold text-surface-900">My Venues</p>
           <p className="text-xs text-surface-400 mt-0.5">Edit venues & courts</p>
@@ -330,33 +330,33 @@ export default function DashboardOverviewPage() {
 
       {/* Stats Cards with colored left borders */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-blue-500 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-500 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Today&apos;s Bookings</p>
-            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Calendar className="w-4.5 h-4.5 text-blue-600" />
+            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
+              <Calendar className="w-4.5 h-4.5 text-brand-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{todaysBookings.length}</p>
           <p className="text-xs text-surface-400 mt-1">{todayAvailableSlots} slots still available</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-emerald-500 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-400 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Today&apos;s Revenue</p>
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <IndianRupee className="w-4.5 h-4.5 text-emerald-600" />
+            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
+              <IndianRupee className="w-4.5 h-4.5 text-brand-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(todaysRevenue)}</p>
           <p className="text-xs text-surface-400 mt-1">{todaysBookings.length} booking{todaysBookings.length !== 1 ? 's' : ''} today</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-orange-500 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-600 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-surface-500">Revenue ({RANGE_LABELS[dateRange]})</p>
-            <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
-              <TrendingUp className="w-4.5 h-4.5 text-orange-600" />
+            <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center">
+              <TrendingUp className="w-4.5 h-4.5 text-brand-600" />
             </div>
           </div>
           <p className="font-display font-bold text-3xl text-surface-900">{formatPrice(rangeRevenue)}</p>
@@ -364,7 +364,7 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Occupancy Card with circular progress */}
-        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-purple-500 p-5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-xl border border-surface-200 border-l-4 border-l-brand-700 p-5 hover:shadow-md transition-shadow">
           <p className="text-sm font-medium text-surface-500 mb-2">Occupancy Rate</p>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -487,7 +487,7 @@ export default function DashboardOverviewPage() {
               {popularTimeSlots.map((slot, i) => {
                 const maxCount = popularTimeSlots[0].count
                 const pct = Math.round((slot.count / maxCount) * 100)
-                const colors = ['bg-brand-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500']
+                const colors = ['bg-brand-600', 'bg-brand-500', 'bg-brand-400', 'bg-brand-300', 'bg-brand-200']
                 return (
                   <div key={slot.time}>
                     <div className="flex items-center justify-between mb-1.5">

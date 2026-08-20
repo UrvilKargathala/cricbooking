@@ -31,7 +31,7 @@ export function BookingsBarChart({ data }: BookingsBarChartProps) {
         />
         <Bar
           dataKey="bookings"
-          fill="#3b82f6"
+          fill="#3ea2ea"
           radius={[6, 6, 0, 0]}
           maxBarSize={40}
         />

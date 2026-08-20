@@ -57,18 +57,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-brand-800 border-r border-white/5 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-surface-200 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="h-16 border-b border-white/10 px-5 flex items-center justify-between shrink-0">
+        <div className="h-16 border-b border-surface-200 px-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center shadow-sm shadow-brand-900/40">
+            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center shadow-sm">
               <span className="text-white font-bold">C</span>
             </div>
-            <span className="font-display font-bold text-lg text-white">Owner Panel</span>
+            <span className="font-display font-bold text-lg text-surface-900">Owner Panel</span>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-surface-400 hover:text-surface-800">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -83,16 +83,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
-                  isActive ? 'bg-brand-600 text-white shadow-sm shadow-brand-900/30' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+                  isActive ? 'bg-brand-50 text-brand-700' : 'text-surface-500 hover:text-surface-900 hover:bg-surface-50'
                 )}
               >
                 <span
                   className={cn(
                     'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
-                    isActive ? 'bg-white/15' : 'bg-white/5'
+                    isActive ? 'bg-brand-100' : 'bg-surface-100'
                   )}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className={cn('w-4 h-4', isActive ? 'text-brand-600' : 'text-surface-400')} />
                 </span>
                 {item.label}
               </Link>
@@ -100,18 +100,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/10 shrink-0">
+        <div className="p-3 border-t border-surface-200 shrink-0">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-xs font-medium text-white shrink-0">
+            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-medium text-white shrink-0">
               {initials(displayName)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white truncate">{displayName}</p>
-              <p className="text-xs text-white/40 truncate">{displayEmail}</p>
+              <p className="text-sm font-medium text-surface-900 truncate">{displayName}</p>
+              <p className="text-xs text-surface-400 truncate">{displayEmail}</p>
             </div>
             <button
               onClick={signOut}
-              className="text-xs text-white/40 hover:text-white transition-colors shrink-0"
+              className="text-xs text-surface-400 hover:text-red-500 transition-colors shrink-0"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

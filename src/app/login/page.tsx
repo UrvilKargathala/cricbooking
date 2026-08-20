@@ -266,10 +266,7 @@ export default function LoginPage() {
 
             <div className="border-t border-surface-100 mt-6 pt-4">
               <p className="text-sm text-surface-800/60 text-center">
-                Are you a venue owner?
-              </p>
-              <p className="text-xs text-surface-800/40 text-center mt-1">
-                Login with your owner email (e.g. urvilk1542@gmail.com) and you&apos;ll be redirected to your dashboard automatically.
+                Are you a venue owner? Login with your registered email to access the dashboard.
               </p>
             </div>
           </div>

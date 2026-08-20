@@ -242,18 +242,23 @@ export default function Home() {
                     href={`/venues?area=${area.slug}`}
                     className="group block bg-white rounded-xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
                   >
-                    <div className="relative aspect-[16/10]">
-                      <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600 flex items-center justify-center">
-                        <MapPin className="w-10 h-10 text-white/80" />
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      {area.image ? (
+                        <img src={area.image} alt={area.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full bg-surface-100 flex items-center justify-center">
+                          <MapPin className="w-8 h-8 text-surface-300" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                        <h3 className="font-display font-semibold text-white text-lg drop-shadow-sm">
+                          {area.name}
+                        </h3>
+                        <span className="text-xs font-medium text-white/80 bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                          {area.count} venue{area.count > 1 ? 's' : ''}
+                        </span>
                       </div>
-                    </div>
-                    <div className="p-4 flex items-center justify-between">
-                      <h3 className="font-display font-semibold text-surface-900 group-hover:text-brand-700 transition-colors">
-                        {area.name}
-                      </h3>
-                      <span className="text-sm text-surface-800/50">
-                        {area.count} venue{area.count > 1 ? 's' : ''}
-                      </span>
                     </div>
                   </Link>
                 </ScrollReveal>

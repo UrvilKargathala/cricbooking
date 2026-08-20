@@ -21,7 +21,7 @@ const OWNER_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="bg-surface-900 text-surface-200 mt-20">
+    <footer className="bg-surface-900 text-surface-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">

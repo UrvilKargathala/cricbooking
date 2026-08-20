@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Lock, Repeat, Clock, CheckCircle2, XCircle, Calendar } from 'lucide-react'
+import { Lock, Repeat, Clock, CheckCircle2, XCircle, Calendar, Plus, Loader2, Sun, Sunset, Moon } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerVenues, fetchSlots } from '@/lib/supabase-queries'
 import { formatTime, formatPrice, cn } from '@/lib/utils'
@@ -9,10 +9,294 @@ import { DateSelector } from '@/components/booking/DateSelector'
 import { Button } from '@/components/ui/Button'
 import { useToastStore } from '@/store/useToastStore'
 import { Modal } from '@/components/ui/Modal'
-import type { Court, Slot } from '@/types'
+import type { Court, Slot, Venue } from '@/types'
 
 function todayStr() {
   return new Date().toISOString().split('T')[0]
+}
+
+function addDays(dateStr: string, days: number) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]
+}
+
+function isWeekend(dateStr: string) {
+  const day = new Date(dateStr + 'T00:00:00').getDay()
+  return day === 0 || day === 6
+}
+
+function isNightSlot(time: string) {
+  const hour = parseInt(time.slice(0, 2))
+  return hour >= 18 || hour < 6
+}
+
+function generateTimeSlots(openTime: string, closeTime: string, durationMins: number) {
+  const slots: { start: string; end: string }[] = []
+  const [openH, openM] = openTime.split(':').map(Number)
+  const [closeH, closeM] = closeTime.split(':').map(Number)
+  let currentMins = openH * 60 + openM
+  const endMins = closeH * 60 + closeM
+
+  while (currentMins + durationMins <= endMins) {
+    const startH = Math.floor(currentMins / 60)
+    const startM = currentMins % 60
+    const endTotalMins = currentMins + durationMins
+    const endH = Math.floor(endTotalMins / 60)
+    const endM = endTotalMins % 60
+    slots.push({
+      start: `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`,
+      end: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
+    })
+    currentMins += durationMins
+  }
+  return slots
+}
+
+function GenerateSlotsModal({
+  isOpen,
+  onClose,
+  court,
+  venue,
+  onGenerated,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  court: Court
+  venue: Venue
+  onGenerated: () => void
+}) {
+  const [fromDate, setFromDate] = useState(todayStr())
+  const [toDate, setToDate] = useState(addDays(todayStr(), 6))
+  const [weekdayPrice, setWeekdayPrice] = useState(court.price_per_slot)
+  const [weekendPrice, setWeekendPrice] = useState(court.weekend_price || court.price_per_slot)
+  const [nightPrice, setNightPrice] = useState(court.night_price || court.price_per_slot)
+  const [generating, setGenerating] = useState(false)
+  const [skipExisting, setSkipExisting] = useState(true)
+  const showToast = useToastStore((s) => s.showToast)
+
+  const openTime = venue.opening_time?.slice(0, 5) || '06:00'
+  const closeTime = venue.closing_time?.slice(0, 5) || '23:00'
+  const duration = venue.slot_duration_mins || 60
+
+  const timeSlots = generateTimeSlots(openTime, closeTime, duration)
+
+  const getDatesInRange = () => {
+    const dates: string[] = []
+    let current = fromDate
+    while (current <= toDate) {
+      dates.push(current)
+      current = addDays(current, 1)
+    }
+    return dates
+  }
+
+  const totalDays = getDatesInRange().length
+  const totalSlots = totalDays * timeSlots.length
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    const supabase = createClient()
+    const dates = getDatesInRange()
+    let created = 0
+    let skipped = 0
+
+    for (const date of dates) {
+      if (skipExisting) {
+        const { data: existing } = await supabase
+          .from('slots')
+          .select('start_time')
+          .eq('court_id', court.id)
+          .eq('date', date)
+        const existingTimes = new Set((existing || []).map((s: { start_time: string }) => s.start_time.slice(0, 5)))
+
+        const newSlots = timeSlots
+          .filter((ts) => !existingTimes.has(ts.start))
+          .map((ts) => {
+            let price = weekdayPrice
+            if (isWeekend(date) && weekendPrice) price = weekendPrice
+            if (isNightSlot(ts.start) && nightPrice) price = nightPrice
+            return {
+              court_id: court.id,
+              date,
+              start_time: ts.start,
+              end_time: ts.end,
+              price,
+              status: 'available' as const,
+            }
+          })
+
+        skipped += timeSlots.length - newSlots.length
+        if (newSlots.length > 0) {
+          const { error } = await supabase.from('slots').insert(newSlots)
+          if (!error) created += newSlots.length
+        }
+      } else {
+        const newSlots = timeSlots.map((ts) => {
+          let price = weekdayPrice
+          if (isWeekend(date) && weekendPrice) price = weekendPrice
+          if (isNightSlot(ts.start) && nightPrice) price = nightPrice
+          return {
+            court_id: court.id,
+            date,
+            start_time: ts.start,
+            end_time: ts.end,
+            price,
+            status: 'available' as const,
+          }
+        })
+        const { error } = await supabase.from('slots').insert(newSlots)
+        if (!error) created += newSlots.length
+      }
+    }
+
+    setGenerating(false)
+    const msg = skipped > 0
+      ? `Created ${created} slots (${skipped} already existed)`
+      : `Created ${created} slots successfully!`
+    showToast(msg, 'success')
+    onGenerated()
+    onClose()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Generate Slots">
+      <div className="flex flex-col gap-5">
+        <div className="bg-brand-50 rounded-xl px-4 py-3 text-sm">
+          <p className="font-medium text-brand-800">{court.name}</p>
+          <p className="text-brand-600 text-xs mt-0.5">
+            {venue.name} · {formatTime(openTime)} – {formatTime(closeTime)} · {duration} min slots
+          </p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-surface-700 block mb-2">Date Range</label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-surface-500 block mb-1">From</label>
+              <input
+                type="date"
+                value={fromDate}
+                min={todayStr()}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-surface-500 block mb-1">To</label>
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-surface-700 block mb-2">Pricing</label>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs text-surface-500 flex items-center gap-1 mb-1">
+                <Sun className="w-3 h-3" /> Weekday
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400">₹</span>
+                <input
+                  type="number"
+                  value={weekdayPrice}
+                  onChange={(e) => setWeekdayPrice(Number(e.target.value))}
+                  className="w-full border border-surface-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-surface-500 flex items-center gap-1 mb-1">
+                <Sunset className="w-3 h-3" /> Weekend
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400">₹</span>
+                <input
+                  type="number"
+                  value={weekendPrice}
+                  onChange={(e) => setWeekendPrice(Number(e.target.value))}
+                  className="w-full border border-surface-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-surface-500 flex items-center gap-1 mb-1">
+                <Moon className="w-3 h-3" /> Night (6 PM+)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400">₹</span>
+                <input
+                  type="number"
+                  value={nightPrice}
+                  onChange={(e) => setNightPrice(Number(e.target.value))}
+                  className="w-full border border-surface-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-surface-700 block mb-2">Preview</label>
+          <div className="bg-surface-50 rounded-xl p-3 max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-1.5">
+              {timeSlots.map((ts) => (
+                <span
+                  key={ts.start}
+                  className={cn(
+                    'text-xs px-2.5 py-1 rounded-full font-medium',
+                    isNightSlot(ts.start)
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'bg-emerald-100 text-emerald-700'
+                  )}
+                >
+                  {formatTime(ts.start)} – {formatTime(ts.end)}
+                </span>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-surface-500 mt-2">
+            {timeSlots.length} slots/day × {totalDays} days = <span className="font-semibold text-surface-700">{totalSlots} total slots</span>
+          </p>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={skipExisting}
+            onChange={(e) => setSkipExisting(e.target.checked)}
+            className="rounded border-surface-300 text-brand-600 focus:ring-brand-400"
+          />
+          Skip slots that already exist (avoid duplicates)
+        </label>
+
+        <Button
+          onClick={handleGenerate}
+          disabled={generating || totalSlots === 0}
+          className="w-full flex items-center justify-center gap-2"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              Generate {totalSlots} Slots
+            </>
+          )}
+        </Button>
+      </div>
+    </Modal>
+  )
 }
 
 function SlotDetailModal({
@@ -102,11 +386,13 @@ function SlotDetailModal({
 }
 
 export default function DashboardSlotsPage() {
+  const [venues, setVenues] = useState<Venue[]>([])
   const [courts, setCourts] = useState<Court[]>([])
   const [activeCourt, setActiveCourt] = useState('')
   const [selectedDate, setSelectedDate] = useState(todayStr())
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
+  const [showGenerate, setShowGenerate] = useState(false)
   const [loading, setLoading] = useState(true)
   const showToast = useToastStore((s) => s.showToast)
 
@@ -115,8 +401,9 @@ export default function DashboardSlotsPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const venues = await fetchOwnerVenues(user.id)
-        const allCourts = venues.flatMap((v) => v.courts ?? [])
+        const ownerVenues = await fetchOwnerVenues(user.id)
+        setVenues(ownerVenues)
+        const allCourts = ownerVenues.flatMap((v) => v.courts ?? [])
         setCourts(allCourts)
         if (allCourts.length > 0) setActiveCourt(allCourts[0].id)
       }
@@ -160,6 +447,7 @@ export default function DashboardSlotsPage() {
 
   const activeCourtObj = courts.find((c) => c.id === activeCourt)
   const activeCourtName = activeCourtObj?.name ?? ''
+  const activeVenue = venues.find((v) => v.courts?.some((c) => c.id === activeCourt))
 
   const availableCount = slots.filter((s) => s.status === 'available').length
   const bookedCount = slots.filter((s) => s.status === 'booked').length
@@ -182,6 +470,10 @@ export default function DashboardSlotsPage() {
     }
 
     setSelectedSlot(null)
+    if (activeCourt) fetchSlots(activeCourt, selectedDate).then(setSlots)
+  }
+
+  const handleSlotsGenerated = () => {
     if (activeCourt) fetchSlots(activeCourt, selectedDate).then(setSlots)
   }
 
@@ -215,9 +507,17 @@ export default function DashboardSlotsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display font-bold text-xl text-surface-900">Slot Management</h1>
-          <p className="text-sm text-surface-500 mt-0.5">Manage availability and block slots for your courts.</p>
+          <p className="text-sm text-surface-500 mt-0.5">Manage availability and generate slots for your courts.</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => setShowGenerate(true)}
+            className="flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Generate Slots
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -225,7 +525,7 @@ export default function DashboardSlotsPage() {
             className="flex items-center gap-1.5"
           >
             <Lock className="w-3.5 h-3.5" />
-            Block Entire Day
+            Block Day
           </Button>
           <Button
             variant="ghost"
@@ -234,7 +534,7 @@ export default function DashboardSlotsPage() {
             className="flex items-center gap-1.5"
           >
             <Repeat className="w-3.5 h-3.5" />
-            Recurring Block
+            Recurring
           </Button>
         </div>
       </div>
@@ -325,7 +625,15 @@ export default function DashboardSlotsPage() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-surface-500 text-center py-8">No slots found for this date. Slots may need to be generated.</p>
+            <div className="text-center py-8">
+              <p className="text-sm text-surface-500">No slots found for this date.</p>
+              <button
+                onClick={() => setShowGenerate(true)}
+                className="mt-2 text-sm text-brand-600 hover:text-brand-700 font-medium"
+              >
+                Generate slots for this court →
+              </button>
+            </div>
           )}
 
           <div className="flex gap-5 mt-5 pt-4 border-t border-surface-100 text-xs text-surface-500 flex-wrap">
@@ -350,6 +658,16 @@ export default function DashboardSlotsPage() {
         onClose={() => setSelectedSlot(null)}
         onAction={handleSlotAction}
       />
+
+      {activeCourtObj && activeVenue && (
+        <GenerateSlotsModal
+          isOpen={showGenerate}
+          onClose={() => setShowGenerate(false)}
+          court={activeCourtObj}
+          venue={activeVenue}
+          onGenerated={handleSlotsGenerated}
+        />
+      )}
     </div>
   )
 }

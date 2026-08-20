@@ -24,7 +24,7 @@ const STATUS_CONFIG: Record<string, { icon: typeof CheckCircle2; color: string; 
   no_show: { icon: AlertCircle, color: 'text-amber-600', label: 'No Show' },
 }
 
-export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function BookingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const showToast = useToastStore((s) => s.showToast)
   const [booking, setBooking] = useState<Booking | null>(null)
@@ -39,7 +39,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const [userId, setUserId] = useState<string | null>(null)
   useEffect(() => {
     const load = async () => {
-      const { id } = await params
+      const { id } = params
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login?redirect=/bookings'); return }
@@ -69,7 +69,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
       setLoading(false)
     }
     load()
-  }, [params, router])
+  }, [params.id, router])
 
   const handleCancel = async () => {
     if (!booking) return

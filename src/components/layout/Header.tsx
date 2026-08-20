@@ -218,6 +218,13 @@ export function Header() {
                     <p className="text-xs text-surface-800/50 capitalize">{user.role}</p>
                   </div>
                   <Link
+                    href="/profile"
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
+                  >
+                    My Account
+                  </Link>
+                  <Link
                     href="/bookings"
                     onClick={() => setProfileOpen(false)}
                     className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
@@ -316,6 +323,9 @@ export function Header() {
                   <p className="text-xs text-surface-800/50 capitalize">{user.role}</p>
                 </div>
               </div>
+              <Link href="/profile" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
+                My Account
+              </Link>
               <Link href="/bookings" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
                 My Bookings
               </Link>

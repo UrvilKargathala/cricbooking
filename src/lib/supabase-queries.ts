@@ -61,6 +61,16 @@ export async function fetchUserBookings(userId: string): Promise<Booking[]> {
   return (data ?? []).map(normalizeBooking)
 }
 
+export async function fetchBookingsByCodes(codes: string[]): Promise<Booking[]> {
+  if (codes.length === 0) return []
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*, venue:venues(*, area:areas(*)), court:courts(*), slot:slots(*)')
+    .in('booking_code', codes)
+  if (error) throw new Error(`Failed to load bookings: ${error.message}`)
+  return (data ?? []).map(normalizeBooking)
+}
+
 export async function fetchOwnerBookings(ownerId: string): Promise<Booking[]> {
   const authed = await supabase.auth.getUser()
   if (authed.data.user?.id !== ownerId) return []

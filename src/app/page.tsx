@@ -306,10 +306,13 @@ export default function Home() {
             <h2 className="font-display font-bold text-xl text-surface-900 text-center mb-10">
               What Players Are Saying
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {TESTIMONIALS.map((testimonial, index) => (
-                <ScrollReveal key={testimonial.id} delay={(index % 3) * 100}>
-                  <div className="bg-white rounded-xl border border-surface-200 p-5">
+            <div className="marquee-mask -mx-4 sm:-mx-6 overflow-hidden">
+              <div className="testimonial-track flex gap-6 px-4 sm:px-6 w-max">
+                {[...TESTIMONIALS, ...TESTIMONIALS].map((testimonial, index) => (
+                  <div
+                    key={`${testimonial.id}-${index}`}
+                    className="bg-white rounded-xl border border-surface-200 p-5 w-[320px] shrink-0"
+                  >
                     <div className="flex items-center gap-0.5 mb-3">
                       {Array.from({ length: testimonial.rating }).map((_, i) => (
                         <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -321,8 +324,8 @@ export default function Home() {
                       <p className="text-xs text-surface-800/50">{testimonial.area} · {testimonial.venue_name}</p>
                     </div>
                   </div>
-                </ScrollReveal>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>

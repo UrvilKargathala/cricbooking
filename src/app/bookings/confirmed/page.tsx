@@ -1,38 +1,55 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Calendar, ArrowRight } from 'lucide-react'
+import { Calendar, ArrowRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
+import { BookingTicket } from '@/components/booking/BookingTicket'
+import { fetchBookingsByCodes } from '@/lib/supabase-queries'
+import type { Booking } from '@/types'
 
 function ConfirmedContent() {
   const searchParams = useSearchParams()
   const codes = searchParams.get('codes')?.split(',') ?? []
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (codes.length === 0) { setLoading(false); return }
+    fetchBookingsByCodes(codes).then(setBookings).finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
-    <main className="max-w-lg mx-auto px-4 sm:px-6 py-16 text-center">
-      <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+    <main className="max-w-lg mx-auto px-4 sm:px-6 py-16">
+      <div className="text-center mb-8">
+        <div className="check-circle-in w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+          <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none">
+            <path
+              d="M5 12.5l4.5 4.5L19 7"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="check-draw text-emerald-600"
+            />
+          </svg>
+        </div>
+
+        <h1 className="font-display font-bold text-2xl text-surface-900 mb-2">Booking Confirmed!</h1>
+        <p className="text-surface-800/60">
+          Your payment was successful and your slot{codes.length > 1 ? 's have' : ' has'} been reserved.
+        </p>
       </div>
 
-      <h1 className="font-display font-bold text-2xl text-surface-900 mb-2">Booking Confirmed!</h1>
-      <p className="text-surface-800/60 mb-6">
-        Your payment was successful and your slot{codes.length > 1 ? 's have' : ' has'} been reserved.
-      </p>
-
-      {codes.length > 0 && (
-        <div className="bg-surface-50 rounded-xl border border-surface-200 p-4 mb-6">
-          <p className="text-sm text-surface-800/60 mb-2">Booking Code{codes.length > 1 ? 's' : ''}</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {codes.map((code) => (
-              <span key={code} className="font-mono font-semibold text-lg text-brand-700 bg-brand-50 px-3 py-1 rounded-lg">
-                {code}
-              </span>
-            ))}
-          </div>
+      {!loading && bookings.length > 0 && (
+        <div className="flex flex-col gap-4 mb-8">
+          {bookings.map((booking, index) => (
+            <BookingTicket key={booking.id} booking={booking} delayMs={300 + index * 120} />
+          ))}
         </div>
       )}
 

@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Urbanist:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Urbanist:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --font-display: 'Urbanist', system-ui, sans-serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Manrope';
+  --font-body: 'Manrope';
 }
 
 body {
@@ -168,6 +168,10 @@ body {
 }
 
 .dashboard-theme {
+  /* Owner dashboard keeps its original typeface — Manrope above is a
+     public-site-only change. */
+  --font-display: 'Urbanist';
+  --font-body: 'DM Sans';
   --brand-50: #f5f8f9;
   --brand-100: #eaf1f5;
   --brand-200: #cee1ee;

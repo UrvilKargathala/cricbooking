@@ -22,20 +22,20 @@ export default function WishlistPage() {
   const savedVenues = allVenues.filter((v) => favoriteIds.has(v.id))
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-surface-900">My Wishlist</h1>
-        <p className="text-sm text-surface-800/60 mt-1">
+        <p className="text-sm text-surface-800/50 mt-1">
           {loading ? 'Loading...' : `${savedVenues.length} venue${savedVenues.length === 1 ? '' : 's'} saved`}
         </p>
 
         {!loading && savedVenues.length === 0 ? (
           <div className="text-center py-20">
             <Heart className="w-10 h-10 text-surface-800/30 mx-auto mb-3" />
-            <p className="text-surface-800/60 mb-4">No venues saved yet — tap the heart on any venue to add it here.</p>
+            <p className="text-surface-800/50 mb-4">No venues saved yet — tap the heart on any venue to add it here.</p>
             <Link href="/venues">
-              <Button variant="outline">Browse Venues</Button>
+              <Button variant="outline" className="border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">Browse Venues</Button>
             </Link>
           </div>
         ) : (
@@ -47,6 +47,6 @@ export default function WishlistPage() {
         )}
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

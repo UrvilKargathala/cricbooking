@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronRight,
+  ArrowLeft,
+  ArrowRight,
   Star,
   MapPin,
   Clock,
@@ -15,19 +16,17 @@ import {
   Heart,
   MessageCircle,
   Navigation,
-  Users,
-  Ruler,
 } from 'lucide-react'
 import { SlotPicker } from '@/components/booking/SlotPicker'
-import { VenueGallery } from '@/components/venue/VenueGallery'
+import { BookingSummary } from '@/components/booking/BookingSummary'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { createClient } from '@/lib/supabase'
 import { fetchSlots, fetchVenueReviews, fetchVenues } from '@/lib/supabase-queries'
-import { AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS, formatPrice, formatTime } from '@/lib/utils'
+import { AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, formatTime } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useToastStore } from '@/store/useToastStore'
 import { useAuth } from '@/hooks/useAuth'
-import type { Slot, Venue, Review } from '@/types'
+import type { Court, Slot, Venue, Review } from '@/types'
 
 type ReviewSort = 'recent' | 'highest' | 'lowest'
 
@@ -40,6 +39,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
   const [similarVenues, setSimilarVenues] = useState<Venue[]>([])
   const [justUpdated, setJustUpdated] = useState<Set<string>>(new Set())
   const [bookingLoading, setBookingLoading] = useState(false)
+  const [schedule, setSchedule] = useState<{ slots: Slot[]; court: Court | null }>({ slots: [], court: null })
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
   const showToast = useToastStore((s) => s.showToast)
@@ -109,8 +109,10 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
     return [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }, [reviews, reviewSort])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleBook = async (selectedSlots: Slot[], totalAmount: number) => {
+  const handleBook = async () => {
+    const selectedSlots = schedule.slots
+    if (selectedSlots.length === 0) return
+
     const supabase = createClient()
     const { data: { user: authUser } } = await supabase.auth.getUser()
 
@@ -154,7 +156,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
           email: user?.email || authUser.email || '',
           contact: user?.phone || '',
         },
-        theme: { color: '#16a34a' },
+        theme: { color: '#2563eb' },
         handler: async (response: RazorpayResponse) => {
           const verifyRes = await fetch('/api/razorpay/verify', {
             method: 'POST',
@@ -211,297 +213,300 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
     : null
 
   const directionsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`
+  const heroImage = venue.cover_image ?? venue.images[0] ?? null
+  const secondaryImage = venue.images.find((img) => img !== heroImage) ?? heroImage
 
   return (
-    <>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 lg:pb-8">
-        <nav className="flex items-center flex-wrap gap-1 text-sm text-surface-800/60 mb-6">
-          <Link href="/" className="hover:text-surface-800">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <Link href="/venues" className="hover:text-surface-800">Venues</Link>
-          {venue.area && (
-            <>
-              <ChevronRight className="w-3.5 h-3.5" />
-              <Link href={`/venues?area=${venue.area.slug}`} className="hover:text-surface-800">{venue.area.name}</Link>
-            </>
+    <div className="min-h-screen bg-surface-50">
+      {/* Hero */}
+      <section className="relative -mt-16 pt-16 overflow-hidden">
+        <div className="absolute inset-0">
+          {heroImage ? (
+            <img src={heroImage} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-brand-700 to-surface-900" />
           )}
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-surface-800 font-medium">{venue.name}</span>
-        </nav>
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/60 to-surface-900/30" />
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <VenueGallery images={venue.images.length ? venue.images : venue.cover_image ? [venue.cover_image] : []} alt={venue.name} />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16 sm:pt-12 sm:pb-24">
+          <Link href="/venues" className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white">
+            <ArrowLeft className="w-4 h-4" /> Back to venues
+          </Link>
 
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="font-display font-bold text-2xl sm:text-3xl text-surface-900">{venue.name}</h1>
-                    {venue.status === 'approved' && (
-                      <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-1 rounded-full">
-                        <BadgeCheck className="w-3.5 h-3.5" />
-                        Verified Venue
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-medium text-surface-800">{venue.rating.toFixed(1)}</span>
-                    <span className="text-sm text-surface-800/50">({venue.total_reviews} reviews)</span>
-                  </div>
-                </div>
+          <p className="text-brand-400 text-sm font-medium mt-8">{SPORT_LABELS[venue.sports[0]] ?? 'Sports'}</p>
+          <h1 className="font-display font-bold text-3xl sm:text-5xl text-white mt-2 max-w-2xl text-balance">
+            Book {venue.name} for your next session.
+          </h1>
+          {venue.description && (
+            <p className="text-white/70 mt-4 max-w-xl">{venue.description}</p>
+          )}
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={handleToggleFavorite}
-                    aria-label={favorite ? 'Remove from wishlist' : 'Save venue'}
-                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-surface-200 hover:bg-surface-100"
-                  >
-                    <Heart className={favorite ? 'w-4 h-4 fill-red-500 text-red-500' : 'w-4 h-4 text-surface-800/60'} />
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    aria-label="Share venue"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-surface-200 hover:bg-surface-100"
-                  >
-                    <Share2 className="w-4 h-4 text-surface-800/60" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2 text-sm text-surface-800">
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-surface-800/50" />
-                  {venue.address}
-                  <a
-                    href={directionsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 text-xs font-medium"
-                  >
-                    <Navigation className="w-3 h-3" />
-                    Directions
-                  </a>
-                </span>
-                <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-surface-800/50" />
-                  {formatTime(venue.opening_time)} - {formatTime(venue.closing_time)}
-                </span>
-                {venue.phone && (
-                  <span className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-surface-800/50" />
-                    {venue.phone}
-                  </span>
-                )}
-              </div>
-
-              <a
-                href={directionsHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 block rounded-lg overflow-hidden border border-surface-200 h-40"
-              >
-                <iframe
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(venue.address)}&z=15&output=embed`}
-                  className="w-full h-full pointer-events-none"
-                  loading="lazy"
-                  title={`Map showing location of ${venue.name}`}
-                />
-              </a>
-
-              {venue.phone && (
-                <div className="mt-4 flex gap-2">
-                  <a
-                    href={`tel:${venue.phone}`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-surface-200 text-sm font-medium text-surface-800 hover:bg-surface-100"
-                  >
-                    <Phone className="w-4 h-4" />
-                    Call
-                  </a>
-                  {whatsappHref && (
-                    <a
-                      href={whatsappHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {venue.description && (
-                <p className="mt-4 text-sm text-surface-800/80 leading-relaxed">{venue.description}</p>
-              )}
-            </div>
-
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-3">Sports</h2>
-              <div className="flex flex-wrap gap-2">
-                {venue.sports.map((sport) => (
-                  <span key={sport} className="bg-brand-50 text-brand-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                    {SPORT_LABELS[sport] ?? sport}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-3">Amenities</h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                {venue.amenities.map((amenity) => {
-                  const Icon = AMENITY_ICONS[amenity]
-                  return (
-                    <span key={amenity} className="flex items-center gap-2 text-sm text-surface-800">
-                      {Icon ? (
-                        <Icon className="w-4 h-4 text-brand-600 shrink-0" />
-                      ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
-                      )}
-                      {AMENITY_LABELS[amenity] ?? amenity}
-                    </span>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-3">Courts & Pricing</h2>
-              <div className="flex flex-col gap-2">
-                {venue.courts?.map((court) => (
-                  <div key={court.id} className="flex items-center justify-between bg-surface-50 rounded-lg px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium text-surface-900">{court.name}</p>
-                      <p className="text-xs text-surface-800/60">
-                        {SURFACE_LABELS[court.surface] ?? court.surface} · {SPORT_LABELS[court.sport] ?? court.sport}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-800/50">
-                        {court.max_players > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            Up to {court.max_players} players
-                          </span>
-                        )}
-                        {court.dimensions && (
-                          <span className="flex items-center gap-1">
-                            <Ruler className="w-3 h-3" />
-                            {court.dimensions}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-display font-semibold text-brand-700">{formatPrice(court.price_per_slot)}</p>
-                      <p className="text-xs text-surface-800/50">
-                        {court.weekend_price && `${formatPrice(court.weekend_price)} weekend`}
-                        {court.weekend_price && court.night_price && ' · '}
-                        {court.night_price && `${formatPrice(court.night_price)} night`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <h2 className="font-display font-semibold text-surface-900 mb-3">Policies</h2>
-              <ul className="flex flex-col gap-2 text-sm text-surface-800">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  Book at least {venue.min_advance_hours} hour(s) in advance
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  Bookings open up to {venue.max_advance_days} days ahead
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  Cancel {venue.cancellation_hours}+ hours before for {venue.cancellation_refund_pct}% refund
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl border border-surface-200 p-5">
-              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-                <h2 className="font-display font-semibold text-surface-900">Reviews</h2>
-                <div className="flex items-center gap-3">
-                  {venue.total_reviews > 0 && (
-                    <span className="flex items-center gap-1 text-sm text-surface-800">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      {venue.rating.toFixed(1)}
-                      <span className="text-surface-800/50">({venue.total_reviews})</span>
-                    </span>
-                  )}
-                  {sortedReviews.length > 1 && (
-                    <select
-                      value={reviewSort}
-                      onChange={(e) => setReviewSort(e.target.value as ReviewSort)}
-                      className="px-2 py-1 bg-surface-100 border border-surface-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-400"
-                    >
-                      <option value="recent">Most Recent</option>
-                      <option value="highest">Highest Rated</option>
-                      <option value="lowest">Lowest Rated</option>
-                    </select>
-                  )}
-                </div>
-              </div>
-              {sortedReviews.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {sortedReviews.map((review) => (
-                    <div key={review.id} className="flex gap-3">
-                      <div className="w-9 h-9 rounded-full bg-brand-50 text-brand-700 font-display font-semibold text-sm flex items-center justify-center shrink-0">
-                        {(review.name ?? 'A').charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-surface-900">{review.name ?? 'Anonymous'}</p>
-                          <span className="text-xs text-surface-800/40">
-                            {new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-0.5 mt-0.5">
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <Star key={i} className="w-3 h-3 text-amber-500 fill-amber-500" />
-                          ))}
-                        </div>
-                        <p className="text-sm text-surface-800/80 mt-1.5 leading-relaxed">{review.comment}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-surface-800/60">No reviews yet — be the first to play and review.</p>
-              )}
-            </div>
+          <div className="flex flex-wrap items-center gap-3 mt-6">
+            <a href="#book-a-slot" className="inline-flex items-center gap-1.5 bg-brand-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-brand-700 transition-colors">
+              Start Booking <ArrowRight className="w-4 h-4" />
+            </a>
+            <button
+              onClick={handleToggleFavorite}
+              className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+            >
+              <Heart className={favorite ? 'w-4 h-4 fill-red-500 text-red-500' : 'w-4 h-4'} />
+              {favorite ? 'Saved' : 'Save'}
+            </button>
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+            >
+              <Share2 className="w-4 h-4" /> Share
+            </button>
           </div>
 
-          <div>
-            <div id="book-a-slot" className="bg-white rounded-xl border border-surface-200 p-5 sticky top-20 scroll-mt-20">
-              <h2 className="font-display font-semibold text-surface-900 mb-3">Book a Slot</h2>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8 text-sm text-white/80">
+            {venue.status === 'approved' && (
+              <span className="flex items-center gap-1.5">
+                <BadgeCheck className="w-4 h-4 text-brand-400" /> Verified Venue
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              {venue.rating.toFixed(1)} ({venue.total_reviews} reviews)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4" /> {venue.area?.name ?? venue.city}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4" /> {formatTime(venue.opening_time)} - {formatTime(venue.closing_time)}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 lg:pb-16">
+        {/* Booking */}
+        <section id="book-a-slot" className="relative -mt-8 sm:-mt-12 scroll-mt-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-xl border border-surface-200 p-5 sm:p-6">
+              <h2 className="font-display font-semibold text-lg text-surface-900">Choose your schedule</h2>
+              <p className="text-sm text-surface-800/50 mt-1 mb-5">
+                Select a date, available time, and court before booking.
+              </p>
               {venue.courts && venue.courts.length > 0 ? (
                 <SlotPicker
                   courts={venue.courts}
                   slots={slots}
                   selectedDate={selectedDate}
                   onDateChange={setSelectedDate}
-                  onBook={handleBook}
+                  onSelectionChange={(selectedSlots, court) => setSchedule({ slots: selectedSlots, court })}
                   justUpdated={justUpdated}
-                  bookingLoading={bookingLoading}
                 />
               ) : (
-                <p className="text-sm text-surface-800/60">No courts available for this venue.</p>
+                <p className="text-sm text-surface-800/50">No courts available for this venue.</p>
               )}
             </div>
-          </div>
-        </div>
 
+            <BookingSummary
+              court={schedule.court}
+              selectedDate={selectedDate}
+              selectedSlots={schedule.slots}
+              areaName={venue.area?.name}
+              onBook={handleBook}
+              loading={bookingLoading}
+            />
+          </div>
+        </section>
+
+        {/* Venue details */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-16 sm:mt-24">
+          <div className="rounded-2xl overflow-hidden bg-surface-100 aspect-[4/3] lg:aspect-auto lg:h-full relative">
+            {secondaryImage ? (
+              <img src={secondaryImage} alt={venue.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600" />
+            )}
+            <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
+              {venue.sports.slice(0, 2).map((sport) => (
+                <span key={sport} className="text-xs font-medium text-white bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  {SPORT_LABELS[sport] ?? sport}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-brand-600 text-sm font-medium">Venue details</p>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-surface-900 mt-2 text-balance">
+              Know the space before <span className="font-black">you book.</span>
+            </h2>
+            <p className="text-surface-800/60 mt-3 leading-relaxed">
+              {venue.description ?? `A well-maintained venue in ${venue.area?.name ?? venue.city}, set up for casual games, private sessions, and regular weekly play.`}
+            </p>
+
+            <div className="bg-white rounded-xl border border-surface-200 p-5 mt-6">
+              <h3 className="font-display font-semibold text-sm text-surface-900">Best for</h3>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {venue.sports.map((sport) => (
+                  <span key={sport} className="text-xs font-medium text-surface-800 bg-surface-100 px-2.5 py-1 rounded-full">
+                    {SPORT_LABELS[sport] ?? sport}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {venue.amenities.length > 0 && (
+              <div className="bg-white rounded-xl border border-surface-200 p-5 mt-4">
+                <h3 className="font-display font-semibold text-sm text-surface-900">Facilities</h3>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-3">
+                  {venue.amenities.map((amenity) => {
+                    const Icon = AMENITY_ICONS[amenity]
+                    return (
+                      <span key={amenity} className="flex items-center gap-2 text-sm text-surface-800">
+                        <span className="w-4 h-4 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                          {Icon ? <Icon className="w-2.5 h-2.5" /> : <Check className="w-2.5 h-2.5" />}
+                        </span>
+                        {AMENITY_LABELS[amenity] ?? amenity}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-surface-200 p-5 mt-4">
+              <h3 className="font-display font-semibold text-sm text-surface-900">Booking notes</h3>
+              <ul className="flex flex-col mt-3">
+                {[
+                  `Book at least ${venue.min_advance_hours} hour(s) in advance.`,
+                  `Bookings open up to ${venue.max_advance_days} days ahead.`,
+                  `Cancel ${venue.cancellation_hours}+ hours before for a ${venue.cancellation_refund_pct}% refund.`,
+                ].map((note, i) => (
+                  <li key={note} className={`flex items-start gap-3 py-2.5 text-sm text-surface-800/70 ${i > 0 ? 'border-t border-surface-100' : ''}`}>
+                    <span className="text-brand-600 font-semibold shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {(venue.phone || venue.address) && (
+              <div className="flex flex-col gap-2 mt-4 text-sm text-surface-800">
+                <span className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-surface-800/50 shrink-0" />
+                  {venue.address}
+                  <a href={directionsHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 text-xs font-medium shrink-0">
+                    <Navigation className="w-3 h-3" /> Directions
+                  </a>
+                </span>
+                {venue.phone && (
+                  <div className="flex gap-2 mt-1">
+                    <a href={`tel:${venue.phone}`} className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-surface-200 text-sm font-medium text-surface-800 hover:bg-surface-100">
+                      <Phone className="w-4 h-4" /> Call
+                    </a>
+                    {whatsappHref && (
+                      <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100">
+                        <MessageCircle className="w-4 h-4" /> WhatsApp
+                      </a>
+                    )}
+                  </div>
+                )}
+                <a
+                  href={directionsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 block rounded-lg overflow-hidden border border-surface-200 h-32"
+                >
+                  <iframe
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(venue.address)}&z=15&output=embed`}
+                    className="w-full h-full pointer-events-none"
+                    loading="lazy"
+                    title={`Map showing location of ${venue.name}`}
+                  />
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Reviews */}
+        <section className="mt-16 sm:mt-24">
+          <p className="text-brand-600 text-sm font-medium">Reviews</p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mt-2">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-surface-900 text-balance">
+              Players who booked <span className="font-black">{venue.name}.</span>
+            </h2>
+            {sortedReviews.length > 1 && (
+              <select
+                value={reviewSort}
+                onChange={(e) => setReviewSort(e.target.value as ReviewSort)}
+                className="px-3 py-2 bg-white border border-surface-200 rounded-lg text-sm text-surface-800 focus:outline-none focus:ring-2 focus:ring-brand-400 shrink-0"
+              >
+                <option value="recent">Most Recent</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+              </select>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div className="bg-white rounded-xl border border-surface-200 p-5">
+              {venue.total_reviews > 0 ? (
+                <>
+                  <p className="font-display font-bold text-4xl text-surface-900">
+                    {venue.rating.toFixed(1)}<span className="text-lg text-surface-800/40 font-normal"> /5 rating</span>
+                  </p>
+                  <div className="flex items-center gap-0.5 mt-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < Math.round(venue.rating) ? 'text-amber-400 fill-amber-400' : 'text-surface-200'}`} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-surface-800/50 mt-2">Based on {venue.total_reviews} player review{venue.total_reviews === 1 ? '' : 's'}.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-display font-semibold text-surface-900">No reviews yet</p>
+                  <p className="text-sm text-surface-800/50 mt-2">Be the first to play here and leave a review.</p>
+                </>
+              )}
+            </div>
+
+            {sortedReviews.slice(0, 2).map((review) => (
+              <div key={review.id} className="bg-white rounded-xl border border-surface-200 p-5">
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: review.rating }).map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-surface-800/80 mt-3 leading-relaxed">&ldquo;{review.comment}&rdquo;</p>
+                <div className="flex items-center gap-2.5 mt-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-50 text-brand-600 font-display font-semibold text-xs flex items-center justify-center shrink-0">
+                    {(review.name ?? 'A').charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-surface-900 truncate">{review.name ?? 'Anonymous'}</p>
+                    <p className="text-xs text-surface-800/40">
+                      {new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Related venues */}
         {similarVenues.length > 0 && (
-          <section className="mt-12">
-            <h2 className="font-display font-bold text-xl text-surface-900 mb-6">You Might Also Like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <section className="mt-16 sm:mt-24">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-brand-600 text-sm font-medium">Related venues</p>
+                <h2 className="font-display font-bold text-2xl sm:text-3xl text-surface-900 mt-2 text-balance">
+                  Explore more spaces for <span className="font-black">your next game.</span>
+                </h2>
+              </div>
+              <Link href="/venues" className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700 shrink-0">
+                View All Venues <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
               {similarVenues.map((v) => (
                 <VenueCard key={v.id} venue={v} />
               ))}
@@ -510,7 +515,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
         )}
       </main>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-surface-200 p-3 shadow-lg">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-50/95 backdrop-blur-xl border-t border-surface-200 p-3 shadow-lg">
         <a
           href="#book-a-slot"
           className="block w-full text-center px-4 py-3 bg-brand-600 text-white rounded-full text-sm font-semibold"
@@ -518,6 +523,6 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
           Book a Slot
         </a>
       </div>
-    </>
+    </div>
   )
 }

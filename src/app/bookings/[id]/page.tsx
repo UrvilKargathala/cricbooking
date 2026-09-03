@@ -130,22 +130,22 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const StatusIcon = statusCfg.icon
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-        <Link href="/bookings" className="inline-flex items-center gap-1.5 text-sm text-surface-800/60 hover:text-surface-900 mb-6">
+        <Link href="/bookings" className="inline-flex items-center gap-1.5 text-sm text-surface-800/50 hover:text-surface-900 mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Bookings
         </Link>
 
         {loading ? (
           <div className="text-center py-16">
-            <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm text-surface-800/60 mt-3">Loading booking...</p>
+            <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-surface-800/50 mt-3">Loading booking...</p>
           </div>
         ) : booking ? (
           <div className="space-y-6">
             {/* Status Banner */}
-            <div className="flex items-center gap-3 bg-white rounded-xl border border-surface-200 p-5">
+            <div className="flex items-center gap-3 glass-card rounded-xl p-5">
               <StatusIcon className={`w-8 h-8 ${statusCfg.color}`} />
               <div>
                 <p className={`font-display font-semibold text-lg ${statusCfg.color}`}>{statusCfg.label}</p>
@@ -159,7 +159,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             </div>
 
             {/* Receipt Card */}
-            <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
+            <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-5 border-b border-surface-200">
                 <h2 className="font-display font-semibold text-surface-900 text-lg">Booking Receipt</h2>
               </div>
@@ -169,10 +169,10 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
                   <div>
-                    <Link href={`/venues/${booking.venue?.slug}`} className="font-display font-semibold text-surface-900 hover:text-brand-700">
+                    <Link href={`/venues/${booking.venue?.slug}`} className="font-display font-semibold text-surface-900 hover:text-brand-600">
                       {booking.venue?.name}
                     </Link>
-                    <p className="text-sm text-surface-800/60">{booking.venue?.address}</p>
+                    <p className="text-sm text-surface-800/50">{booking.venue?.address}</p>
                     {booking.venue?.area && (
                       <p className="text-sm text-surface-800/50">{booking.venue.area.name}, Surat</p>
                     )}
@@ -183,7 +183,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 {booking.court && (
                   <div className="flex items-center gap-3">
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                      <span className="w-2 h-2 rounded-full bg-brand-500" />
+                      <span className="w-2 h-2 rounded-full bg-brand-600" />
                     </div>
                     <p className="text-sm text-surface-800">
                       <span className="font-medium">{booking.court.name}</span>
@@ -195,7 +195,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 {booking.slot && (
                   <>
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-surface-800/40 shrink-0" />
+                      <Calendar className="w-5 h-5 text-surface-800/50 shrink-0" />
                       <p className="text-sm text-surface-800">
                         {new Date(booking.slot.date + 'T00:00:00').toLocaleDateString('en-IN', {
                           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -203,7 +203,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-surface-800/40 shrink-0" />
+                      <Clock className="w-5 h-5 text-surface-800/50 shrink-0" />
                       <p className="text-sm text-surface-800">
                         {formatTime(booking.slot.start_time)} &mdash; {formatTime(booking.slot.end_time)}
                       </p>
@@ -213,9 +213,9 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
 
               {/* Amount */}
-              <div className="bg-surface-50 px-5 py-4 flex items-center justify-between border-t border-surface-200">
+              <div className="bg-surface-100 px-5 py-4 flex items-center justify-between border-t border-surface-200">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-surface-800/40" />
+                  <CreditCard className="w-5 h-5 text-surface-800/50" />
                   <span className="text-sm text-surface-800/70">Amount Paid</span>
                 </div>
                 <span className="font-display font-bold text-lg text-surface-900">{formatPrice(booking.amount)}</span>
@@ -233,7 +233,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 <>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100"
                     onClick={async () => {
                       if (!confirm('This will cancel your current booking and take you to the venue page to book a new slot. Continue?')) return
                       await handleCancel()
@@ -244,7 +244,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    className="border-red-500/40 text-red-400 bg-transparent hover:bg-red-500/10"
                     onClick={() => setCancelOpen(true)}
                   >
                     Cancel Booking
@@ -253,24 +253,24 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               )}
               {(booking.status === 'completed' || booking.status === 'cancelled') && booking.venue?.slug && (
                 <Link href={`/venues/${booking.venue.slug}`}>
-                  <Button variant="outline" className="flex items-center gap-2">
+                  <Button variant="outline" className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
                     <RotateCcw className="w-4 h-4" /> Book Again
                   </Button>
                 </Link>
               )}
               {(booking.status === 'completed' || booking.status === 'confirmed') && !existingReview && (
-                <Button variant="outline" onClick={() => setReviewOpen(true)} className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => setReviewOpen(true)} className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
                   <Star className="w-4 h-4" /> Write a Review
                 </Button>
               )}
               {existingReview && (
-                <div className="flex items-center gap-2 text-sm text-surface-800/60">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <div className="flex items-center gap-2 text-sm text-surface-800/50">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   You rated this venue {existingReview.rating}/5
                 </div>
               )}
               <Link href={`/venues/${booking.venue?.slug}`}>
-                <Button variant="outline">View Venue</Button>
+                <Button variant="outline" className="border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">View Venue</Button>
               </Link>
             </div>
           </div>
@@ -352,6 +352,6 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
           </Button>
         </div>
       </Modal>
-    </>
+    </div>
   )
 }

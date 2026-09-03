@@ -153,9 +153,9 @@ export default function LoginPage() {
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
-      <main className="flex min-h-[calc(100vh-4rem)]">
+      <main className="flex min-h-[calc(100vh-4rem)] hero-glow">
         <div className="hidden lg:block lg:w-1/2 relative">
           <img
             src="https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1200"
@@ -172,11 +172,11 @@ export default function LoginPage() {
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-16">
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm glass-card rounded-2xl p-6 sm:p-8">
             <div className="flex flex-col items-center mb-8">
-              <img src="/logo-icon.png" alt="" className="w-12 h-12 mb-3" />
+              <span className="logo-mark w-12 h-12 mb-3 text-brand-600" />
               <h1 className="font-display font-bold text-xl text-surface-900">Welcome to CricBooking</h1>
-              <p className="text-sm text-surface-800/60 mt-1">
+              <p className="text-sm text-surface-800/50 mt-1">
                 Enter your email to get started
               </p>
             </div>
@@ -188,21 +188,21 @@ export default function LoginPage() {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/40" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/50" />
                     <input
                       id="email"
                       type="email"
                       placeholder="yourname@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-surface-100 border border-surface-200 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/40"
+                      className="w-full bg-surface-100 border border-surface-200 rounded-lg pl-10 pr-4 py-3 text-sm text-surface-900 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/50"
                     />
                   </div>
                   <p className="text-xs text-surface-800/40 mt-1.5">
                     We&apos;ll send a one-time code to verify — no password needed.
                   </p>
                 </div>
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-red-400">{error}</p>}
                 <Button
                   variant="primary"
                   onClick={handleSendOtp}
@@ -230,11 +230,11 @@ export default function LoginPage() {
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
                       onPaste={handleOtpPaste}
-                      className="w-10 h-12 text-center text-lg font-display font-semibold bg-surface-100 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+                      className="w-10 h-12 text-center text-lg font-display font-semibold bg-surface-100 border border-surface-200 rounded-lg text-surface-900 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                     />
                   ))}
                 </div>
-                {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+                {error && <p className="text-sm text-red-400 text-center">{error}</p>}
                 <Button
                   variant="primary"
                   onClick={handleVerify}
@@ -264,14 +264,14 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="border-t border-surface-100 mt-6 pt-4">
-              <p className="text-sm text-surface-800/60 text-center">
+            <div className="border-t border-surface-200 mt-6 pt-4">
+              <p className="text-sm text-surface-800/50 text-center">
                 Are you a venue owner? Login with your registered email to access the dashboard.
               </p>
             </div>
           </div>
         </div>
       </main>
-    </>
+    </div>
   )
 }

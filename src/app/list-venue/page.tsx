@@ -10,8 +10,8 @@ import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 const inputClass =
-  'w-full px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/40'
-const errorClass = 'border-red-300 focus:ring-red-400'
+  'w-full px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm text-surface-900 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/50'
+const errorClass = 'border-red-500/50 focus:ring-red-500/50'
 
 function SectionHeading({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
@@ -50,13 +50,13 @@ function FileUploadZone({
         }}
       />
       {file ? (
-        <div className="flex items-center gap-3 bg-surface-50 border border-surface-200 rounded-lg p-3">
+        <div className="flex items-center gap-3 bg-surface-100 border border-surface-200 rounded-lg p-3">
           <FileText className="w-5 h-5 text-brand-600 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-surface-900 truncate">{file.name}</p>
-            <p className="text-xs text-surface-800/40">{(file.size / 1024).toFixed(0)} KB</p>
+            <p className="text-xs text-surface-800/50">{(file.size / 1024).toFixed(0)} KB</p>
           </div>
-          <button onClick={onRemove} className="text-surface-800/40 hover:text-red-600 shrink-0">
+          <button onClick={onRemove} className="text-surface-800/50 hover:text-red-400 shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -65,16 +65,16 @@ function FileUploadZone({
           type="button"
           onClick={() => ref.current?.click()}
           className={cn(
-            'w-full border border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-colors',
-            error ? 'border-red-300' : 'border-surface-200'
+            'w-full border border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-brand-300 hover:bg-brand-500/5 transition-colors',
+            error ? 'border-red-500/50' : 'border-surface-200'
           )}
         >
-          <Upload className="w-6 h-6 text-surface-800/30 mx-auto" />
-          <p className="text-sm text-surface-800/60 mt-1.5">{label}</p>
+          <Upload className="w-6 h-6 text-surface-800/40 mx-auto" />
+          <p className="text-sm text-surface-800/70 mt-1.5">{label}</p>
           <p className="text-xs text-surface-800/40 mt-0.5">JPG, PNG, PDF — max 5MB</p>
         </button>
       )}
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   )
 }
@@ -214,7 +214,7 @@ export default function ListVenuePage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <main>
         <section className="bg-gradient-to-br from-brand-600 to-brand-800 text-white py-16">
@@ -228,18 +228,18 @@ export default function ListVenuePage() {
 
         <section className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
           {submitted ? (
-            <div className="bg-white rounded-xl border border-surface-200 p-8 text-center max-w-lg mx-auto">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
-                <Check className="w-8 h-8 text-emerald-600" />
+            <div className="glass-card rounded-xl p-8 text-center max-w-lg mx-auto">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center">
+                <Check className="w-8 h-8 text-emerald-400" />
               </div>
               <h2 className="font-display font-bold text-xl text-surface-900 mt-4">Application Submitted!</h2>
-              <p className="text-surface-800/70 mt-2">
+              <p className="text-surface-800 mt-2">
                 Thank you, {formData.ownerName}! Your application for {formData.businessName} has been submitted successfully.
               </p>
               <p className="text-sm text-surface-800/50 mt-1">
                 Our team will review your details and get back to you within 48 hours.
               </p>
-              <div className="bg-surface-50 rounded-lg p-4 mt-6 text-left text-sm text-surface-800/60">
+              <div className="bg-surface-100 rounded-lg p-4 mt-6 text-left text-sm text-surface-800/70">
                 <p className="font-medium text-surface-900 mb-2">What happens next?</p>
                 <ol className="list-decimal list-inside space-y-1">
                   <li>We review your documents and business details</li>
@@ -252,14 +252,14 @@ export default function ListVenuePage() {
               </Button>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-surface-200 p-6 sm:p-8">
+            <div className="glass-card rounded-xl p-6 sm:p-8">
               <h2 className="font-display font-bold text-xl text-surface-900">Register as a Venue Owner</h2>
-              <p className="text-sm text-surface-800/60 mt-1">
+              <p className="text-sm text-surface-800/50 mt-1">
                 Fill in your details. We&apos;ll review your application within 48 hours.
               </p>
 
               {error && (
-                <div className="bg-red-50 text-red-800 rounded-lg p-3 text-sm mt-4">{error}</div>
+                <div className="bg-red-500/10 text-red-400 rounded-lg p-3 text-sm mt-4">{error}</div>
               )}
 
               {/* Section 1: Personal Information */}
@@ -278,7 +278,7 @@ export default function ListVenuePage() {
                 <div>
                   <label className="block text-sm font-medium text-surface-800 mb-1.5">Mobile Number *</label>
                   <div className="flex">
-                    <span className="bg-surface-200 border border-surface-200 rounded-l-lg px-3 flex items-center text-sm text-surface-800/60 shrink-0">+91</span>
+                    <span className="bg-surface-200 border border-surface-200 rounded-l-lg px-3 flex items-center text-sm text-surface-800/70 shrink-0">+91</span>
                     <input
                       type="tel"
                       maxLength={10}
@@ -315,7 +315,7 @@ export default function ListVenuePage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-800/40 hover:text-surface-800"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-800/50 hover:text-surface-800"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -413,7 +413,7 @@ export default function ListVenuePage() {
 
               {/* Section 3: Documents */}
               <SectionHeading icon={FileText} title="Verification Documents" />
-              <div className="bg-amber-50 text-amber-800 rounded-lg p-3 text-sm mb-4">
+              <div className="bg-amber-500/10 text-amber-400 rounded-lg p-3 text-sm mb-4">
                 Upload clear photos or scanned copies. Accepted formats: JPG, PNG, PDF (max 5MB each).
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -433,7 +433,7 @@ export default function ListVenuePage() {
 
               {/* Section 4: Bank / Payment Details */}
               <SectionHeading icon={Landmark} title="Payment Details" />
-              <div className="bg-blue-50 text-blue-800 rounded-lg p-3 text-sm mb-4">
+              <div className="bg-blue-500/10 text-blue-400 rounded-lg p-3 text-sm mb-4">
                 Required for receiving booking payments. You can update this later from your dashboard.
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -487,18 +487,18 @@ export default function ListVenuePage() {
 
               {/* Terms & Submit */}
               <div className="mt-8">
-                <label className={cn('flex items-start gap-2 cursor-pointer', fieldErrors.agreedToTerms && 'text-red-600')}>
+                <label className={cn('flex items-start gap-2 cursor-pointer', fieldErrors.agreedToTerms && 'text-red-400')}>
                   <input
                     type="checkbox"
                     checked={formData.agreedToTerms}
                     onChange={(e) => update('agreedToTerms', e.target.checked)}
-                    className="mt-1 rounded border-surface-300 text-brand-600 focus:ring-brand-400"
+                    className="mt-1 rounded border-surface-300 bg-surface-100 text-brand-500 focus:ring-brand-400"
                   />
                   <span className="text-sm text-surface-800/70">
                     I confirm that all information provided is accurate. I agree to CricBooking&apos;s terms of service and platform guidelines.
                   </span>
                 </label>
-                {fieldErrors.agreedToTerms && <p className="text-xs text-red-600 mt-1">{fieldErrors.agreedToTerms}</p>}
+                {fieldErrors.agreedToTerms && <p className="text-xs text-red-400 mt-1">{fieldErrors.agreedToTerms}</p>}
               </div>
 
               <Button
@@ -515,6 +515,6 @@ export default function ListVenuePage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

@@ -40,7 +40,7 @@ function ConfirmedContent() {
         </div>
 
         <h1 className="font-display font-bold text-2xl text-surface-900 mb-2">Booking Confirmed!</h1>
-        <p className="text-surface-800/60">
+        <p className="text-surface-800/70">
           Your payment was successful and your slot{codes.length > 1 ? 's have' : ' has'} been reserved.
         </p>
       </div>
@@ -61,7 +61,7 @@ function ConfirmedContent() {
           </Button>
         </Link>
         <Link href="/venues">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
             Book Another
             <ArrowRight className="w-4 h-4" />
           </Button>
@@ -73,16 +73,16 @@ function ConfirmedContent() {
 
 export default function BookingConfirmedPage() {
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <Suspense fallback={
         <main className="max-w-lg mx-auto px-4 py-16 text-center">
-          <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
         </main>
       }>
         <ConfirmedContent />
       </Suspense>
       <Footer />
-    </>
+    </div>
   )
 }

@@ -140,6 +140,33 @@ body {
   animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Recolors the logo mark (a flat single-color PNG) via CSS mask instead of
+   shipping a second image asset — background-color drives the color. */
+.logo-mark {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-image: url('/logo-icon.png');
+  mask-image: url('/logo-icon.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Light glassmorphism surface used across the public site (not the dashboard) */
+.glass-card {
+  background-color: rgb(255 255 255 / 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(226 224 219 / 0.8); /* ~surface-200 */
+}
+
+.hero-glow {
+  background: radial-gradient(600px circle at 50% 0%, rgb(59 130 246 / 0.08), transparent 70%);
+}
+
 .dashboard-theme {
   --brand-50: #f5f8f9;
   --brand-100: #eaf1f5;

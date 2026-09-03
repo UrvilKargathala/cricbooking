@@ -86,7 +86,7 @@ export default function BookingsPage() {
   )
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="font-display font-bold text-2xl text-surface-900 mb-6">My Bookings</h1>
@@ -96,8 +96,8 @@ export default function BookingsPage() {
         <div className="flex flex-col gap-4 mt-6">
           {loading ? (
             <div className="text-center py-16">
-              <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-surface-800/60 mt-3">Loading bookings...</p>
+              <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-surface-800/50 mt-3">Loading bookings...</p>
             </div>
           ) : bookings.length > 0 ? (
             bookings.map((booking) => (
@@ -106,7 +106,7 @@ export default function BookingsPage() {
           ) : (
             <div className="text-center py-16">
               <Calendar className="w-10 h-10 text-surface-800/30 mx-auto mb-3" />
-              <p className="text-surface-800/60 mb-4">No bookings yet.</p>
+              <p className="text-surface-800/50 mb-4">No bookings yet.</p>
               <Link href="/venues" className="text-sm font-medium text-brand-600 hover:text-brand-700">
                 Browse Venues
               </Link>
@@ -115,6 +115,6 @@ export default function BookingsPage() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

@@ -12,6 +12,11 @@ import { createClient } from '@/lib/supabase'
 import { useToastStore } from '@/store/useToastStore'
 import type { Profile } from '@/types'
 
+// Dark-styled input box only — Input's own `label` prop stays dark text (shared with
+// dashboard settings), so labels are rendered separately here instead.
+const darkInputClass =
+  'bg-surface-100 border-surface-200 text-surface-900 placeholder:text-surface-800/50 focus:ring-brand-400'
+
 export default function ProfilePage() {
   const router = useRouter()
   const showToast = useToastStore((s) => s.showToast)
@@ -59,10 +64,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-surface-50">
       <Header />
       <main className="max-w-xl mx-auto px-4 sm:px-6 py-8">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-surface-800/60 hover:text-surface-900 mb-6">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-surface-800/50 hover:text-surface-900 mb-6">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
 
@@ -70,12 +75,12 @@ export default function ProfilePage() {
 
         {loading ? (
           <div className="text-center py-16">
-            <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         ) : profile ? (
           <div className="space-y-6">
             <div className="flex items-center gap-4 pb-6 border-b border-surface-200">
-              <div className="w-16 h-16 rounded-full bg-brand-100 text-brand-700 font-bold text-xl flex items-center justify-center shrink-0">
+              <div className="w-16 h-16 rounded-full bg-brand-100 text-brand-600 font-bold text-xl flex items-center justify-center shrink-0">
                 {(profile.full_name?.[0] || 'U').toUpperCase()}
               </div>
               <div>
@@ -87,43 +92,52 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-surface-200 p-5 space-y-4">
+            <div className="glass-card rounded-xl p-5 space-y-4">
               <h2 className="font-display font-semibold text-surface-900">Personal Details</h2>
 
-              <Input
-                id="name"
-                label="Full Name"
-                icon={<User className="w-4 h-4" />}
-                value={form.full_name}
-                onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-              />
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-surface-800 mb-1.5">Full Name</label>
+                <Input
+                  id="name"
+                  icon={<User className="w-4 h-4" />}
+                  value={form.full_name}
+                  onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+                  className={darkInputClass}
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-surface-800 mb-1.5">Email</label>
-                <div className="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-lg text-sm text-surface-800/60 flex items-center gap-2">
+                <div className="w-full px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm text-surface-800/50 flex items-center gap-2">
                   <Mail className="w-4 h-4 text-surface-800/40" />
                   {profile.email}
                 </div>
                 <p className="text-xs text-surface-800/40 mt-1">Email cannot be changed</p>
               </div>
 
-              <Input
-                id="phone"
-                label="Phone Number"
-                icon={<Phone className="w-4 h-4" />}
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+91 98765 43210"
-              />
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-surface-800 mb-1.5">Phone Number</label>
+                <Input
+                  id="phone"
+                  icon={<Phone className="w-4 h-4" />}
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="+91 98765 43210"
+                  className={darkInputClass}
+                />
+              </div>
 
-              <Input
-                id="area"
-                label="Area (Locality)"
-                icon={<MapPin className="w-4 h-4" />}
-                value={form.area}
-                onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-                placeholder="e.g. Vesu, Adajan"
-              />
+              <div>
+                <label htmlFor="area" className="block text-sm font-medium text-surface-800 mb-1.5">Area (Locality)</label>
+                <Input
+                  id="area"
+                  icon={<MapPin className="w-4 h-4" />}
+                  value={form.area}
+                  onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
+                  placeholder="e.g. Vesu, Adajan"
+                  className={darkInputClass}
+                />
+              </div>
             </div>
 
             <Button variant="primary" onClick={handleSave} disabled={saving} className="w-full flex items-center justify-center gap-2">
@@ -134,6 +148,6 @@ export default function ProfilePage() {
         ) : null}
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

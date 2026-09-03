@@ -7,6 +7,8 @@ import { Search, MapPin, User, Menu, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { fetchAreas } from '@/lib/supabase-queries'
+import type { Area } from '@/types'
 
 const NAV_LINK_CLASS =
   'relative py-1.5 text-sm font-medium text-surface-800/70 hover:text-brand-600 transition-colors after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:w-0 after:bg-brand-600 after:transition-all after:duration-200 hover:after:w-full'
@@ -24,10 +26,13 @@ export function Header() {
   const [mobileQuery, setMobileQuery] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [areaOpen, setAreaOpen] = useState(false)
+  const [areas, setAreas] = useState<Area[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
+  const areaRef = useRef<HTMLDivElement>(null)
   const mobileSearchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -42,15 +47,6 @@ export function Header() {
   useEffect(() => {
     if (menuOpen) mobileSearchRef.current?.focus()
   }, [menuOpen])
-
-  const handleHowItWorks = () => {
-    closeMenu()
-    if (pathname === '/') {
-      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
-    } else {
-      router.push('/#how-it-works')
-    }
-  }
 
   useEffect(() => {
     if (!searchOpen) return
@@ -81,7 +77,33 @@ export function Header() {
     return () => window.removeEventListener('mousedown', handleClick)
   }, [profileOpen])
 
-  const transparent = pathname === '/' && !scrolled && !menuOpen && !searchOpen
+  useEffect(() => {
+    fetchAreas().then(setAreas).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!areaOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (areaRef.current && !areaRef.current.contains(e.target as Node)) {
+        setAreaOpen(false)
+      }
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAreaOpen(false)
+    }
+    window.addEventListener('mousedown', handleClick)
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      window.removeEventListener('mousedown', handleClick)
+      window.removeEventListener('keydown', handleKey)
+    }
+  }, [areaOpen])
+
+  // Transparent-over-photo only on pages whose hero is a full-bleed image
+  // (home, venue detail) — everywhere else the header stays solid.
+  const hasPhotoHero = pathname === '/' || (pathname?.startsWith('/venues/') ?? false)
+  const transparent = hasPhotoHero && !scrolled && !menuOpen && !searchOpen
+  const isActive = (href: string) => pathname === href
 
   return (
     <header
@@ -95,7 +117,7 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Link href="/" className="flex md:hidden items-center gap-2">
-          <img src="/logo-icon.png" alt="" className="w-9 h-9" />
+          <span className={cn('logo-mark w-9 h-9', transparent ? 'text-white' : 'text-brand-600')} />
           <span className="font-display font-bold text-xl">
             <span className={transparent ? 'text-white' : 'text-surface-900'}>Cric</span>
             <span className={transparent ? "text-brand-400" : "text-brand-600"}>Booking</span>
@@ -108,31 +130,45 @@ export function Header() {
             className={cn(
               NAV_LINK_CLASS,
               transparent && 'text-white/80 hover:text-white after:bg-white',
-              pathname === '/venues' && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+              isActive('/venues') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
             Venues
           </Link>
-          <button
-            onClick={handleHowItWorks}
-            className={cn(NAV_LINK_CLASS, transparent && 'text-white/80 hover:text-white after:bg-white')}
+          <Link
+            href="/how-it-works"
+            className={cn(
+              NAV_LINK_CLASS,
+              transparent && 'text-white/80 hover:text-white after:bg-white',
+              isActive('/how-it-works') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+            )}
           >
             How It Works
-          </button>
+          </Link>
           <Link
             href="/list-venue"
             className={cn(
               NAV_LINK_CLASS,
               transparent && 'text-white/80 hover:text-white after:bg-white',
-              pathname === '/list-venue' && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+              isActive('/list-venue') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
             List Your Venue
           </Link>
+          <Link
+            href="/blog"
+            className={cn(
+              NAV_LINK_CLASS,
+              transparent && 'text-white/80 hover:text-white after:bg-white',
+              pathname?.startsWith('/blog') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
+            )}
+          >
+            Blog
+          </Link>
         </nav>
 
         <Link href="/" className="hidden md:flex items-center gap-2 justify-self-center">
-          <img src="/logo-icon.png" alt="" className="w-9 h-9" />
+          <span className={cn('logo-mark w-9 h-9', transparent ? 'text-white' : 'text-brand-600')} />
           <span className="font-display font-bold text-xl">
             <span className={transparent ? 'text-white' : 'text-surface-900'}>Cric</span>
             <span className={transparent ? "text-brand-400" : "text-brand-600"}>Booking</span>
@@ -178,10 +214,47 @@ export function Header() {
             )}
           </div>
           <span className={cn('w-px h-6', transparent ? 'bg-white/20' : 'bg-surface-200')} />
-          <span className={cn('flex items-center gap-1.5 text-sm', transparent ? 'text-white/80' : 'text-surface-800/70')}>
-            <MapPin className={cn('w-4 h-4', transparent ? 'text-brand-400' : 'text-brand-500')} />
-            Surat
-          </span>
+          <div ref={areaRef} className="relative">
+            <button
+              onClick={() => setAreaOpen((v) => !v)}
+              className={cn(
+                'flex items-center gap-1.5 text-sm rounded-lg px-2 py-1.5 -mx-2 transition-colors',
+                areaOpen
+                  ? 'bg-brand-50 text-brand-600'
+                  : transparent
+                    ? 'text-white/80 hover:bg-white/10'
+                    : 'text-surface-800/70 hover:bg-surface-100'
+              )}
+            >
+              <MapPin className={cn('w-4 h-4', areaOpen ? 'text-brand-600' : transparent ? 'text-brand-400' : 'text-brand-500')} />
+              Surat
+              <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', areaOpen && 'rotate-180')} />
+            </button>
+            {areaOpen && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-12 w-56 bg-white border border-surface-200 rounded-lg shadow-lg p-2 z-50">
+                <p className="px-3 pt-1.5 pb-1 text-xs font-medium text-surface-800/40 uppercase tracking-wide">Browse by area</p>
+                <Link
+                  href="/venues"
+                  onClick={() => setAreaOpen(false)}
+                  className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
+                >
+                  All of Surat
+                </Link>
+                <div className="max-h-64 overflow-y-auto">
+                  {areas.map((area) => (
+                    <Link
+                      key={area.slug}
+                      href={`/venues?area=${area.slug}`}
+                      onClick={() => setAreaOpen(false)}
+                      className="block px-3 py-2 text-sm text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
+                    >
+                      {area.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <span className={cn('w-px h-6', transparent ? 'bg-white/20' : 'bg-surface-200')} />
           {user?.role === 'user' && (
             <Link href="/bookings">
@@ -300,11 +373,14 @@ export function Header() {
           <Link href="/venues" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
             Venues
           </Link>
-          <button onClick={handleHowItWorks} className="text-sm font-medium text-surface-800 py-1.5 text-left">
+          <Link href="/how-it-works" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
             How It Works
-          </button>
+          </Link>
           <Link href="/list-venue" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
             List Your Venue
+          </Link>
+          <Link href="/blog" onClick={closeMenu} className="text-sm font-medium text-surface-800 py-1.5">
+            Blog
           </Link>
           {user && user.role === 'owner' ? (
             <Link href="/dashboard" onClick={closeMenu}>

@@ -144,7 +144,7 @@ export function SlotPicker({ courts, slots, selectedDate, onDateChange, onSelect
                   >
                     <span className="flex items-center gap-1">
                       {isBlocked && <Lock className="w-3 h-3 shrink-0" />}
-                      {formatTime(slot.start_time)}
+                      {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
                     </span>
                     <span className="opacity-80">{formatPrice(slot.price)}</span>
                   </button>

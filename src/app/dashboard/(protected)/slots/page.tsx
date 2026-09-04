@@ -643,7 +643,7 @@ export default function DashboardSlotsPage() {
                       isBlocked && 'text-red-800',
                       !isBooked && !isBlocked && 'text-surface-900',
                     )}>
-                      {formatTime(slot.start_time)}
+                      {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
                     </span>
                     <span className={cn(
                       'text-[10px] font-medium',

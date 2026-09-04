@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
 
 function generateBookingCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -40,7 +40,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
   }
 
-  const { data: court } = await supabase
+  const admin = createServiceRoleClient()
+
+  const { data: court } = await admin
     .from('courts')
     .select('price_per_slot')
     .eq('id', court_id)
@@ -57,16 +59,17 @@ export async function POST(req: Request) {
   const bookedSlotIds: string[] = []
 
   for (const slotId of slot_ids) {
-    const { error: slotError } = await supabase
+    const { data: updated, error: slotError } = await admin
       .from('slots')
       .update({ status: 'booked' })
       .eq('id', slotId)
       .eq('status', 'available')
+      .select('id')
 
-    if (slotError) continue
+    if (slotError || !updated?.length) continue
     bookedSlotIds.push(slotId)
 
-    const { data: booking, error: bookingError } = await supabase
+    const { data: booking, error: bookingError } = await admin
       .from('bookings')
       .insert({
         booking_code: generateBookingCode(),
@@ -85,7 +88,7 @@ export async function POST(req: Request) {
       .single()
 
     if (bookingError) {
-      await supabase
+      await admin
         .from('slots')
         .update({ status: 'available' })
         .eq('id', slotId)

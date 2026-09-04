@@ -1,6 +1,6 @@
 'use client'
 
-import { Mail, Phone, Calendar, Clock } from 'lucide-react'
+import { Mail, Phone, Calendar } from 'lucide-react'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'

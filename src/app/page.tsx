@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   MapPin,
   Calendar,
@@ -237,7 +238,7 @@ export default function Home() {
         )}
 
         {/* Stats + trust bar */}
-        <section className="relative z-10 py-16 md:py-20">
+        <section className="relative z-10 py-10 md:py-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <div className="glass-card rounded-2xl px-6 py-8 sm:px-10 sm:py-10">
               {statsError ? (
@@ -277,7 +278,7 @@ export default function Home() {
         </section>
 
         {/* How It Works */}
-        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 scroll-mt-16">
+        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16 scroll-mt-16">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">How It Works</h2>
           <p className="text-surface-800/50 text-center mt-3 mb-14 text-lg">Book your next match in three simple steps</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
@@ -299,7 +300,7 @@ export default function Home() {
 
         {/* Popular Venues */}
         {popularVenues.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-20">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
             <div className="flex items-end justify-between mb-10">
               <div>
                 <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900">Popular Venues</h2>
@@ -323,7 +324,7 @@ export default function Home() {
         )}
 
         {/* Why CricBooking */}
-        <section className="bg-white/[0.02] py-20 md:py-28">
+        <section className="bg-white/[0.02] py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">Why Players Choose CricBooking</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-14 text-lg">Everything you need, nothing you don&apos;t</p>
@@ -345,9 +346,9 @@ export default function Home() {
 
         {/* Areas We Cover */}
         {areaVenueCounts.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-20">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">Explore Venues by Area</h2>
-            <p className="text-surface-800/50 text-center mt-3 mb-14 text-lg">Find grounds close to you, anywhere in Surat</p>
+            <p className="text-surface-800/50 text-center mt-3 mb-10 text-lg">Find grounds close to you, anywhere in Surat</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {areaVenueCounts.map((area, index) => (
                 <ScrollReveal key={area.slug} delay={(index % 4) * 100}>
@@ -357,7 +358,7 @@ export default function Home() {
                   >
                     <div className="relative aspect-[4/3] overflow-hidden">
                       {area.image ? (
-                        <img src={area.image} alt={area.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={area.image} alt={area.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 1024px) 50vw, 25vw" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-brand-100 via-brand-200 to-brand-400 flex items-center justify-center">
                           <MapPin className="w-8 h-8 text-white/60" />
@@ -377,7 +378,7 @@ export default function Home() {
         )}
 
         {/* Testimonials */}
-        <section className="bg-white/[0.02] py-16 md:py-20">
+        <section className="bg-white/[0.02] py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">What Players Say</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-12 text-lg">Hear from the Surat cricket community</p>
@@ -427,8 +428,8 @@ export default function Home() {
         </section>
 
         {/* FAQ */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16 md:py-24">
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center mb-12">Frequently Asked Questions</h2>
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center mb-10">Frequently Asked Questions</h2>
           <div className="flex flex-col gap-3">
             {FAQS.map((faq, index) => {
               const isOpen = openFaq === index
@@ -451,7 +452,7 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16 md:py-24 text-center">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900">Ready to Play?</h2>
           <p className="text-surface-800/50 mt-3 text-lg max-w-lg mx-auto">
             Join thousands of players booking their next match on CricBooking.

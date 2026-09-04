@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -222,7 +223,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
       <section className="relative -mt-16 pt-16 overflow-hidden">
         <div className="absolute inset-0">
           {heroImage ? (
-            <img src={heroImage} alt="" className="w-full h-full object-cover" />
+            <Image src={heroImage} alt="" fill className="object-cover" sizes="100vw" priority />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-brand-700 to-surface-900" />
           )}
@@ -319,7 +320,7 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-16 sm:mt-24">
           <div className="rounded-2xl overflow-hidden bg-surface-100 aspect-[4/3] lg:aspect-auto lg:h-full relative">
             {secondaryImage ? (
-              <img src={secondaryImage} alt={venue.name} className="w-full h-full object-cover" />
+              <Image src={secondaryImage} alt={venue.name} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600" />
             )}

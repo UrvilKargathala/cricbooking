@@ -27,22 +27,26 @@ export default function BookingsPage() {
   const showToast = useToastStore((s) => s.showToast)
 
   const handleCancel = async (booking: Booking) => {
-    const supabase = createClient()
-    const { error: bookingError } = await supabase
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', booking.id)
-    if (bookingError) {
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: booking.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Failed to cancel booking', 'error')
+        return
+      }
+      const refundMsg = data.refund_id
+        ? ` Refund of ${data.refund_pct}% initiated.`
+        : data.refund_pct === 0
+          ? ' No refund per venue policy.'
+          : ''
+      showToast(`Booking cancelled.${refundMsg}`, 'success')
+    } catch {
       showToast('Failed to cancel booking', 'error')
-      return
     }
-    if (booking.slot) {
-      await supabase
-        .from('slots')
-        .update({ status: 'available' })
-        .eq('id', booking.slot.id)
-    }
-    showToast('Booking cancelled', 'success')
     if (userId) fetchBookings(userId)
   }
 

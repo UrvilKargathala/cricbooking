@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -25,8 +26,8 @@ export default function BlogPage() {
           <ScrollReveal>
             <Link href={`/blog/${featured.slug}`} className="group block glass-card rounded-2xl overflow-hidden mt-10 hover:border-brand-300 transition-colors">
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="aspect-[16/9] md:aspect-auto md:h-full overflow-hidden">
-                  <img src={featured.image} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="aspect-[16/9] md:aspect-auto md:h-full overflow-hidden relative">
+                  <Image src={featured.image} alt={featured.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
                 </div>
                 <div className="p-6 sm:p-8 flex flex-col justify-center">
                   <span className="w-fit text-xs font-medium text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{featured.category}</span>
@@ -50,8 +51,8 @@ export default function BlogPage() {
           {rest.map((post, index) => (
             <ScrollReveal key={post.slug} delay={(index % 3) * 100}>
               <Link href={`/blog/${post.slug}`} className="group block glass-card rounded-xl overflow-hidden hover:border-brand-300 transition-colors h-full">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="aspect-[16/10] overflow-hidden relative">
+                  <Image src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                 </div>
                 <div className="p-5">
                   <span className="text-xs font-medium text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{post.category}</span>

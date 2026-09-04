@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Calendar, IndianRupee, TrendingUp, Clock,
   Zap, Ban, AlertCircle, MapPin,
@@ -265,7 +266,7 @@ export default function DashboardOverviewPage() {
     <div className="space-y-6">
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl p-6 text-white">
-        <img src="/dashboard-banner.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <Image src="/dashboard-banner.jpg" alt="" fill className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-900/90 via-brand-800/80 to-brand-900/60" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

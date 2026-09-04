@@ -6,6 +6,7 @@ import {
   IndianRupee, Building2, ChevronDown, ChevronUp, Eye,
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerVenues, fetchAreas } from '@/lib/supabase-queries'
 import { SPORT_LABELS, AMENITY_LABELS, AMENITY_ICONS, formatPrice } from '@/lib/utils'
@@ -32,7 +33,7 @@ function VenueCard({
       <div className="flex flex-col sm:flex-row">
         <div className="sm:w-48 h-36 sm:h-auto shrink-0 relative overflow-hidden bg-gradient-to-br from-brand-100 to-brand-50">
           {venue.cover_image ? (
-            <img src={venue.cover_image} alt="" className="w-full h-full object-cover" />
+            <Image src={venue.cover_image} alt="" fill className="object-cover" sizes="192px" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="font-display font-bold text-4xl text-brand-300">{venue.name[0]}</span>

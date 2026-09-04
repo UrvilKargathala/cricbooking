@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Image from 'next/image'
 import { Check, Plus, Upload, X, Users, Ruler } from 'lucide-react'
 import { cn, formatPrice, AMENITY_LABELS, AMENITY_ICONS, SPORT_LABELS, SURFACE_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
@@ -100,7 +101,7 @@ export function VenueEditForm({ venue, onSave, onCancel, areas = [] }: VenueEdit
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
             {form.images.map((url, i) => (
               <div key={url} className="aspect-square rounded-lg overflow-hidden relative group">
-                <img src={url} alt="" className="w-full h-full object-cover" />
+                <Image src={url} alt="" fill className="object-cover" sizes="25vw" />
                 <button
                   type="button"
                   onClick={async () => {

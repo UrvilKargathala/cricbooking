@@ -87,23 +87,30 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
       return
     }
     setCancelling(true)
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', booking.id)
-    if (error) {
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: booking.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Failed to cancel booking', 'error')
+        setCancelling(false)
+        return
+      }
+      setBooking({ ...booking, status: 'cancelled' })
+      setCancelOpen(false)
+      const refundMsg = data.refund_id
+        ? ` Refund of ${data.refund_pct}% initiated.`
+        : data.refund_pct === 0
+          ? ' No refund per venue policy.'
+          : ''
+      showToast(`Booking cancelled.${refundMsg}`, 'success')
+    } catch {
       showToast('Failed to cancel booking', 'error')
-      setCancelling(false)
-      return
     }
-    if (booking.slot) {
-      await supabase.from('slots').update({ status: 'available' }).eq('id', booking.slot.id)
-    }
-    setBooking({ ...booking, status: 'cancelled' })
-    setCancelOpen(false)
     setCancelling(false)
-    showToast('Booking cancelled', 'success')
   }
 
   const handleReview = async () => {

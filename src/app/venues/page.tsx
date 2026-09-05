@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
-import { fetchAreas, fetchVenues } from '@/lib/supabase-queries'
+import { fetchAreas, fetchVenues, fetchTodaySlotCounts, type VenueSlotInfo } from '@/lib/supabase-queries'
 import { SPORT_LABELS } from '@/lib/utils'
 import type { Area, SportType, Venue } from '@/types'
 
@@ -36,13 +36,16 @@ function VenuesPageContent() {
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [areas, setAreas] = useState<Area[]>([])
   const [allVenues, setAllVenues] = useState<Venue[]>([])
+  const [slotCounts, setSlotCounts] = useState<Record<string, VenueSlotInfo>>({})
   const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(12)
 
   useEffect(() => {
-    Promise.all([fetchAreas().then(setAreas), fetchVenues().then(setAllVenues)]).finally(() =>
-      setLoading(false)
-    )
+    Promise.all([
+      fetchAreas().then(setAreas),
+      fetchVenues().then(setAllVenues),
+      fetchTodaySlotCounts().then(setSlotCounts),
+    ]).finally(() => setLoading(false))
   }, [])
 
   // Re-sync filters when the query string changes via client-side navigation
@@ -142,7 +145,7 @@ function VenuesPageContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
               {filteredVenues.slice(0, visibleCount).map((venue, index) => (
                 <ScrollReveal key={venue.id} delay={(index % 3) * 100}>
-                  <VenueCard venue={venue} />
+                  <VenueCard venue={venue} slotInfo={slotCounts[venue.id]} />
                 </ScrollReveal>
               ))}
             </div>

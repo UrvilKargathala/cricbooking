@@ -1,17 +1,68 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { MapPin, Star, Clock, Heart, Layers, MessageSquare, IndianRupee } from 'lucide-react'
+import { MapPin, Star, Clock, Heart, Layers, MessageSquare, IndianRupee, CalendarCheck } from 'lucide-react'
 import type { Venue } from '@/types'
 import { formatPrice, formatTime, SPORT_LABELS, cn } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
+import type { VenueSlotInfo } from '@/lib/supabase-queries'
 
 interface VenueCardProps {
   venue: Venue
+  slotInfo?: VenueSlotInfo
 }
 
-export function VenueCard({ venue }: VenueCardProps) {
+function formatShortDate(dateStr: string) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+
+function SlotStrip({ info }: { info: VenueSlotInfo }) {
+  const [offset, setOffset] = useState(0)
+  const slots = info.slots
+
+  useEffect(() => {
+    if (slots.length <= 4) return
+    const id = setInterval(() => setOffset((o) => (o + 1) % slots.length), 2500)
+    return () => clearInterval(id)
+  }, [slots.length])
+
+  if (slots.length === 0) return null
+
+  const displaySlots = slots.length > 4
+    ? Array.from({ length: 4 }, (_, i) => slots[(offset + i) % slots.length])
+    : slots
+
+  return (
+    <div className="bg-surface-900 rounded-b-2xl px-4 py-2.5 -mt-1">
+      <div className="flex items-center gap-2 mb-2">
+        <CalendarCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span className="text-xs font-medium text-white/90">
+          {info.available} slot{info.available === 1 ? '' : 's'} · {info.isToday ? 'Today' : formatShortDate(info.date)}
+        </span>
+      </div>
+      <div className="flex gap-1.5 overflow-hidden">
+        {displaySlots.map((slot, i) => (
+          <span
+            key={`${slot.start}-${i}`}
+            className="text-[11px] font-medium px-2 py-1 rounded-md whitespace-nowrap bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all duration-300"
+          >
+            {formatTime(slot.start)}
+          </span>
+        ))}
+        {slots.length > 4 && (
+          <span className="text-[11px] text-white/40 px-1 py-1 self-center">
+            +{slots.length - 4}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function VenueCard({ venue, slotInfo }: VenueCardProps) {
   const router = useRouter()
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
@@ -33,13 +84,15 @@ export function VenueCard({ venue }: VenueCardProps) {
       href={`/venues/${venue.slug}`}
       className="group block bg-white rounded-2xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
     >
-      <div className="relative p-2">
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+      <div className="relative p-2 pb-0">
+        <div className={cn('relative aspect-[4/3] overflow-hidden', slotInfo?.slots.length ? 'rounded-t-xl' : 'rounded-xl')}>
           {venue.cover_image ? (
-            <img
+            <Image
               src={venue.cover_image}
               alt={venue.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600" />
@@ -60,9 +113,10 @@ export function VenueCard({ venue }: VenueCardProps) {
             <Heart className={cn('w-4 h-4', favorite ? 'fill-red-500 text-red-500' : 'text-white')} />
           </button>
         </div>
+        {slotInfo?.slots.length ? <SlotStrip info={slotInfo} /> : null}
       </div>
 
-      <div className="px-5 pb-5">
+      <div className="px-5 pb-5 pt-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm text-brand-600 truncate">{venue.area?.name ?? venue.city}</span>
           {minPrice !== null && (

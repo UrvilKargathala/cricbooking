@@ -99,6 +99,46 @@ export async function fetchBookingCount(): Promise<number> {
   return count ?? 0
 }
 
+export interface VenueSlotInfo {
+  available: number
+  date: string
+  isToday: boolean
+  slots: { start: string; end: string; status: string }[]
+}
+
+export async function fetchTodaySlotCounts(): Promise<Record<string, VenueSlotInfo>> {
+  const today = new Date().toISOString().split('T')[0]
+  const now = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+  // Try today first
+  const { data, error } = await supabase
+    .from('slots')
+    .select('court_id, start_time, end_time, status, date, court:courts!inner(venue_id)')
+    .gte('date', today)
+    .eq('status', 'available')
+    .order('date')
+    .order('start_time')
+
+  if (error || !data?.length) return {}
+
+  const result: Record<string, VenueSlotInfo> = {}
+  for (const slot of data) {
+    const venueId = (slot.court as unknown as { venue_id: string }).venue_id
+    const isToday = slot.date === today
+    if (isToday && slot.start_time < now) continue
+
+    if (!result[venueId]) {
+      result[venueId] = { available: 0, date: slot.date, isToday, slots: [] }
+    }
+    // Only show slots for the earliest available date per venue
+    if (slot.date !== result[venueId].date) continue
+
+    result[venueId].available++
+    result[venueId].slots.push({ start: slot.start_time, end: slot.end_time, status: slot.status })
+  }
+  return result
+}
+
 function normalizeVenue(raw: Record<string, unknown>): Venue {
   return {
     ...raw,

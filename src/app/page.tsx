@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/Button'
 import { CountUp } from '@/components/ui/CountUp'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { VenueCard } from '@/components/venue/VenueCard'
-import { fetchAreas, fetchVenues, fetchBookingCount } from '@/lib/supabase-queries'
+import { fetchAreas, fetchVenues, fetchBookingCount, fetchTodaySlotCounts, type VenueSlotInfo } from '@/lib/supabase-queries'
 import { SPORT_LABELS, formatPrice } from '@/lib/utils'
 import type { Area, SportType, Venue } from '@/types'
 
@@ -109,12 +109,14 @@ export default function Home() {
   const [bookingCount, setBookingCount] = useState(0)
   const [statsLoaded, setStatsLoaded] = useState(false)
   const [statsError, setStatsError] = useState(false)
+  const [slotCounts, setSlotCounts] = useState<Record<string, VenueSlotInfo>>({})
 
   useEffect(() => {
     Promise.all([
       fetchAreas().then(setAreas),
       fetchVenues().then(setAllVenues),
       fetchBookingCount().then(setBookingCount),
+      fetchTodaySlotCounts().then(setSlotCounts),
     ]).catch(() => setStatsError(true)).finally(() => setStatsLoaded(true))
   }, [])
 
@@ -313,7 +315,7 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {popularVenues.map((venue, index) => (
                 <ScrollReveal key={venue.id} delay={(index % 3) * 100}>
-                  <VenueCard venue={venue} />
+                  <VenueCard venue={venue} slotInfo={slotCounts[venue.id]} />
                 </ScrollReveal>
               ))}
             </div>

@@ -36,10 +36,10 @@ function SlotStrip({ info }: { info: VenueSlotInfo }) {
     : slots
 
   return (
-    <div className="border-t border-surface-100 mx-5 px-0 py-3">
+    <div className="bg-surface-900 rounded-xl px-4 py-2.5 mt-2 shadow-lg">
       <div className="flex items-center gap-2 mb-2">
-        <CalendarCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-        <span className="text-xs font-medium text-surface-800/70">
+        <CalendarCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span className="text-xs font-medium text-white/90">
           {info.available} slot{info.available === 1 ? '' : 's'} · {info.isToday ? 'Today' : formatShortDate(info.date)}
         </span>
       </div>
@@ -47,13 +47,13 @@ function SlotStrip({ info }: { info: VenueSlotInfo }) {
         {displaySlots.map((slot, i) => (
           <span
             key={`${slot.start}-${i}`}
-            className="text-[11px] font-medium px-2 py-1 rounded-md whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200 transition-all duration-300"
+            className="text-[11px] font-medium px-2 py-1 rounded-md whitespace-nowrap bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all duration-300"
           >
             {formatTime(slot.start)}
           </span>
         ))}
         {slots.length > 4 && (
-          <span className="text-[11px] text-surface-800/40 px-1 py-1 self-center">
+          <span className="text-[11px] text-white/40 px-1 py-1 self-center">
             +{slots.length - 4}
           </span>
         )}
@@ -80,6 +80,7 @@ export function VenueCard({ venue, slotInfo }: VenueCardProps) {
   }
 
   return (
+    <div>
     <Link
       href={`/venues/${venue.slug}`}
       className="group block bg-white rounded-2xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
@@ -161,7 +162,8 @@ export function VenueCard({ venue, slotInfo }: VenueCardProps) {
           </div>
         </div>
       </div>
-      {slotInfo?.slots.length ? <SlotStrip info={slotInfo} /> : null}
     </Link>
+    {slotInfo?.slots.length ? <SlotStrip info={slotInfo} /> : null}
+    </div>
   )
 }

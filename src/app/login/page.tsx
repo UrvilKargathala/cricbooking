@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 export default function LoginPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const [isDashboard, setIsDashboard] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
@@ -19,6 +20,10 @@ export default function LoginPage() {
   const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
   const submittingRef = useRef(false)
+
+  useEffect(() => {
+    setIsDashboard(window.location.hostname.startsWith('dashboard.'))
+  }, [])
 
   const getRedirect = () => {
     const params = new URLSearchParams(window.location.search)
@@ -162,20 +167,42 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-surface-50">
-      <Header />
+      {isDashboard ? (
+        <div className="h-16 border-b border-surface-200 bg-white flex items-center px-6">
+          <span className="logo-mark w-8 h-8 text-brand-600" />
+          <span className="ml-2 font-display font-bold text-lg text-surface-900">CricBooking</span>
+          <span className="ml-2 text-xs font-medium text-surface-500 bg-surface-100 px-2 py-0.5 rounded-full">Owner Dashboard</span>
+        </div>
+      ) : (
+        <Header />
+      )}
       <main className="flex min-h-[calc(100vh-4rem)] hero-glow">
         <div className="hidden lg:block lg:w-1/2 relative">
           <img
-            src="https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1200"
+            src={isDashboard
+              ? "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1200"
+              : "https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1200"
+            }
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface-900/90 via-surface-900/20 to-transparent" />
           <div className="absolute bottom-12 left-10 right-10">
-            <h2 className="font-display font-bold text-3xl text-white">Book Your Next Match</h2>
-            <p className="mt-2 text-white/80 max-w-sm">
-              Real-time slot availability across Surat&apos;s best turfs and grounds — booked in seconds.
-            </p>
+            {isDashboard ? (
+              <>
+                <h2 className="font-display font-bold text-3xl text-white">Manage Your Venue</h2>
+                <p className="mt-2 text-white/80 max-w-sm">
+                  Track bookings, manage slots, and grow your turf business — all in one place.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="font-display font-bold text-3xl text-white">Book Your Next Match</h2>
+                <p className="mt-2 text-white/80 max-w-sm">
+                  Real-time slot availability across Surat&apos;s best turfs and grounds — booked in seconds.
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -183,9 +210,11 @@ export default function LoginPage() {
           <div className="w-full max-w-sm glass-card rounded-2xl p-6 sm:p-8">
             <div className="flex flex-col items-center mb-8">
               <span className="logo-mark w-12 h-12 mb-3 text-brand-600" />
-              <h1 className="font-display font-bold text-xl text-surface-900">Welcome to CricBooking</h1>
+              <h1 className="font-display font-bold text-xl text-surface-900">
+                {isDashboard ? 'Owner Dashboard Login' : 'Welcome to CricBooking'}
+              </h1>
               <p className="text-sm text-surface-800/50 mt-1">
-                Enter your email to get started
+                {isDashboard ? 'Sign in with your registered owner email' : 'Enter your email to get started'}
               </p>
             </div>
 
@@ -274,7 +303,10 @@ export default function LoginPage() {
 
             <div className="border-t border-surface-200 mt-6 pt-4">
               <p className="text-sm text-surface-800/50 text-center">
-                Are you a venue owner? Login with your registered email to access the dashboard.
+                {isDashboard
+                  ? 'Only registered venue owners can access this dashboard.'
+                  : 'Are you a venue owner? Login with your registered email to access the dashboard.'
+                }
               </p>
             </div>
           </div>

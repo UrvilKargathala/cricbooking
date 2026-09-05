@@ -29,7 +29,8 @@ export default function LoginPage() {
     if (submittingRef.current) return
     if (!authLoading && user) {
       const redirect = getRedirect()
-      if (redirect) router.push(redirect)
+      if (redirect?.startsWith('http')) window.location.href = redirect
+      else if (redirect) router.push(redirect)
       else if (user.role === 'owner') router.push('/dashboard')
       else router.push('/')
     }
@@ -139,7 +140,9 @@ export default function LoginPage() {
     }
 
     const redirect = getRedirect()
-    if (redirect) {
+    if (redirect?.startsWith('http')) {
+      window.location.href = redirect
+    } else if (redirect) {
       router.push(redirect)
     } else if (profile.role === 'owner') {
       router.push('/dashboard')

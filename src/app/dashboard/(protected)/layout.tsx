@@ -29,12 +29,23 @@ const SETTINGS_NAV = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user, signOut } = useAuth()
+  const { user, loading: authLoading, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [pendingPayments, setPendingPayments] = useState<Booking[]>([])
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      const isDashboardSubdomain = window.location.hostname === 'dashboard.cricbooking.in'
+      const loginUrl = isDashboardSubdomain
+        ? 'https://cricbooking.in/login?redirect=https://dashboard.cricbooking.in'
+        : '/login?redirect=/dashboard'
+      window.location.href = loginUrl
+    }
+  }, [user, authLoading])
 
   useEffect(() => {
     const supabase = createClient()

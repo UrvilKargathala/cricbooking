@@ -24,45 +24,42 @@ function SlotStrip({ info }: { info: VenueSlotInfo }) {
   const slots = info.slots
 
   useEffect(() => {
-    if (slots.length <= 4) return
+    if (slots.length <= 3) return
     const id = setInterval(() => setOffset((o) => (o + 1) % slots.length), 2500)
     return () => clearInterval(id)
   }, [slots.length])
 
   if (slots.length === 0) return null
 
-  const displaySlots = slots.length > 4
-    ? Array.from({ length: 4 }, (_, i) => slots[(offset + i) % slots.length])
+  const displaySlots = slots.length > 3
+    ? Array.from({ length: 3 }, (_, i) => slots[(offset + i) % slots.length])
     : slots
 
   return (
-    <div className="bg-emerald-50 border border-surface-200 border-t-emerald-200 rounded-b-2xl px-4 py-2.5">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wide">
-            {info.available} slot{info.available === 1 ? '' : 's'}
+    <div className="bg-emerald-50 border border-surface-200 border-t-emerald-200 rounded-b-2xl px-4 py-2">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="text-[11px] font-semibold text-emerald-700">
+          {info.available} slot{info.available === 1 ? '' : 's'} available
+        </span>
+        <span className="text-[11px] text-surface-800/40 ml-auto">
+          {info.isToday ? 'Today' : formatShortDate(info.date)}
+        </span>
+      </div>
+      <div className="flex gap-1.5 flex-wrap">
+        {displaySlots.map((slot, i) => (
+          <span
+            key={`${slot.start}-${i}`}
+            className="text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-white text-emerald-700 border border-emerald-200 transition-all duration-300"
+          >
+            {formatTime(slot.start)}
           </span>
-          <span className="text-[11px] text-surface-800/40">·</span>
-          <span className="text-[11px] text-surface-800/50">
-            {info.isToday ? 'Today' : formatShortDate(info.date)}
+        ))}
+        {slots.length > 3 && (
+          <span className="text-[10px] text-surface-800/40 px-1 py-0.5 self-center">
+            +{slots.length - 3} more
           </span>
-        </div>
-        <div className="flex gap-1.5 overflow-hidden ml-auto">
-          {displaySlots.map((slot, i) => (
-            <span
-              key={`${slot.start}-${i}`}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-white text-emerald-700 border border-emerald-200 transition-all duration-300"
-            >
-              {formatTime(slot.start)}
-            </span>
-          ))}
-          {slots.length > 4 && (
-            <span className="text-[11px] text-surface-800/40 px-1 py-0.5 self-center">
-              +{slots.length - 4}
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

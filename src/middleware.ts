@@ -3,7 +3,15 @@ import { updateSession } from '@/lib/supabase-middleware'
 
 export async function middleware(request: NextRequest) {
   const { user, supabaseResponse, supabase } = await updateSession(request)
+  const hostname = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
+  const isDashboard = hostname.startsWith('dashboard.')
+
+  if (isDashboard && !pathname.startsWith('/dashboard') && pathname !== '/login') {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname === '/' ? '/dashboard' : `/dashboard${pathname}`
+    return NextResponse.rewrite(url, { request: { headers: request.headers } })
+  }
 
   const publicRoutes = ['/', '/login', '/venues', '/list-venue']
   const isPublicRoute = publicRoutes.some(route =>
@@ -23,7 +31,9 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/dashboard')) {
     if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const loginUrl = new URL('/login', request.url)
+      if (isDashboard) loginUrl.searchParams.set('redirect', '/dashboard')
+      return NextResponse.redirect(loginUrl)
     }
     const { data: profile } = await supabase
       .from('profiles')

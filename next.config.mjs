@@ -14,27 +14,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/login',
-          has: [{ type: 'host', value: 'dashboard.cricbooking.in' }],
-          destination: '/login',
-        },
-        {
-          source: '/',
-          has: [{ type: 'host', value: 'dashboard.cricbooking.in' }],
-          destination: '/dashboard',
-        },
-        {
-          source: '/:path+',
-          has: [{ type: 'host', value: 'dashboard.cricbooking.in' }],
-          destination: '/dashboard/:path+',
-        },
-      ],
-    }
-  },
   async headers() {
     return [
       {

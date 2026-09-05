@@ -39,11 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      const isDashboardSubdomain = window.location.hostname === 'dashboard.cricbooking.in'
-      const loginUrl = isDashboardSubdomain
-        ? 'https://cricbooking.in/login?redirect=https://dashboard.cricbooking.in'
-        : '/login?redirect=/dashboard'
-      window.location.href = loginUrl
+      window.location.href = '/login?redirect=/dashboard'
     }
   }, [user, authLoading])
 

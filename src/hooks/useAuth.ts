@@ -45,8 +45,7 @@ export function useAuth() {
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
-    const isDashboardSubdomain = window.location.hostname === 'dashboard.cricbooking.in'
-    window.location.href = isDashboardSubdomain ? 'https://cricbooking.in' : '/'
+    window.location.href = '/login'
   }
 
   return { user, loading, signOut }

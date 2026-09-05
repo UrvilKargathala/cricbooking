@@ -17,6 +17,11 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: '/login',
+        has: [{ type: 'host', value: 'dashboard.cricbooking.in' }],
+        destination: '/login',
+      },
+      {
         source: '/:path*',
         has: [{ type: 'host', value: 'dashboard.cricbooking.in' }],
         destination: '/dashboard/:path*',

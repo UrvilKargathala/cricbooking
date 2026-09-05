@@ -301,14 +301,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="border-t border-surface-200 mt-6 pt-4">
-              <p className="text-sm text-surface-800/50 text-center">
-                {isDashboard
-                  ? 'Only registered venue owners can access this dashboard.'
-                  : 'Are you a venue owner? Login with your registered email to access the dashboard.'
-                }
-              </p>
-            </div>
+            {isDashboard && (
+              <div className="border-t border-surface-200 mt-6 pt-4">
+                <p className="text-sm text-surface-800/50 text-center">
+                  Only registered venue owners can access this dashboard.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>

@@ -36,27 +36,33 @@ function SlotStrip({ info }: { info: VenueSlotInfo }) {
     : slots
 
   return (
-    <div className="bg-surface-900 rounded-xl px-4 py-2.5 mt-2 shadow-lg">
-      <div className="flex items-center gap-2 mb-2">
-        <CalendarCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        <span className="text-xs font-medium text-white/90">
-          {info.available} slot{info.available === 1 ? '' : 's'} · {info.isToday ? 'Today' : formatShortDate(info.date)}
-        </span>
-      </div>
-      <div className="flex gap-1.5 overflow-hidden">
-        {displaySlots.map((slot, i) => (
-          <span
-            key={`${slot.start}-${i}`}
-            className="text-[11px] font-medium px-2 py-1 rounded-md whitespace-nowrap bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all duration-300"
-          >
-            {formatTime(slot.start)}
+    <div className="bg-emerald-50 border border-surface-200 border-t-emerald-200 rounded-b-2xl px-4 py-2.5">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wide">
+            {info.available} slot{info.available === 1 ? '' : 's'}
           </span>
-        ))}
-        {slots.length > 4 && (
-          <span className="text-[11px] text-white/40 px-1 py-1 self-center">
-            +{slots.length - 4}
+          <span className="text-[11px] text-surface-800/40">·</span>
+          <span className="text-[11px] text-surface-800/50">
+            {info.isToday ? 'Today' : formatShortDate(info.date)}
           </span>
-        )}
+        </div>
+        <div className="flex gap-1.5 overflow-hidden ml-auto">
+          {displaySlots.map((slot, i) => (
+            <span
+              key={`${slot.start}-${i}`}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-white text-emerald-700 border border-emerald-200 transition-all duration-300"
+            >
+              {formatTime(slot.start)}
+            </span>
+          ))}
+          {slots.length > 4 && (
+            <span className="text-[11px] text-surface-800/40 px-1 py-0.5 self-center">
+              +{slots.length - 4}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -79,11 +85,16 @@ export function VenueCard({ venue, slotInfo }: VenueCardProps) {
     if (result === 'signed_out') router.push('/login')
   }
 
+  const hasSlots = !!slotInfo?.slots.length
+
   return (
-    <div>
+    <div className="relative">
     <Link
       href={`/venues/${venue.slug}`}
-      className="group block bg-white rounded-2xl border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden"
+      className={cn(
+        'group block bg-white border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden',
+        hasSlots ? 'rounded-t-2xl rounded-b-none border-b-0' : 'rounded-2xl'
+      )}
     >
       <div className="relative p-2 pb-0">
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl">

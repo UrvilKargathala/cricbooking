@@ -25,10 +25,7 @@ import { CountUp } from '@/components/ui/CountUp'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { fetchAreas, fetchVenues, fetchBookingCount, fetchTodaySlotCounts, type VenueSlotInfo } from '@/lib/supabase-queries'
-import { SPORT_LABELS, formatPrice } from '@/lib/utils'
-import type { Area, SportType, Venue } from '@/types'
-
-const SPORT_OPTIONS = Object.entries(SPORT_LABELS) as [SportType, string][]
+import type { Area, Venue } from '@/types'
 
 const HOW_IT_WORKS = [
   { icon: MapPin, title: 'Find a Venue', description: 'Browse turfs by area, sport, or amenities. Check real-time slot availability.' },
@@ -70,14 +67,6 @@ const TESTIMONIALS = [
   },
 ]
 
-const SPORT_PHOTOS: Record<SportType, string> = {
-  box_cricket: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80',
-  cricket: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&q=80',
-  football: 'https://images.unsplash.com/photo-1626248801379-51a0748a5f96?w=600&q=80',
-  badminton: 'https://images.unsplash.com/photo-1521537634581-0dced2fee2ef?w=600&q=80',
-  tennis: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&q=80',
-  multi_sport: 'https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=600&q=80',
-}
 
 const FAQS = [
   {
@@ -98,7 +87,7 @@ const FAQS = [
   },
   {
     question: 'What sports can I book venues for?',
-    answer: 'Currently you can book for Box Cricket, Cricket, Football, Badminton, Tennis, and Multi Sport activities.',
+    answer: 'Currently you can book for Box Cricket and Cricket Ground sessions across Surat.',
   },
 ]
 
@@ -121,21 +110,6 @@ export default function Home() {
   }, [])
 
   const popularVenues = allVenues.slice(0, 6)
-
-  const sportCategories = SPORT_OPTIONS.map(([sport, label]) => {
-    const prices = allVenues
-      .flatMap((v) => v.courts ?? [])
-      .filter((c) => c.sport === sport)
-      .map((c) => c.price_per_slot)
-    const venueCount = allVenues.filter((v) => v.sports.includes(sport)).length
-    return {
-      sport,
-      label,
-      venueCount,
-      minPrice: prices.length ? Math.min(...prices) : null,
-      maxPrice: prices.length ? Math.max(...prices) : null,
-    }
-  }).filter((c) => c.venueCount > 0)
 
   const venueNames = allVenues.map((v) => v.name)
 
@@ -187,34 +161,19 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Sport category strip — overlaps the hero photo */}
-          {sportCategories.length > 0 && (
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 mt-10 sm:mt-14 pb-8">
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-6">
-                {sportCategories.map((cat) => (
-                  <Link
-                    key={cat.sport}
-                    href={`/venues?sport=${cat.sport}`}
-                    className="group relative shrink-0 w-40 sm:w-auto aspect-[4/5] rounded-xl overflow-hidden shadow-lg shadow-black/30"
-                  >
-                    <img
-                      src={SPORT_PHOTOS[cat.sport]}
-                      alt={cat.label}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-1">
-                      <div className="min-w-0">
-                        <p className="text-white font-display font-semibold text-sm truncate">{cat.label}</p>
-                        {cat.minPrice !== null && (
-                          <p className="text-white/70 text-xs mt-0.5">
-                            {formatPrice(cat.minPrice)}{cat.maxPrice !== cat.minPrice ? ` – ${formatPrice(cat.maxPrice!)}` : ''}/hr
-                          </p>
-                        )}
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-white shrink-0" />
-                    </div>
-                  </Link>
+          {/* Live stats strip */}
+          {statsLoaded && !statsError && (
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 mt-10 sm:mt-14 pb-8 animate-fade-up [animation-delay:320ms]">
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+                {[
+                  { value: allVenues.length, label: 'Venues' },
+                  { value: Object.values(slotCounts).reduce((sum, v) => sum + v.available, 0), label: 'Slots Available Today' },
+                  { value: bookingCount, label: 'Bookings & Counting' },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-2.5">
+                    <span className="font-display font-bold text-2xl sm:text-3xl text-white">{stat.value.toLocaleString('en-IN')}+</span>
+                    <span className="text-white/60 text-xs sm:text-sm font-medium">{stat.label}</span>
+                  </div>
                 ))}
               </div>
             </div>

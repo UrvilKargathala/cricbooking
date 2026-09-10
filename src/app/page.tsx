@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   MapPin,
   Calendar,
@@ -28,25 +27,25 @@ import { fetchAreas, fetchVenues, fetchBookingCount, fetchTodaySlotCounts, type 
 import type { Area, Venue } from '@/types'
 
 const HOW_IT_WORKS = [
-  { icon: MapPin, title: 'Find a Venue', description: 'Browse turfs by area, sport, or amenities. Check real-time slot availability.' },
-  { icon: Calendar, title: 'Pick Your Slot', description: 'Choose your preferred date, time, and duration. See pricing upfront.' },
-  { icon: Shield, title: 'Book Instantly', description: 'Confirm your booking in seconds. No calls needed, no hidden charges.' },
+  { icon: MapPin, title: 'Find a Venue', description: 'Browse turfs by area, sport, or amenities. Check real-time slot availability.', bg: 'bg-blue-600 shadow-blue-500/20', text: 'text-blue-600' },
+  { icon: Calendar, title: 'Pick Your Slot', description: 'Choose your preferred date, time, and duration. See pricing upfront.', bg: 'bg-emerald-600 shadow-emerald-500/20', text: 'text-emerald-600' },
+  { icon: Shield, title: 'Book Instantly', description: 'Confirm your booking in seconds. No calls needed, no hidden charges.', bg: 'bg-amber-500 shadow-amber-500/20', text: 'text-amber-600' },
 ]
 
 const TRUST_BAR = [
-  { icon: Zap, label: 'Instant Confirmation' },
-  { icon: IndianRupee, label: 'No Hidden Fees' },
-  { icon: ShieldCheck, label: 'Verified Venues' },
-  { icon: Clock, label: '24/7 Booking' },
+  { icon: Zap, label: 'Instant Confirmation', color: 'text-amber-500' },
+  { icon: IndianRupee, label: 'No Hidden Fees', color: 'text-emerald-600' },
+  { icon: ShieldCheck, label: 'Verified Venues', color: 'text-blue-600' },
+  { icon: Clock, label: '24/7 Booking', color: 'text-violet-600' },
 ]
 
 const WHY_CRICBOOKING = [
-  { icon: ShieldCheck, title: 'Verified Venues', description: 'Every venue is personally verified for quality, safety, and amenities.' },
-  { icon: Zap, title: 'Instant Confirmation', description: 'Get booking confirmation immediately. No waiting, no callbacks.' },
-  { icon: IndianRupee, title: 'No Hidden Fees', description: 'What you see is what you pay. Transparent pricing always.' },
-  { icon: Clock, title: 'Real-Time Availability', description: 'Live slot updates so you never show up to a booked ground.' },
-  { icon: Headphones, title: '24/7 Booking', description: 'Book anytime, anywhere. Our platform never sleeps.' },
-  { icon: RotateCcw, title: 'Easy Cancellation', description: 'Plans changed? Cancel hassle-free as per venue policy.' },
+  { icon: ShieldCheck, title: 'Verified Venues', description: 'Every venue is personally verified for quality, safety, and amenities.', bg: 'bg-blue-50', text: 'text-blue-600' },
+  { icon: Zap, title: 'Instant Confirmation', description: 'Get booking confirmation immediately. No waiting, no callbacks.', bg: 'bg-amber-50', text: 'text-amber-500' },
+  { icon: IndianRupee, title: 'No Hidden Fees', description: 'What you see is what you pay. Transparent pricing always.', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  { icon: Clock, title: 'Real-Time Availability', description: 'Live slot updates so you never show up to a booked ground.', bg: 'bg-violet-50', text: 'text-violet-600' },
+  { icon: Headphones, title: '24/7 Booking', description: 'Book anytime, anywhere. Our platform never sleeps.', bg: 'bg-rose-50', text: 'text-rose-600' },
+  { icon: RotateCcw, title: 'Easy Cancellation', description: 'Plans changed? Cancel hassle-free as per venue policy.', bg: 'bg-cyan-50', text: 'text-cyan-600' },
 ]
 
 const TESTIMONIALS = [
@@ -205,19 +204,19 @@ export default function Home() {
               ) : (
                 <div className="grid grid-cols-3 gap-4 sm:gap-8">
                   <div className="text-center">
-                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-blue-600">
                       {statsLoaded ? <CountUp value={allVenues.length} suffix="+" /> : <span className="opacity-0">0</span>}
                     </p>
                     <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Verified Venues</p>
                   </div>
                   <div className="text-center border-x border-surface-200">
-                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-emerald-600">
                       {statsLoaded ? <CountUp value={areas.length} /> : <span className="opacity-0">0</span>}
                     </p>
                     <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Areas in Surat</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-display font-bold text-3xl sm:text-4xl text-brand-600">
+                    <p className="font-display font-bold text-3xl sm:text-4xl text-amber-500">
                       {statsLoaded ? <CountUp value={bookingCount} suffix="+" /> : <span className="opacity-0">0</span>}
                     </p>
                     <p className="text-xs sm:text-sm text-surface-800/50 mt-1">Bookings Made</p>
@@ -227,7 +226,7 @@ export default function Home() {
               <div className="mt-6 pt-6 border-t border-surface-200 grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {TRUST_BAR.map((item) => (
                   <div key={item.label} className="flex items-center gap-2 justify-center bg-surface-100 rounded-lg py-2.5 px-3">
-                    <item.icon className="w-4 h-4 text-brand-600 shrink-0" />
+                    <item.icon className={`w-4 h-4 shrink-0 ${item.color}`} />
                     <span className="text-xs sm:text-sm font-medium text-surface-800/70">{item.label}</span>
                   </div>
                 ))}
@@ -245,10 +244,10 @@ export default function Home() {
             {HOW_IT_WORKS.map((step, i) => (
               <ScrollReveal key={step.title} delay={i * 100}>
                 <div className="relative flex flex-col items-center text-center">
-                  <div className="relative z-10 w-14 h-14 rounded-full bg-brand-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-brand-500/20">
+                  <div className={`relative z-10 w-14 h-14 rounded-full text-white flex items-center justify-center mb-5 shadow-lg ${step.bg}`}>
                     <step.icon className="w-6 h-6" />
                   </div>
-                  <span className="text-[11px] font-bold tracking-widest text-brand-600 uppercase mb-1.5">Step {i + 1}</span>
+                  <span className={`text-[11px] font-bold tracking-widest uppercase mb-1.5 ${step.text}`}>Step {i + 1}</span>
                   <h3 className="font-display font-semibold text-lg text-surface-900">{step.title}</h3>
                   <p className="text-sm text-surface-800/50 mt-1.5 max-w-[240px]">{step.description}</p>
                 </div>
@@ -291,8 +290,8 @@ export default function Home() {
               {WHY_CRICBOOKING.map((feature, index) => (
                 <ScrollReveal key={feature.title} delay={(index % 3) * 100}>
                   <div className="glass-card rounded-xl p-6 h-full hover:border-brand-400/30 transition-colors duration-300">
-                    <div className="w-11 h-11 rounded-lg bg-brand-50 flex items-center justify-center mb-4">
-                      <feature.icon className="w-5 h-5 text-brand-600" />
+                    <div className={`w-11 h-11 rounded-lg flex items-center justify-center mb-4 ${feature.bg}`}>
+                      <feature.icon className={`w-5 h-5 ${feature.text}`} />
                     </div>
                     <h3 className="font-display font-semibold text-surface-900">{feature.title}</h3>
                     <p className="text-sm text-surface-800/50 mt-1.5 leading-relaxed">{feature.description}</p>
@@ -308,26 +307,19 @@ export default function Home() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-12">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">Explore Venues by Area</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-10 text-lg">Find grounds close to you, anywhere in Surat</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
               {areaVenueCounts.map((area, index) => (
-                <ScrollReveal key={area.slug} delay={(index % 4) * 100}>
+                <ScrollReveal key={area.slug} delay={(index % 5) * 100}>
                   <Link
                     href={`/venues?area=${area.slug}`}
-                    className="group block glass-card rounded-xl hover:border-brand-300 transition-all duration-300 overflow-hidden"
+                    className="group flex flex-col items-center text-center gap-2.5 glass-card rounded-xl p-5 hover:border-brand-300 transition-all duration-300"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      {area.image ? (
-                        <Image src={area.image} alt={area.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 1024px) 50vw, 25vw" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-brand-100 via-brand-200 to-brand-400 flex items-center justify-center">
-                          <MapPin className="w-8 h-8 text-white/60" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <h3 className="font-display font-semibold text-white text-sm drop-shadow-sm">{area.name}</h3>
-                        <span className="text-xs text-white/80">{area.count} venue{area.count > 1 ? 's' : ''}</span>
-                      </div>
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand-100 via-brand-200 to-brand-400 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                      <MapPin className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-surface-900 text-sm">{area.name}</h3>
+                      <span className="text-xs text-surface-800/50">{area.count} venue{area.count > 1 ? 's' : ''}</span>
                     </div>
                   </Link>
                 </ScrollReveal>

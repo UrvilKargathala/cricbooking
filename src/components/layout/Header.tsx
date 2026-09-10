@@ -261,7 +261,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={transparent ? 'text-white hover:bg-white/10' : undefined}
+                className={transparent ? 'text-black hover:bg-white/10' : undefined}
               >
                 My Bookings
               </Button>

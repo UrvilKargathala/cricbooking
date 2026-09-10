@@ -129,7 +129,7 @@ export function Header() {
             href="/venues"
             className={cn(
               NAV_LINK_CLASS,
-              transparent && 'text-white/80 hover:text-white after:bg-white',
+              transparent && 'text-black/80 hover:text-white after:bg-white',
               isActive('/venues') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
@@ -139,7 +139,7 @@ export function Header() {
             href="/how-it-works"
             className={cn(
               NAV_LINK_CLASS,
-              transparent && 'text-white/80 hover:text-white after:bg-white',
+              transparent && 'text-black/80 hover:text-white after:bg-white',
               isActive('/how-it-works') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
@@ -149,7 +149,7 @@ export function Header() {
             href="/list-venue"
             className={cn(
               NAV_LINK_CLASS,
-              transparent && 'text-white/80 hover:text-white after:bg-white',
+              transparent && 'text-black/80 hover:text-white after:bg-white',
               isActive('/list-venue') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
@@ -159,7 +159,7 @@ export function Header() {
             href="/blog"
             className={cn(
               NAV_LINK_CLASS,
-              transparent && 'text-white/80 hover:text-white after:bg-white',
+              transparent && 'text-black/80 hover:text-white after:bg-white',
               pathname?.startsWith('/blog') && (transparent ? 'text-white after:w-full' : 'text-brand-600 after:w-full')
             )}
           >
@@ -168,9 +168,9 @@ export function Header() {
         </nav>
 
         <Link href="/" className="hidden md:flex items-center gap-2 justify-self-center">
-          <span className={cn('logo-mark w-9 h-9', transparent ? 'text-white' : 'text-brand-600')} />
+          <span className={cn('logo-mark w-9 h-9', transparent ? 'text-brand-600' : 'text-brand-600')} />
           <span className="font-display font-bold text-xl">
-            <span className={transparent ? 'text-white' : 'text-surface-900'}>Cric</span>
+            <span className={transparent ? 'text-black' : 'text-surface-900'}>Cric</span>
             <span className={transparent ? "text-brand-400" : "text-brand-600"}>Booking</span>
           </span>
         </Link>
@@ -185,7 +185,7 @@ export function Header() {
                 searchOpen
                   ? 'bg-brand-50 text-brand-600'
                   : transparent
-                    ? 'text-white/80 hover:bg-white/10'
+                    ? 'text-black/80 hover:bg-white/10'
                     : 'text-surface-800/70 hover:bg-surface-100'
               )}
             >
@@ -222,7 +222,7 @@ export function Header() {
                 areaOpen
                   ? 'bg-brand-50 text-brand-600'
                   : transparent
-                    ? 'text-white/80 hover:bg-white/10'
+                    ? 'text-black/80 hover:bg-white/10'
                     : 'text-surface-800/70 hover:bg-surface-100'
               )}
             >

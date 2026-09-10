@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Mail, MapPin } from 'lucide-react'
+import { Mail, MapPin } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { fetchAreas } from '@/lib/supabase-queries'
 import type { Area } from '@/types'
@@ -11,6 +11,7 @@ const EXPLORE_LINKS = [
   { name: 'All Venues', href: '/venues' },
   { name: 'How It Works', href: '/how-it-works' },
   { name: 'Blog', href: '/blog' },
+  { name: 'Contact Us', href: '/contact' },
 ]
 
 const OWNER_LINKS = [
@@ -98,16 +99,6 @@ export function Footer() {
               )}
             </ul>
           </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-4 mt-10 pb-8 border-b border-white/10">
-          <p className="text-sm text-surface-200/40 hidden sm:block">Ready for your next match?</p>
-          <Link
-            href="/venues"
-            className="inline-flex items-center gap-1.5 bg-brand-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-brand-700 transition-colors ml-auto"
-          >
-            Search Venues <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
 
         <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3">

@@ -56,7 +56,7 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-20 md:pb-28">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
           <div className="flex flex-col gap-6">
             {STEPS.map((step, i) => (
               <ScrollReveal key={step.title} delay={i * 100}>
@@ -77,7 +77,7 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        <section className="bg-white/[0.02] py-16 md:py-20">
+        <section className="bg-white/[0.02]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="font-display font-bold text-3xl text-surface-900 text-center mb-10">For Players</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -113,7 +113,7 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        <section className="max-w-2xl mx-auto px-4 sm:px-6 py-16 md:py-24 text-center">
+        <section className="max-w-2xl mx-auto px-4 sm:px-6 py-8 md:py-12 text-center">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900">Ready to get started?</h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
             <Link href="/venues">

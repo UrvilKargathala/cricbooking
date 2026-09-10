@@ -123,61 +123,59 @@ export default function Home() {
       <Header />
       <main className="text-surface-800">
         {/* Hero */}
-        <section className="relative -mt-16 overflow-hidden">
+        <section className="relative -mt-16 overflow-hidden min-h-[85vh] sm:min-h-[90vh] flex flex-col justify-end">
           <div className="absolute inset-0">
             <img
               src="https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1600&q=80"
               alt=""
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/70 to-surface-900/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/50 to-transparent" />
           </div>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-32 sm:pt-40 pb-4">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-300 animate-fade-up">
-              <Sparkles className="w-3.5 h-3.5" />
-              Trusted by 500+ players in Surat
-            </span>
-            <h1 className="font-display font-bold text-4xl sm:text-6xl text-white mt-4 max-w-2xl animate-fade-up [animation-delay:80ms] text-balance">
-              Book turfs.<br /><span className="font-black">Play more cricket.</span>
-            </h1>
-            <p className="mt-4 text-white/70 text-base sm:text-lg max-w-lg animate-fade-up [animation-delay:160ms]">
-              Find real-time slots, compare venues, and book instantly. No hidden fees, no phone calls.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 mt-6 animate-fade-up [animation-delay:240ms]">
-              <Link href="/venues">
-                <Button variant="primary" size="lg">
-                  <span className="flex items-center gap-1.5">
-                    Search Venues <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Button>
-              </Link>
-              <Link href="/how-it-works">
-                <Button variant="outline" size="lg" className="border-white/30 text-white bg-white/5 hover:bg-white/15">
-                  How It Works
-                </Button>
-              </Link>
+          <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 pt-32 pb-10 sm:pb-14 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-300 animate-fade-up">
+                <Sparkles className="w-3.5 h-3.5" />
+                Trusted by 500+ players in Surat
+              </span>
+              <h1 className="font-display font-bold text-4xl sm:text-6xl text-white mt-4 max-w-xl animate-fade-up [animation-delay:80ms] text-balance">
+                Book turfs.<br /><span className="font-black">Play more cricket.</span>
+              </h1>
+              <p className="mt-4 text-white/70 text-base sm:text-lg max-w-md animate-fade-up [animation-delay:160ms]">
+                Find real-time slots, compare venues, and book instantly. No hidden fees, no phone calls.
+              </p>
             </div>
-          </div>
 
-          {/* Live stats strip */}
-          {statsLoaded && !statsError && (
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 mt-10 sm:mt-14 pb-8 animate-fade-up [animation-delay:320ms]">
-              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+            <div className="lg:max-w-xs animate-fade-up [animation-delay:240ms]">
+              <div className="flex -space-x-3">
                 {[
-                  { value: allVenues.length, label: 'Venues' },
-                  { value: Object.values(slotCounts).reduce((sum, v) => sum + v.available, 0), label: 'Slots Available Today' },
-                  { value: bookingCount, label: 'Bookings & Counting' },
-                ].map((stat) => (
-                  <div key={stat.label} className="flex items-center gap-2.5">
-                    <span className="font-display font-bold text-2xl sm:text-3xl text-white">{stat.value.toLocaleString('en-IN')}+</span>
-                    <span className="text-white/60 text-xs sm:text-sm font-medium">{stat.label}</span>
-                  </div>
+                  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
+                  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
+                  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
+                ].map((src, i) => (
+                  <img key={i} src={src} alt="" className="w-9 h-9 rounded-full object-cover border-2 border-surface-900" />
                 ))}
               </div>
+              <p className="text-white/70 text-sm mt-3 leading-relaxed">
+                Join hundreds of players in Surat booking verified turfs with real-time slot availability.
+              </p>
+              <div className="flex items-center gap-3 mt-4">
+                <Link href="/venues">
+                  <Button variant="primary" size="md">
+                    <span className="flex items-center gap-1.5">
+                      Search Venues <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </Button>
+                </Link>
+                <Link href="/how-it-works">
+                  <Button variant="outline" size="md" className="border-white/30 text-white bg-white/5 hover:bg-white/15">
+                    How It Works
+                  </Button>
+                </Link>
+              </div>
             </div>
-          )}
+          </div>
         </section>
 
         {/* Trust strip — real venues on the platform */}
@@ -239,7 +237,7 @@ export default function Home() {
         </section>
 
         {/* How It Works */}
-        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16 scroll-mt-16">
+        <section id="how-it-works" className="max-w-5xl mx-auto px-4 sm:px-6 scroll-mt-16">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">How It Works</h2>
           <p className="text-surface-800/50 text-center mt-3 mb-14 text-lg">Book your next match in three simple steps</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
@@ -285,7 +283,7 @@ export default function Home() {
         )}
 
         {/* Why CricBooking */}
-        <section className="bg-white/[0.02] py-12 md:py-16">
+        <section className="bg-white/[0.02]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">Why Players Choose CricBooking</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-14 text-lg">Everything you need, nothing you don&apos;t</p>
@@ -307,7 +305,7 @@ export default function Home() {
 
         {/* Areas We Cover */}
         {areaVenueCounts.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-12">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">Explore Venues by Area</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-10 text-lg">Find grounds close to you, anywhere in Surat</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -339,7 +337,7 @@ export default function Home() {
         )}
 
         {/* Testimonials */}
-        <section className="bg-white/[0.02] py-12 md:py-16">
+        <section className="bg-white/[0.02]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center">What Players Say</h2>
             <p className="text-surface-800/50 text-center mt-3 mb-12 text-lg">Hear from the Surat cricket community</p>
@@ -365,6 +363,7 @@ export default function Home() {
         </section>
 
         {/* Owner CTA */}
+        <div className="py-8 md:py-8">
         <section className="bg-gradient-to-r from-brand-700 via-brand-600 to-brand-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
             <div>
@@ -387,9 +386,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </div>
+        
 
         {/* FAQ */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-8">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900 text-center mb-10">Frequently Asked Questions</h2>
           <div className="flex flex-col gap-3">
             {FAQS.map((faq, index) => {
@@ -413,7 +414,7 @@ export default function Home() {
         </section>
 
         {/* Final CTA */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-8 text-center">
           <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900">Ready to Play?</h2>
           <p className="text-surface-800/50 mt-3 text-lg max-w-lg mx-auto">
             Join thousands of players booking their next match on CricBooking.

@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase-server'
+import Razorpay from 'razorpay'
+import { checkPaidOrder } from '@/lib/paymentCheck'
+import { getAuthedUser, createServiceRoleClient } from '@/lib/supabase-server'
+
+const razorpay = new Razorpay({
+  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+})
 
 function generateBookingCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -12,8 +19,7 @@ function generateBookingCode() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthedUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -42,18 +48,41 @@ export async function POST(req: Request) {
 
   const admin = createServiceRoleClient()
 
-  const { data: court } = await admin
-    .from('courts')
-    .select('price_per_slot')
-    .eq('id', court_id)
-    .eq('venue_id', venue_id)
-    .single()
-
-  if (!court) {
-    return NextResponse.json({ error: 'Court not found' }, { status: 404 })
+  // The same payment must never create bookings twice (e.g. after a cancelled + refunded booking)
+  const { data: existing } = await admin
+    .from('bookings')
+    .select('*')
+    .eq('user_id', user.id)
+    .like('notes', `Razorpay: ${razorpay_payment_id}%`)
+  if (existing?.length) {
+    const active = existing.filter((b) => b.status === 'confirmed')
+    if (active.length === 0) {
+      return NextResponse.json({ error: 'This payment has already been used' }, { status: 409 })
+    }
+    return NextResponse.json({ success: true, bookings: active })
   }
 
-  const perSlotAmount = court.price_per_slot
+  // The signature only proves *a* payment happened. Confirm with Razorpay that the order was
+  // fully paid and was created for exactly this user, court and slots.
+  let order
+  try {
+    order = await razorpay.orders.fetch(razorpay_order_id)
+  } catch {
+    return NextResponse.json({ error: 'Payment order not found' }, { status: 400 })
+  }
+  const problem = checkPaidOrder({
+    order,
+    userId: user.id,
+    venueId: venue_id,
+    courtId: court_id,
+    slotIds: slot_ids,
+  })
+  if (problem) {
+    return NextResponse.json({ error: problem }, { status: 400 })
+  }
+
+  // What was actually paid, per slot
+  const perSlotAmount = Number(order.amount) / 100 / slot_ids.length
 
   const bookings = []
   const bookedSlotIds: string[] = []

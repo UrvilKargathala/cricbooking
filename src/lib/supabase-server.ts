@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
 export function createServiceRoleClient() {
   return createClient(
@@ -30,4 +30,15 @@ export function createServerSupabaseClient() {
       },
     }
   )
+}
+
+/**
+ * Signed-in user for an API route. Accepts either the website's auth cookie
+ * or an `Authorization: Bearer <access token>` header (used by the mobile app).
+ */
+export async function getAuthedUser() {
+  const auth = headers().get('authorization')
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined
+  const { data: { user } } = await createServerSupabaseClient().auth.getUser(token)
+  return user
 }

@@ -1,134 +1,158 @@
 'use client'
 
 import Link from 'next/link'
-import { Search, CalendarCheck, CheckCircle, MapPinned, Clock3, ShieldCheck, Star, Wallet, LayoutDashboard, Users2, LineChart, ArrowRight } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { Button } from '@/components/ui/Button'
-import { ScrollReveal } from '@/components/ui/ScrollReveal'
 
 const STEPS = [
   {
     number: '01',
-    icon: Search,
-    title: 'Find a Venue',
-    description: 'Browse turfs by area, sport, or amenities. Check real-time slot availability before you commit to anything.',
+    title: 'Pick a turf',
+    description:
+      'Filter by area, price, turf surface and amenities. Every slot you see is checked in real-time — no double booking, no guessing.',
   },
   {
     number: '02',
-    icon: CalendarCheck,
-    title: 'Pick Your Slot',
-    description: 'Choose your preferred date, time, and duration. Pricing is shown upfront — no surprises, no back-and-forth calls.',
+    title: 'Choose your hour',
+    description:
+      'Pick the exact court and duration. See all prices upfront with ₹0 platform booking fee. Add player names for the live match.',
   },
   {
     number: '03',
-    icon: CheckCircle,
-    title: 'Book Instantly',
-    description: 'Confirm your booking in seconds and get instant confirmation. Show up and play — that’s it.',
+    title: 'Pay and play',
+    description:
+      'Pay in seconds via UPI, card or net banking. Your ticket QR code and match scoring link are generated instantly.',
   },
 ]
 
-const FOR_PLAYERS = [
-  { icon: MapPinned, text: 'Browse by area, sport, or amenities' },
-  { icon: Clock3, text: 'Check real-time availability — no more phone calls' },
-  { icon: ShieldCheck, text: 'Book and pay securely — instant confirmation' },
-  { icon: Star, text: 'Rate and review after your game' },
+const PLAYER_PERKS = [
+  'Verified turfs across Surat (Vesu, Varachha, Adajan, Katargam, Pal)',
+  'Real-time slot calendar with immediate confirmation',
+  'Free live scoreboard for your match with shareable link',
+  '100% transparent pricing — ₹0 platform fees, ever',
+  'Easy cancellation and refund policy per venue rules',
 ]
 
-const FOR_OWNERS = [
-  { icon: Wallet, text: 'List your venue for free in minutes' },
-  { icon: LayoutDashboard, text: 'Manage slots and pricing from your dashboard' },
-  { icon: Users2, text: 'Reach thousands of players in Surat' },
-  { icon: LineChart, text: 'Track bookings and revenue in real-time' },
+const OWNER_PERKS = [
+  'Free listing for any verified cricket turf in Surat',
+  'Fill empty weekday morning and afternoon hours',
+  'Direct UPI & Razorpay settlements with zero payment hassle',
+  'Automated WhatsApp booking confirmations sent to players',
+  'Complete owner dashboard to block slots, track revenue and manage courts',
 ]
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="text-surface-800">
-        <section className="hero-glow py-20 md:py-28 text-center">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6">
-            <h1 className="font-display font-bold text-4xl sm:text-5xl text-surface-900 text-balance">How CricBooking Works</h1>
-            <p className="mt-4 text-surface-800/70 text-lg">
-              From finding the perfect turf to playing your match — here&apos;s how simple it is.
-            </p>
-          </div>
-        </section>
 
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
-          <div className="flex flex-col gap-6">
-            {STEPS.map((step, i) => (
-              <ScrollReveal key={step.title} delay={i * 100}>
-                <div className="glass-card rounded-2xl p-6 sm:p-8 flex items-start gap-6">
-                  <div className="shrink-0 flex flex-col items-center gap-3">
-                    <div className="w-14 h-14 rounded-full bg-brand-600 text-white flex items-center justify-center">
-                      <step.icon className="w-6 h-6" />
-                    </div>
-                    <span className="font-display font-bold text-3xl text-surface-900/10">{step.number}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-xl text-surface-900">{step.title}</h3>
-                    <p className="text-surface-800/70 mt-2 leading-relaxed">{step.description}</p>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
+      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
+        {/* Title Header */}
+        <div className="max-w-[760px] mb-12 sm:mb-16">
+          <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+            Simple & Transparent
           </div>
-        </section>
+          <h1 className="text-[38px] sm:text-[54px] font-normal tracking-[-1.68px] leading-[1.1] text-black">
+            Three simple taps from discovery to the pitch.
+          </h1>
+          <p className="text-[16px] sm:text-[18px] text-[#50555c] mt-4 leading-relaxed">
+            No endless phone calls to turf managers. No arriving to find someone else on the court. CricBooking connects you directly to live slots.
+          </p>
+        </div>
 
-        <section className="bg-white/[0.02]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="font-display font-bold text-3xl text-surface-900 text-center mb-10">For Players</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {FOR_PLAYERS.map((item, i) => (
-                <ScrollReveal key={item.text} delay={i * 80}>
-                  <div className="glass-card rounded-xl p-5 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5 text-brand-600" />
-                    </div>
-                    <p className="text-sm text-surface-800">{item.text}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
+        {/* 3 Step Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16 sm:mb-24">
+          {STEPS.map((step, idx) => (
+            <div
+              key={step.number}
+              className={`rounded-[24px] p-8 flex flex-col justify-between min-h-[260px] ${
+                idx === 0
+                  ? 'bg-white border border-[#e3e5e8]'
+                  : idx === 1
+                  ? 'bg-[#eef1f4]'
+                  : 'bg-[#e3ebfa]'
+              }`}
+            >
+              <span className="text-[54px] sm:text-[64px] font-medium tracking-tighter text-[#1849c9] leading-none">
+                {step.number}
+              </span>
+              <div>
+                <h3 className="text-[22px] font-medium text-black tracking-tight">{step.title}</h3>
+                <p className="text-[14px] text-[#50555c] mt-2 leading-relaxed">{step.description}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          ))}
+        </div>
 
-        <section className="py-16 md:py-20">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="font-display font-bold text-3xl text-surface-900 text-center mb-10">For Venue Owners</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {FOR_OWNERS.map((item, i) => (
-                <ScrollReveal key={item.text} delay={i * 80}>
-                  <div className="glass-card rounded-xl p-5 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5 text-brand-600" />
-                    </div>
-                    <p className="text-sm text-surface-800">{item.text}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
+        {/* Players vs Owners Split Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 sm:mb-24">
+          {/* Players */}
+          <div className="bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8">
+            <div>
+              <span className="bg-[#c9f13e] text-black px-3 py-1 rounded-full text-[12px] font-medium">
+                For Players
+              </span>
+              <h2 className="text-[28px] sm:text-[34px] font-normal text-black mt-4 tracking-tight">
+                Designed for cricketers who hate wasted time.
+              </h2>
+              <ul className="flex flex-col gap-3 mt-6">
+                {PLAYER_PERKS.map((perk, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14px] text-[#404449]">
+                    <span className="size-5 rounded-full bg-black text-[#c9f13e] flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="size-3" strokeWidth={3} />
+                    </span>
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </section>
 
-        <section className="max-w-2xl mx-auto px-4 sm:px-6 py-8 md:py-12 text-center">
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-surface-900">Ready to get started?</h2>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-            <Link href="/venues">
-              <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                <span className="flex items-center gap-1.5 justify-center">Find Venues <ArrowRight className="w-4 h-4" /></span>
-              </Button>
-            </Link>
-            <Link href="/list-venue">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
-                List Your Venue
-              </Button>
+            <Link
+              href="/venues"
+              className="group bg-black hover:bg-neutral-800 transition-colors text-white pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between w-fit mt-4"
+            >
+              <span>Explore turfs</span>
+              <span className="size-8 rounded-full bg-[#c9f13e] text-black flex items-center justify-center transition-transform group-hover:translate-x-0.5 ml-4">
+                <ArrowUpRight className="size-4" strokeWidth={2.5} />
+              </span>
             </Link>
           </div>
-        </section>
+
+          {/* Owners */}
+          <div className="bg-[#042644] text-white rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8">
+            <div>
+              <span className="bg-[#c9f13e] text-black px-3 py-1 rounded-full text-[12px] font-medium">
+                For Turf Owners
+              </span>
+              <h2 className="text-[28px] sm:text-[34px] font-normal text-white mt-4 tracking-tight">
+                Fill courts, stop no-shows, track earnings.
+              </h2>
+              <ul className="flex flex-col gap-3 mt-6">
+                {OWNER_PERKS.map((perk, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14px] text-white/80">
+                    <span className="size-5 rounded-full bg-[#c9f13e] text-black flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="size-3" strokeWidth={3} />
+                    </span>
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <Link
+              href="/list-venue"
+              className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between w-fit mt-4"
+            >
+              <span>List your venue free</span>
+              <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5 ml-4">
+                <ArrowUpRight className="size-4" strokeWidth={2.5} />
+              </span>
+            </Link>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   )

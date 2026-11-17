@@ -5,57 +5,52 @@ import { Footer } from '@/components/layout/Footer'
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <h1 className="font-display font-bold text-3xl text-surface-900">Privacy Policy</h1>
-        <p className="text-sm text-surface-800/50 mt-2">Last updated: September 2026</p>
 
-        <div className="mt-8 flex flex-col gap-6 text-sm text-surface-800/80 leading-relaxed">
+      <main className="w-full max-w-[880px] mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+          Privacy
+        </div>
+        <h1 className="text-[36px] sm:text-[48px] font-normal tracking-[-1.68px] text-black leading-tight">
+          Privacy Policy
+        </h1>
+        <p className="text-[14px] text-[#50555c] mt-2 mb-8">Last updated: November 2026 · CricBooking Surat</p>
+
+        <div className="bg-[#f4f6f8] rounded-[28px] p-8 sm:p-12 flex flex-col gap-8 text-[15px] text-[#404449] leading-relaxed">
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">What we collect</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">1. Information We Collect</h2>
             <p>
-              To book a slot, we collect your name, email, and phone number, along with the bookings you make.
-              Venue owners see only what they need to fulfil a booking — your name, contact number, and the
-              slot details.
+              We collect your email, phone number, and name when you create an account or book a cricket turf in Surat. We use this strictly to deliver your booking confirmation, ticket details, and match notifications.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">How we use it</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">2. Payment Security</h2>
             <p>
-              Your details are used to confirm bookings, send booking-related updates, and let you manage your
-              bookings and reviews from your account. We don&apos;t sell your data to third parties.
+              All online transactions are processed through RBI-authorized payment aggregators (Razorpay / UPI). CricBooking does not store your credit card numbers or UPI PINs on our servers.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Payments</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">3. Data Sharing</h2>
             <p>
-              Payments are processed by Razorpay. CricBooking does not store your card, UPI, or bank details —
-              they&apos;re handled directly by Razorpay&apos;s secure checkout.
+              Your contact information is shared only with the specific venue owner of the turf you book, strictly for ground access and match coordination. We never sell your personal information to third parties.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Your choices</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">4. Your Rights</h2>
             <p>
-              You can update your profile details or delete your account at any time from your account
-              settings. To request deletion of your booking history, email us and we&apos;ll process it.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Contact</h2>
-            <p>
-              Privacy questions can be sent to{' '}
-              <a href="mailto:hello@cricbooking.com" className="text-brand-600 hover:text-brand-700 font-medium">
-                hello@cricbooking.com
+              You may request a copy of your personal data or request deletion of your account and booking history at any time by contacting{' '}
+              <a href="mailto:support@cricbooking.in" className="text-black font-medium underline">
+                support@cricbooking.in
               </a>.
             </p>
           </section>
         </div>
       </main>
+
       <Footer />
     </div>
   )

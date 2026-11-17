@@ -9,6 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        cb: {
+          lime: "#C9F13E",
+          "lime-light": "#EAF8C4",
+          "lime-hover": "#b8e12d",
+          navy: "#042644",
+          "navy-light": "#0a3a66",
+          blue: "#1849C9",
+          "blue-light": "#E3EBFA",
+          mist: "#F4F6F8",
+          "mist-card": "#F4F6F8",
+          "mist-hover": "#EEF1F4",
+          ink: "#000000",
+          grey: "#6C6C6C",
+          "grey-muted": "#50555C",
+          "grey-light": "#E3E5E8",
+          border: "#E3E5E8",
+          red: "#E5484D",
+        },
         brand: {
           50: "var(--brand-50, #eff6ff)",
           100: "var(--brand-100, #dbeafe)",
@@ -31,8 +49,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
-        body: ["var(--font-body)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
       },
     },
   },

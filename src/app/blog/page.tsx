@@ -2,73 +2,132 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { BLOG_POSTS } from '@/lib/blogs'
 
 function formatDate(date: string) {
-  return new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 export default function BlogPage() {
   const [featured, ...rest] = BLOG_POSTS
 
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <h1 className="font-display font-bold text-3xl sm:text-4xl text-surface-900">CricBooking Blog</h1>
-        <p className="text-surface-800/50 mt-2 text-lg">Tips, guides, and stories from the Surat cricket scene</p>
 
+      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
+        {/* Title Header */}
+        <div className="max-w-[700px] mb-10 sm:mb-14">
+          <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+            The CricBooking Blog
+          </div>
+          <h1 className="text-[38px] sm:text-[52px] font-normal tracking-[-1.68px] leading-[1.1] text-black">
+            Stories, rules and tactics from the Surat cricket scene.
+          </h1>
+          <p className="text-[16px] sm:text-[18px] text-[#50555c] mt-4 leading-relaxed">
+            Guides on booking the best turfs, box cricket tournaments, and gear for the local pitch.
+          </p>
+        </div>
+
+        {/* Featured Post Card */}
         {featured && (
-          <ScrollReveal>
-            <Link href={`/blog/${featured.slug}`} className="group block glass-card rounded-2xl overflow-hidden mt-10 hover:border-brand-300 transition-colors">
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="aspect-[16/9] md:aspect-auto md:h-full overflow-hidden relative">
-                  <Image src={featured.image} alt={featured.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
-                </div>
-                <div className="p-6 sm:p-8 flex flex-col justify-center">
-                  <span className="w-fit text-xs font-medium text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{featured.category}</span>
-                  <h2 className="font-display font-bold text-2xl text-surface-900 mt-4 group-hover:text-brand-600 transition-colors">{featured.title}</h2>
-                  <p className="text-surface-800/70 mt-3 leading-relaxed">{featured.excerpt}</p>
-                  <div className="flex items-center gap-3 text-xs text-surface-800/50 mt-5">
-                    <span>{formatDate(featured.date)}</span>
-                    <span>·</span>
-                    <span>{featured.readTime}</span>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 mt-4">
-                    Read More <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
+          <Link
+            href={`/blog/${featured.slug}`}
+            className="group bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-4 sm:p-6 mb-12 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center hover:shadow-lg transition-all"
+          >
+            <div className="lg:col-span-7 relative aspect-[16/10] sm:aspect-[16/9] rounded-[20px] sm:rounded-[28px] overflow-hidden bg-[#dde3ea]">
+              <Image
+                src={featured.image}
+                alt={featured.title}
+                fill
+                priority
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute top-4 left-4 bg-[#c9f13e] px-3.5 py-1.5 rounded-full text-[13px] font-medium text-black">
+                Featured
               </div>
-            </Link>
-          </ScrollReveal>
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col justify-between gap-6 px-2 sm:px-4">
+              <div className="flex flex-col gap-3">
+                <span className="bg-white px-3 py-1 rounded-full text-[12px] font-medium text-black w-fit border border-[#e3e5e8]">
+                  {featured.category}
+                </span>
+
+                <h2 className="text-[26px] sm:text-[34px] font-medium tracking-tight text-black leading-tight group-hover:text-neutral-700">
+                  {featured.title}
+                </h2>
+
+                <p className="text-[15px] text-[#50555c] leading-relaxed line-clamp-3">
+                  {featured.excerpt}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-[#e3e5e8]">
+                <span className="text-[13px] text-[#767b82]">
+                  {formatDate(featured.date)} · {featured.readTime}
+                </span>
+
+                <span className="bg-black text-white pl-4 pr-1.5 py-1.5 rounded-full text-[13px] font-medium inline-flex items-center gap-2">
+                  <span>Read post</span>
+                  <span className="size-6 rounded-full bg-[#c9f13e] text-black flex items-center justify-center">
+                    <ArrowUpRight className="size-3" strokeWidth={2.5} />
+                  </span>
+                </span>
+              </div>
+            </div>
+          </Link>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-          {rest.map((post, index) => (
-            <ScrollReveal key={post.slug} delay={(index % 3) * 100}>
-              <Link href={`/blog/${post.slug}`} className="group block glass-card rounded-xl overflow-hidden hover:border-brand-300 transition-colors h-full">
-                <div className="aspect-[16/10] overflow-hidden relative">
-                  <Image src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+        {/* Other Blog Posts Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {rest.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="group bg-[#f4f6f8] rounded-[24px] p-4 flex flex-col justify-between gap-4 hover:shadow-md transition-all"
+            >
+              <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden bg-[#dde3ea]">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-[11px] font-medium text-black shadow-sm">
+                  {post.category}
                 </div>
-                <div className="p-5">
-                  <span className="text-xs font-medium text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{post.category}</span>
-                  <h3 className="font-display font-semibold text-surface-900 mt-3 group-hover:text-brand-600 transition-colors">{post.title}</h3>
-                  <p className="text-sm text-surface-800/50 mt-1.5 line-clamp-2">{post.excerpt}</p>
-                  <div className="flex items-center gap-2 text-xs text-surface-800/40 mt-4">
-                    <span>{formatDate(post.date)}</span>
-                    <span>·</span>
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-              </Link>
-            </ScrollReveal>
+              </div>
+
+              <div className="flex flex-col gap-2 px-1">
+                <h3 className="text-[18px] sm:text-[20px] font-medium tracking-tight text-black line-clamp-2 group-hover:text-neutral-700">
+                  {post.title}
+                </h3>
+                <p className="text-[13px] text-[#50555c] line-clamp-2 leading-relaxed">
+                  {post.excerpt}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-[#e3e5e8] px-1 mt-auto">
+                <span className="text-[12px] text-[#767b82]">
+                  {formatDate(post.date)} · {post.readTime}
+                </span>
+                <span className="size-7 rounded-full bg-black text-[#c9f13e] flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                  <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
+                </span>
+              </div>
+            </Link>
           ))}
         </div>
       </main>
+
       <Footer />
     </div>
   )

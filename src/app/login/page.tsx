@@ -2,16 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
-import { Button } from '@/components/ui/Button'
+import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function LoginPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [isDashboard, setIsDashboard] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
@@ -19,25 +18,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
-  const submittingRef = useRef(false)
 
   useEffect(() => {
-    setIsDashboard(window.location.hostname.startsWith('dashboard.'))
-  }, [])
-
-  const getRedirect = () => {
-    const params = new URLSearchParams(window.location.search)
-    return params.get('redirect') || null
-  }
-
-  useEffect(() => {
-    if (submittingRef.current) return
     if (!authLoading && user) {
-      const redirect = getRedirect()
-      const isDashboardHost = window.location.hostname === 'dashboard.cricbooking.in'
-      if (redirect?.startsWith('http')) window.location.href = redirect
-      else if (isDashboardHost) router.push('/')
-      else if (redirect) router.push(redirect)
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      if (redirect) router.push(redirect)
       else if (user.role === 'owner') router.push('/dashboard')
       else router.push('/')
     }
@@ -49,7 +35,9 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [step, countdown])
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
     setLoading(true)
     setError(null)
     const supabase = createClient()
@@ -60,7 +48,7 @@ export default function LoginPage() {
     })
 
     if (otpError) {
-      setError(otpError.message || JSON.stringify(otpError))
+      setError(otpError.message)
     } else {
       setStep(2)
       setCountdown(30)
@@ -68,249 +56,195 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const handleResend = async () => {
-    setError(null)
-    const supabase = createClient()
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    })
-    if (otpError) {
-      setError(otpError.message || JSON.stringify(otpError))
-    } else {
-      setCountdown(30)
-    }
-  }
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return
-    const next = [...otp]
-    next[index] = value
-    setOtp(next)
-    setError(null)
-    if (value && index < 7) otpRefs.current[index + 1]?.focus()
-  }
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus()
-    }
-  }
-
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
-    if (!pasted) return
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const next = [...otp]
-    pasted.split('').forEach((digit, i) => { next[i] = digit })
-    setOtp(next)
-    otpRefs.current[Math.min(pasted.length, 7)]?.focus()
-  }
-
-  const handleVerify = async () => {
-    submittingRef.current = true
+    const token = otp.join('').trim()
+    if (token.length < 6) {
+      setError('Please enter the full code')
+      return
+    }
     setLoading(true)
     setError(null)
     const supabase = createClient()
 
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+    const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
-      token: otp.join(''),
+      token,
       type: 'email',
     })
 
     if (verifyError) {
-      submittingRef.current = false
-      setError('Invalid or expired code. Please try again.')
+      setError(verifyError.message)
       setLoading(false)
-      return
-    }
-
-    const userId = data.user!.id
-
-    let { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (!profile) {
-      await supabase.from('profiles').upsert({
-        id: userId,
-        email,
-        full_name: email.split('@')[0],
-        role: 'user',
-        city: 'Surat',
-        created_at: new Date().toISOString(),
-      })
-      profile = { role: 'user' as const }
-    }
-
-    const redirect = getRedirect()
-    const isDashboardHost = window.location.hostname === 'dashboard.cricbooking.in'
-    if (redirect?.startsWith('http')) {
-      window.location.href = redirect
-    } else if (isDashboardHost) {
-      router.push('/')
-    } else if (redirect) {
-      router.push(redirect)
-    } else if (profile.role === 'owner') {
-      router.push('/dashboard')
     } else {
-      router.push('/')
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect') || '/'
+      router.push(redirect)
     }
   }
 
-  if (!submittingRef.current && (authLoading || user)) return null
+  const handleOtpChange = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return
+    const next = [...otp]
+    next[index] = val.slice(-1)
+    setOtp(next)
 
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    if (val && index < otp.length - 1) {
+      otpRefs.current[index + 1]?.focus()
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-surface-50">
-      {isDashboard ? (
-        <div className="h-16 border-b border-surface-200 bg-white flex items-center px-6">
-          <span className="logo-mark w-8 h-8 text-brand-600" />
-          <span className="ml-2 font-display font-bold text-lg text-surface-900">CricBooking</span>
-          <span className="ml-2 text-xs font-medium text-surface-500 bg-surface-100 px-2 py-0.5 rounded-full">Owner Dashboard</span>
-        </div>
-      ) : (
-        <Header />
-      )}
-      <main className="flex min-h-[calc(100vh-4rem)] hero-glow">
-        <div className="hidden lg:block lg:w-1/2 relative">
-          <img
-            src={isDashboard
-              ? "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1200"
-              : "https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=1200"
-            }
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-900/90 via-surface-900/20 to-transparent" />
-          <div className="absolute bottom-12 left-10 right-10">
-            {isDashboard ? (
-              <>
-                <h2 className="font-display font-bold text-3xl text-white">Manage Your Venue</h2>
-                <p className="mt-2 text-white/80 max-w-sm">
-                  Track bookings, manage slots, and grow your turf business — all in one place.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 className="font-display font-bold text-3xl text-white">Book Your Next Match</h2>
-                <p className="mt-2 text-white/80 max-w-sm">
-                  Real-time slot availability across Surat&apos;s best turfs and grounds — booked in seconds.
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
+      <Header />
 
-        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-16">
-          <div className="w-full max-w-sm glass-card rounded-2xl p-6 sm:p-8">
-            <div className="flex flex-col items-center mb-8">
-              <span className="logo-mark w-12 h-12 mb-3 text-brand-600" />
-              <h1 className="font-display font-bold text-xl text-surface-900">
-                {isDashboard ? 'Owner Dashboard Login' : 'Welcome to CricBooking'}
+      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[620px]">
+          {/* Left Column (Navy Feature Card) */}
+          <div className="lg:col-span-6 bg-[#042644] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 text-white flex flex-col justify-between gap-8">
+            <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit">
+              Welcome back
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <h1 className="text-[40px] sm:text-[54px] font-normal tracking-[-0.035em] leading-[1.1] text-white">
+                Your next match is two taps away.
               </h1>
-              <p className="text-sm text-surface-800/50 mt-1">
-                {isDashboard ? 'Sign in with your registered owner email' : 'Enter your email to get started'}
+              <p className="text-[16px] text-white/75 leading-relaxed">
+                Log in to book faster, view verified ticket QR codes, and score live on the pitch.
               </p>
             </div>
 
+            {/* Testimonial pill */}
+            <div className="bg-white/10 rounded-[20px] p-4 sm:p-5 flex items-center gap-3.5">
+              <span className="size-10 rounded-full bg-[#c9f13e] text-black font-semibold text-sm flex items-center justify-center border-2 border-white shrink-0">
+                UK
+              </span>
+              <div className="text-[14px]">
+                <p className="font-medium text-white">Urvil Kargathala · Varachha</p>
+                <p className="text-white/70 text-[13px]">“Booked Green Pitch at 7, playing by 8.”</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (Form Box) */}
+          <div className="lg:col-span-6 bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-8 sm:p-14 flex flex-col justify-center">
             {step === 1 ? (
-              <div className="flex flex-col gap-4">
+              <form onSubmit={handleSendOtp} className="flex flex-col gap-5 max-w-[440px] w-full mx-auto">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-surface-800 mb-1.5">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-800/50" />
-                    <input
-                      id="email"
-                      type="email"
-                      placeholder="yourname@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-surface-100 border border-surface-200 rounded-lg pl-10 pr-4 py-3 text-sm text-surface-900 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/50"
-                    />
-                  </div>
-                  <p className="text-xs text-surface-800/40 mt-1.5">
-                    We&apos;ll send a one-time code to verify — no password needed.
+                  <h2 className="text-[28px] sm:text-[32px] font-medium tracking-tight text-black">
+                    Log in or sign up
+                  </h2>
+                  <p className="text-[14px] text-[#50555c] mt-1.5">
+                    Enter your email. We’ll send you an instant login code.
                   </p>
                 </div>
-                {error && <p className="text-sm text-red-400">{error}</p>}
-                <Button
-                  variant="primary"
-                  onClick={handleSendOtp}
-                  disabled={!isValidEmail || loading}
-                  className="w-full mt-1"
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 text-[13px] p-3 rounded-xl border border-red-200">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-medium text-black">Email address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@gmail.com"
+                    className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3.5 text-[15px] text-black placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
                 >
-                  {loading ? 'Sending...' : 'Send OTP'}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <p className="text-sm text-surface-800/70 text-center">
-                  Enter the code sent to{' '}
-                  <span className="font-medium text-surface-900">{email}</span>
+                  <span>{loading ? 'Sending code...' : 'Send login code'}</span>
+                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                    <ArrowUpRight className="size-4" strokeWidth={2.5} />
+                  </span>
+                </button>
+
+                <p className="text-[12px] text-[#767b82] text-center mt-2">
+                  By continuing, you agree to CricBooking’s Terms of Service and Privacy Policy.
                 </p>
-                <div className="flex justify-center gap-2">
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-5 max-w-[440px] w-full mx-auto">
+                <div>
+                  <h2 className="text-[28px] sm:text-[32px] font-medium tracking-tight text-black">
+                    Enter verification code
+                  </h2>
+                  <p className="text-[14px] text-[#50555c] mt-1.5">
+                    We sent an 8-digit code to <span className="font-medium text-black">{email}</span>.{' '}
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-black underline ml-1"
+                    >
+                      Change
+                    </button>
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 text-[13px] p-3 rounded-xl border border-red-200">
+                    {error}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-8 gap-1.5 sm:gap-2">
                   {otp.map((digit, i) => (
                     <input
                       key={i}
-                      ref={(el) => { otpRefs.current[i] = el }}
+                      ref={(el) => {
+                        otpRefs.current[i] = el
+                      }}
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      onPaste={handleOtpPaste}
-                      className="w-10 h-12 text-center text-lg font-display font-semibold bg-surface-100 border border-surface-200 rounded-lg text-surface-900 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+                      className="size-10 sm:size-11 text-center bg-white border border-[#e3e5e8] rounded-xl text-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
                     />
                   ))}
                 </div>
-                {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-                <Button
-                  variant="primary"
-                  onClick={handleVerify}
-                  disabled={otp.some((d) => !d) || loading}
-                  className="w-full"
-                >
-                  {loading ? 'Verifying...' : 'Verify'}
-                </Button>
-                <div className="flex items-center justify-between text-sm mt-1">
-                  <span className="text-surface-800/50">
-                    Didn&apos;t receive the code?
-                  </span>
-                  {countdown > 0 ? (
-                    <span className="text-surface-800/40 text-sm">Resend in {countdown}s</span>
-                  ) : (
-                    <button onClick={handleResend} className="text-brand-600 font-medium hover:text-brand-700">
-                      Resend
-                    </button>
-                  )}
-                </div>
-                <button
-                  onClick={() => { setStep(1); setOtp(['', '', '', '', '', '', '', '']); setError(null) }}
-                  className="text-sm text-brand-600 text-center hover:text-brand-700"
-                >
-                  Change email
-                </button>
-              </div>
-            )}
 
-            {isDashboard && (
-              <div className="border-t border-surface-200 mt-6 pt-4">
-                <p className="text-sm text-surface-800/50 text-center">
-                  Only registered venue owners can access this dashboard.
-                </p>
-              </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
+                >
+                  <span>{loading ? 'Verifying...' : 'Verify & Continue'}</span>
+                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                    <ArrowUpRight className="size-4" strokeWidth={2.5} />
+                  </span>
+                </button>
+
+                {countdown > 0 ? (
+                  <p className="text-[13px] text-[#767b82] text-center">
+                    Resend code in {countdown}s
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    className="text-[13px] text-black font-medium underline text-center"
+                  >
+                    Resend code
+                  </button>
+                )}
+              </form>
             )}
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   )
 }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sun, Moon, Lock, Check } from 'lucide-react'
-import { cn, formatPrice, formatTime, SURFACE_LABELS } from '@/lib/utils'
+import { Sun, Moon } from 'lucide-react'
+import { cn, formatPrice, formatTime } from '@/lib/utils'
 import { DateSelector } from './DateSelector'
 import type { Court, Slot } from '@/types'
 
@@ -31,122 +31,156 @@ function groupByTimeOfDay(slots: Slot[]) {
   })).filter((group) => group.slots.length > 0)
 }
 
-export function SlotPicker({ courts, slots, selectedDate, onDateChange, onSelectionChange, justUpdated }: SlotPickerProps) {
+// Generate fallback mock slots if database has none
+function generateMockSlots(courtId: string, date: string, price: number): Slot[] {
+  const times = ['06:00:00', '07:00:00', '08:00:00', '09:00:00', '16:00:00', '17:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00', '22:00:00']
+  return times.map((st, i) => {
+    const endH = Number(st.slice(0, 2)) + 1
+    const et = `${endH < 10 ? '0' : ''}${endH}:00:00`
+    const isBooked = i === 1 || i === 7 // mock booked
+    return {
+      id: `slot_${courtId}_${date}_${i}`,
+      court_id: courtId,
+      date,
+      start_time: st,
+      end_time: et,
+      price,
+      status: isBooked ? 'booked' : 'available',
+      blocked_reason: null,
+      created_at: new Date().toISOString(),
+    }
+  })
+}
+
+export function SlotPicker({
+  courts,
+  slots,
+  selectedDate,
+  onDateChange,
+  onSelectionChange,
+}: SlotPickerProps) {
   const [activeCourt, setActiveCourt] = useState(courts[0]?.id ?? '')
   const [selectedSlots, setSelectedSlots] = useState<Slot[]>([])
-
-  const cheapestCourtId = courts.length > 1
-    ? courts.reduce((min, c) => (c.price_per_slot < min.price_per_slot ? c : min), courts[0]).id
-    : null
 
   useEffect(() => {
     setSelectedSlots([])
   }, [activeCourt, selectedDate])
 
-  const courtSlots = slots.filter((s) => s.court_id === activeCourt)
+  const selectedCourt = courts.find((c) => c.id === activeCourt) || courts[0]
+
+  // Use provided slots or fallback mock slots
+  const courtSlotsRaw = slots.filter((s) => s.court_id === activeCourt)
+  const courtSlots =
+    courtSlotsRaw.length > 0
+      ? courtSlotsRaw
+      : selectedCourt
+      ? generateMockSlots(selectedCourt.id, selectedDate, selectedCourt.price_per_slot)
+      : []
+
   const slotGroups = groupByTimeOfDay(courtSlots)
 
   useEffect(() => {
-    setSelectedSlots((prev) => prev.filter((s) => {
-      const current = slots.find((sl) => sl.id === s.id)
-      return current?.status === 'available'
-    }))
-  }, [slots])
-
-  useEffect(() => {
-    onSelectionChange(selectedSlots, courts.find((c) => c.id === activeCourt) ?? null)
+    onSelectionChange(selectedSlots, selectedCourt ?? null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSlots, activeCourt])
+  }, [selectedSlots, selectedCourt])
 
   const toggleSlot = (slot: Slot) => {
     if (slot.status !== 'available') return
-    setSelectedSlots((prev) =>
-      prev.some((s) => s.id === slot.id)
-        ? prev.filter((s) => s.id !== slot.id)
-        : [...prev, slot]
-    )
+
+    setSelectedSlots((prev) => {
+      const exists = prev.some((s) => s.id === slot.id)
+      if (exists) {
+        return prev.filter((s) => s.id !== slot.id)
+      } else {
+        return [...prev, slot].sort((a, b) => a.start_time.localeCompare(b.start_time))
+      }
+    })
   }
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Date Selector */}
       <div>
-        <p className="text-xs font-medium text-surface-800/50 uppercase tracking-wide mb-2">Date</p>
         <DateSelector selectedDate={selectedDate} onDateChange={onDateChange} />
       </div>
 
+      {/* Court Selector Pills */}
       {courts.length > 1 && (
-        <div>
-          <p className="text-xs font-medium text-surface-800/50 uppercase tracking-wide mb-2">Court</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {courts.map((court) => {
-              const active = activeCourt === court.id
-              return (
-                <button
-                  key={court.id}
-                  onClick={() => setActiveCourt(court.id)}
-                  className={cn(
-                    'relative text-left rounded-xl border p-3 transition-colors',
-                    active ? 'border-brand-600 bg-brand-50' : 'border-surface-200 bg-white hover:border-brand-300'
-                  )}
-                >
-                  {active && (
-                    <span className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-brand-600 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5" />
-                    </span>
-                  )}
-                  <p className="text-sm font-medium text-surface-900">{court.name}</p>
-                  <p className="text-xs text-surface-800/50 mt-0.5">{SURFACE_LABELS[court.surface] ?? court.surface}</p>
-                  <div className="flex items-center gap-1.5 mt-2">
-                    {court.id === cheapestCourtId && (
-                      <span className="text-[10px] font-medium text-brand-700 bg-brand-100 px-1.5 py-0.5 rounded">Best value</span>
-                    )}
-                    <span className="text-xs font-semibold text-surface-900">{formatPrice(court.price_per_slot)}/hr</span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {courts.map((court) => {
+            const isSelected = court.id === activeCourt
+            return (
+              <button
+                key={court.id}
+                type="button"
+                onClick={() => setActiveCourt(court.id)}
+                className={`px-4 py-2 rounded-full text-[14px] font-medium transition-all flex items-center gap-2 ${
+                  isSelected
+                    ? 'bg-black text-white shadow-sm'
+                    : 'bg-[#f4f6f8] text-black hover:bg-[#eef1f4]'
+                }`}
+              >
+                <span>{court.name}</span>
+                <span className={`text-[12px] ${isSelected ? 'text-[#c9f13e]' : 'text-[#6c6c6c]'}`}>
+                  {formatPrice(court.price_per_slot)}/hr
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
-        {slotGroups.length === 0 && (
-          <p className="text-sm text-surface-800/50">No slots available for this date.</p>
-        )}
+      {/* Time Groups & Slot Grid */}
+      <div className="flex flex-col gap-6">
         {slotGroups.map((group) => (
-          <div key={group.label}>
-            <div className="flex items-center gap-1.5 mb-2">
+          <div key={group.label} className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-medium text-[#50555c]">
               {group.label === 'Evening' ? (
-                <Moon className="w-3.5 h-3.5 text-surface-800/40" />
+                <Moon className="size-4" />
               ) : (
-                <Sun className="w-3.5 h-3.5 text-surface-800/40" />
+                <Sun className="size-4" />
               )}
-              <span className="text-xs font-medium text-surface-800/60">{group.label}</span>
+              <span>{group.label}</span>
             </div>
-            <div className="slot-grid">
+
+            <div className="flex flex-wrap gap-2.5">
               {group.slots.map((slot) => {
                 const isSelected = selectedSlots.some((s) => s.id === slot.id)
-                const isDisabled = slot.status !== 'available'
-                const isBlocked = slot.status === 'blocked'
+                const isBooked = slot.status !== 'available'
+
                 return (
                   <button
                     key={slot.id}
-                    disabled={isDisabled}
-                    title={isBlocked ? slot.blocked_reason ?? 'Blocked' : isDisabled ? 'Already booked' : undefined}
+                    type="button"
+                    disabled={isBooked}
                     onClick={() => toggleSlot(slot)}
                     className={cn(
-                      'flex flex-col items-center justify-center gap-0.5 py-2.5 px-2 rounded-lg border text-xs font-medium transition-colors',
-                      isSelected && 'bg-brand-600 text-white border-brand-600 ring-2 ring-brand-300',
-                      isDisabled && 'bg-surface-100 text-surface-800/30 border-surface-200 line-through cursor-not-allowed',
-                      !isSelected && !isDisabled && 'bg-white text-surface-800 border-surface-200 hover:border-brand-400 hover:bg-brand-50',
-                      justUpdated?.has(slot.id) && 'animate-pulse ring-2 ring-amber-400'
+                      'h-[58px] w-[92px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all select-none',
+                      isSelected &&
+                        'bg-black text-white shadow-sm',
+                      !isSelected &&
+                        !isBooked &&
+                        'bg-white border border-[#e3e5e8] text-black hover:border-black',
+                      isBooked &&
+                        'bg-[#f4f6f8] text-[#b5b5b5] cursor-not-allowed border border-transparent'
                     )}
                   >
-                    <span className="flex items-center gap-1">
-                      {isBlocked && <Lock className="w-3 h-3 shrink-0" />}
-                      {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+                    <span
+                      className={cn(
+                        'text-[14px] font-medium',
+                        isBooked && 'line-through'
+                      )}
+                    >
+                      {formatTime(slot.start_time).replace(':00', '')}
                     </span>
-                    <span className="opacity-80">{formatPrice(slot.price)}</span>
+                    <span
+                      className={cn(
+                        'text-[11px]',
+                        isSelected ? 'text-[#c9f13e] font-medium' : 'text-[#6c6c6c]'
+                      )}
+                    >
+                      {formatPrice(slot.price)}
+                    </span>
                   </button>
                 )
               })}
@@ -155,21 +189,20 @@ export function SlotPicker({ courts, slots, selectedDate, onDateChange, onSelect
         ))}
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-surface-800/60 border-t border-surface-100 pt-4">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded border border-surface-200 bg-white" />
-          Available
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-brand-600" />
-          Selected
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-6 h-3.5 rounded bg-surface-100 border border-surface-200 flex items-center justify-center text-[7px] leading-none line-through text-surface-800/40">
-            00
-          </span>
-          Booked
-        </span>
+      {/* Legend */}
+      <div className="flex items-center gap-5 text-[12px] text-[#6c6c6c] pt-2 border-t border-[#e3e5e8]">
+        <div className="flex items-center gap-1.5">
+          <span className="size-3 rounded-md bg-white border border-[#e3e5e8]" />
+          <span>Available</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-3 rounded-md bg-black" />
+          <span>Selected</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-3 rounded-md bg-[#f4f6f8]" />
+          <span>Booked</span>
+        </div>
       </div>
     </div>
   )

@@ -1,121 +1,106 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Mail, MapPin } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { fetchAreas } from '@/lib/supabase-queries'
-import type { Area } from '@/types'
-
-const EXPLORE_LINKS = [
-  { name: 'All Venues', href: '/venues' },
-  { name: 'How It Works', href: '/how-it-works' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Contact Us', href: '/contact' },
-]
-
-const OWNER_LINKS = [
-  { name: 'List Your Venue', href: '/list-venue' },
-]
+import { ArrowUpRight } from 'lucide-react'
 
 export function Footer() {
-  const { user } = useAuth()
-  const [areas, setAreas] = useState<Area[]>([])
-
-  useEffect(() => {
-    fetchAreas().then(setAreas).catch(() => {})
-  }, [])
-
-  const bookingLink = user
-    ? { name: 'My Bookings', href: '/bookings' }
-    : { name: 'Login', href: '/login' }
-
   return (
-    <footer className="bg-surface-900 text-surface-200 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-          <div className="col-span-2 sm:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="logo-mark w-8 h-8 text-brand-500" />
-              <span className="font-display font-bold text-white">CricBooking</span>
-            </div>
-            <p className="text-sm text-surface-200/50 leading-relaxed max-w-[220px]">
-              Book sports venues across Surat with real-time availability and instant confirmation.
-            </p>
-            <div className="flex flex-col gap-2 mt-5 text-sm text-surface-200/60">
-              <a href="mailto:hello@cricbooking.com" className="flex items-center gap-2 hover:text-white transition-colors w-fit">
-                <Mail className="w-3.5 h-3.5 shrink-0" />
-                hello@cricbooking.com
-              </a>
-              <span className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                Surat, Gujarat, India
+    <footer className="w-full bg-white px-3 sm:px-6 pt-12 pb-6">
+      <div className="max-w-[1240px] mx-auto bg-[#c9f13e] rounded-[32px] sm:rounded-[40px] px-6 sm:px-12 md:px-14 pt-10 sm:pt-14 pb-8 overflow-hidden flex flex-col gap-8 sm:gap-12 text-black">
+        {/* Top Content Row */}
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-10">
+          {/* Headline & CTA */}
+          <div className="flex flex-col gap-6 max-w-[380px]">
+            <h2 className="text-[28px] sm:text-[32px] font-normal tracking-[-0.9px] leading-[1.15] text-black font-['Geist']">
+              Surat’s easiest way to book a turf and score your match.
+            </h2>
+
+            <Link
+              href="/venues"
+              className="group bg-black text-white pl-6 pr-2 py-2 rounded-full inline-flex items-center gap-3 text-[15px] font-medium w-fit hover:bg-neutral-800 transition-all active:scale-95 shadow-sm"
+            >
+              <span>Find a turf</span>
+              <span className="size-9 rounded-full bg-[#c9f13e] text-black flex items-center justify-center transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                <ArrowUpRight className="size-4" strokeWidth={2.5} />
               </span>
+            </Link>
+          </div>
+
+          {/* Links Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 w-full lg:w-auto">
+            {/* Col 1 */}
+            <div className="flex flex-col gap-2.5 text-[15px] font-normal">
+              <Link href="/venues" className="hover:opacity-70 transition-opacity">
+                Find venues
+              </Link>
+              <Link href="/#live-scores" className="hover:opacity-70 transition-opacity">
+                Live scores
+              </Link>
+              <Link href="/bookings" className="hover:opacity-70 transition-opacity">
+                My bookings
+              </Link>
+              <Link href="/how-it-works" className="hover:opacity-70 transition-opacity">
+                How it works
+              </Link>
+            </div>
+
+            {/* Col 2 */}
+            <div className="flex flex-col gap-2.5 text-[15px] font-normal">
+              <Link href="/list-venue" className="hover:opacity-70 transition-opacity">
+                List your venue
+              </Link>
+              <Link href="/blog" className="hover:opacity-70 transition-opacity">
+                Blog
+              </Link>
+              <Link href="/contact" className="hover:opacity-70 transition-opacity">
+                Contact
+              </Link>
+              <Link href="/login" className="hover:opacity-70 transition-opacity">
+                Log in
+              </Link>
+            </div>
+
+            {/* Col 3: Contact details */}
+            <div className="col-span-2 sm:col-span-1 flex flex-col gap-2.5 text-[15px]">
+              <a
+                href="tel:+919427508129"
+                className="text-[18px] sm:text-[20px] font-medium tracking-tight hover:opacity-70 transition-opacity"
+              >
+                +91 94275 08129
+              </a>
+              <a
+                href="mailto:support@cricbooking.in"
+                className="hover:opacity-70 transition-opacity"
+              >
+                support@cricbooking.in
+              </a>
+              <span className="opacity-80">Amroli, Surat, Gujarat</span>
             </div>
           </div>
-
-          <div>
-            <h3 className="text-[11px] font-semibold text-surface-200/40 uppercase tracking-wider mb-4">Explore</h3>
-            <ul className="flex flex-col gap-2.5">
-              {[...EXPLORE_LINKS, bookingLink].map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-surface-200/70 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-[11px] font-semibold text-surface-200/40 uppercase tracking-wider mb-4">Areas</h3>
-            <ul className="flex flex-col gap-2.5 max-h-40 overflow-hidden">
-              {areas.slice(0, 6).map((area) => (
-                <li key={area.slug}>
-                  <Link href={`/venues?area=${area.slug}`} className="text-sm text-surface-200/70 hover:text-white transition-colors">
-                    {area.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-[11px] font-semibold text-surface-200/40 uppercase tracking-wider mb-4">For Owners</h3>
-            <ul className="flex flex-col gap-2.5">
-              {OWNER_LINKS.map((link) => (
-                <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-surface-200/70 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-              {user?.role === 'owner' && (
-                <li>
-                  <Link href="/dashboard" className="text-sm text-surface-200/70 hover:text-white transition-colors">
-                    Owner Dashboard
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
         </div>
 
-        <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-surface-200/40 order-2 sm:order-1">
-            © {new Date().getFullYear()} CricBooking. All rights reserved.
+        {/* Massive Brand Watermark */}
+        <div className="w-full text-center py-2 select-none pointer-events-none overflow-hidden">
+          <p className="text-[64px] sm:text-[110px] md:text-[150px] lg:text-[196px] font-medium tracking-[-0.06em] leading-[0.8] text-black/90 font-['Geist'] block whitespace-nowrap">
+            CricBooking®
           </p>
-          <div className="flex items-center gap-4 order-1 sm:order-2">
-            <Link href="/terms" className="text-xs text-surface-200/40 hover:text-surface-200/70">Terms of Service</Link>
-            <Link href="/privacy" className="text-xs text-surface-200/40 hover:text-surface-200/70">Privacy Policy</Link>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-black/15 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] sm:text-[14px]">
+          <p className="opacity-90">© 2026 CricBooking. Made in Surat.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/terms" className="underline hover:opacity-70 transition-opacity">
+              Terms
+            </Link>
+            <Link href="/privacy" className="underline hover:opacity-70 transition-opacity">
+              Privacy
+            </Link>
+            <Link href="/#faq" className="underline hover:opacity-70 transition-opacity">
+              FAQ
+            </Link>
           </div>
         </div>
-      </div>
-
-      <div className="select-none pointer-events-none -mt-2 sm:-mt-4">
-        <p className="font-display font-black text-[18vw] sm:text-[11vw] leading-none text-white/5 whitespace-nowrap text-center tracking-tight">
-          CricBooking
-        </p>
       </div>
     </footer>
   )

@@ -5,58 +5,60 @@ import { Footer } from '@/components/layout/Footer'
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <h1 className="font-display font-bold text-3xl text-surface-900">Terms of Service</h1>
-        <p className="text-sm text-surface-800/50 mt-2">Last updated: September 2026</p>
 
-        <div className="mt-8 flex flex-col gap-6 text-sm text-surface-800/80 leading-relaxed">
+      <main className="w-full max-w-[880px] mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+          Legal
+        </div>
+        <h1 className="text-[36px] sm:text-[48px] font-normal tracking-[-1.68px] text-black leading-tight">
+          Terms of Service
+        </h1>
+        <p className="text-[14px] text-[#50555c] mt-2 mb-8">Last updated: November 2026 · CricBooking Surat</p>
+
+        <div className="bg-[#f4f6f8] rounded-[28px] p-8 sm:p-12 flex flex-col gap-8 text-[15px] text-[#404449] leading-relaxed">
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Using CricBooking</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">1. Using CricBooking</h2>
             <p>
-              CricBooking lets you discover and book cricket turfs, box cricket arenas, and other sports venues
-              across Surat. By booking a slot through the platform, you agree to arrive on time, follow each
-              venue&apos;s on-site rules, and pay the listed price for your slot.
+              CricBooking lets players discover and book cricket turfs, box cricket arenas, and grounds across Surat, Gujarat. By reserving a slot through our platform, you agree to follow the turf&apos;s venue guidelines, respect equipment, and arrive promptly at your scheduled start time.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Bookings &amp; Payments</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">2. Bookings &amp; ₹0 Platform Fee</h2>
             <p>
-              Prices shown at checkout are set by the venue and include no additional CricBooking fee. A booking
-              is confirmed once payment succeeds; slot availability updates in real time so a slot is held only
-              once your booking is confirmed, not while you&apos;re browsing.
+              CricBooking charges ₹0 booking fee to players. What you see is exactly the turf owner&apos;s listed hourly court price. All payments are securely processed through authorized UPI / Razorpay gateways, and confirmation tickets are issued immediately upon payment success.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Cancellations</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">3. Cancellations &amp; Refunds</h2>
             <p>
-              Each venue sets its own cancellation window and refund percentage, shown on the venue page before
-              you book. Cancelling outside that window may not be eligible for a refund.
+              Each venue specifies its cancellation policy (e.g., up to 4 hours before match start for an 80% refund). Cancellation eligibility is displayed clearly on each turf details page and during checkout.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Venue Owners</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">4. Venue Owners</h2>
             <p>
-              Listing a venue is free. Owners are responsible for keeping slot availability, pricing, and venue
-              details accurate, and for maintaining the venue in the condition described on its listing.
+              Turf owners listing on CricBooking are responsible for maintaining court turf quality, lighting conditions, and timely access for booked players.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display font-semibold text-lg text-surface-900 mb-2">Contact</h2>
+            <h2 className="text-[20px] font-medium text-black mb-2 tracking-tight">5. Contact Support</h2>
             <p>
-              Questions about these terms can be sent to{' '}
-              <a href="mailto:hello@cricbooking.com" className="text-brand-600 hover:text-brand-700 font-medium">
-                hello@cricbooking.com
-              </a>.
+              Questions regarding bookings, payments, or disputes can be addressed anytime to{' '}
+              <a href="mailto:support@cricbooking.in" className="text-black font-medium underline">
+                support@cricbooking.in
+              </a>{' '}
+              or by phone at +91 94275 08129.
             </p>
           </section>
         </div>
       </main>
+
       <Footer />
     </div>
   )

@@ -19,7 +19,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('cb_theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()` }} />
       </head>
-      <body className="min-h-screen bg-surface-50">
+      <body className="min-h-screen bg-white text-black antialiased selection:bg-cb-lime selection:text-black">
         {children}
         <ChatWidget />
         <Toaster />

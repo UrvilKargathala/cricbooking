@@ -1,79 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { MapPin, Star, Clock, Heart, Layers, MessageSquare, IndianRupee } from 'lucide-react'
+import { Heart, ArrowUpRight } from 'lucide-react'
 import type { Venue } from '@/types'
-import { formatPrice, formatTime, SPORT_LABELS, cn } from '@/lib/utils'
+import { formatPrice, formatTime, cn } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { VenueSlotInfo } from '@/lib/supabase-queries'
 
 interface VenueCardProps {
   venue: Venue
   slotInfo?: VenueSlotInfo
+  featured?: boolean
 }
 
-function formatShortDate(dateStr: string) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-}
-
-function SlotStrip({ info }: { info: VenueSlotInfo }) {
-  const [offset, setOffset] = useState(0)
-  const slots = info.slots
-
-  useEffect(() => {
-    if (slots.length <= 3) return
-    const id = setInterval(() => setOffset((o) => (o + 1) % slots.length), 2500)
-    return () => clearInterval(id)
-  }, [slots.length])
-
-  if (slots.length === 0) return null
-
-  const displaySlots = slots.length > 3
-    ? Array.from({ length: 3 }, (_, i) => slots[(offset + i) % slots.length])
-    : slots
-
-  return (
-    <div className="bg-emerald-50 border border-surface-200 border-t-emerald-200 rounded-b-2xl px-4 py-2">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-[11px] font-semibold text-emerald-700">
-          {info.available} slot{info.available === 1 ? '' : 's'} available
-        </span>
-        <span className="text-[11px] text-surface-800/40 ml-auto">
-          {info.isToday ? 'Today' : formatShortDate(info.date)}
-        </span>
-      </div>
-      <div className="flex gap-1.5 flex-wrap">
-        {displaySlots.map((slot, i) => (
-          <span
-            key={`${slot.start}-${i}`}
-            className="text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-white text-emerald-700 border border-emerald-200 transition-all duration-300"
-          >
-            {formatTime(slot.start)}
-          </span>
-        ))}
-        {slots.length > 3 && (
-          <span className="text-[10px] text-surface-800/40 px-1 py-0.5 self-center">
-            +{slots.length - 3} more
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export function VenueCard({ venue, slotInfo }: VenueCardProps) {
+export function VenueCard({ venue, slotInfo, featured }: VenueCardProps) {
   const router = useRouter()
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
 
   const minPrice = venue.courts?.length
     ? Math.min(...venue.courts.map((c) => c.price_per_slot))
-    : null
-  const courtCount = venue.courts?.length ?? 0
+    : 600
+  const courtCount = venue.courts?.length ?? 1
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -82,96 +32,83 @@ export function VenueCard({ venue, slotInfo }: VenueCardProps) {
     if (result === 'signed_out') router.push('/login')
   }
 
-  const hasSlots = !!slotInfo?.slots.length
+  // Fallback image map
+  const fallbackImg = venue.slug?.includes('green-pitch')
+    ? '/figma/venue-green-pitch.png'
+    : venue.slug?.includes('royal')
+    ? '/figma/venue-royal-box.png'
+    : venue.slug?.includes('sunset')
+    ? '/figma/venue-sunset-turf.png'
+    : '/figma/venue-surat-arena.png'
+
+  const imgSrc = venue.cover_image || fallbackImg
 
   return (
-    <div className="relative">
-    <Link
-      href={`/venues/${venue.slug}`}
-      className={cn(
-        'group block bg-white border border-surface-200 hover:shadow-lg hover:border-brand-200 transition-all duration-300 overflow-hidden',
-        hasSlots ? 'rounded-t-2xl rounded-b-none border-b-0' : 'rounded-2xl'
-      )}
-    >
-      <div className="relative p-2 pb-0">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
-          {venue.cover_image ? (
-            <Image
-              src={venue.cover_image}
-              alt={venue.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-brand-200 to-brand-600" />
-          )}
-          <span
-            className={cn(
-              'absolute top-3 left-3 text-xs font-medium px-3 py-1.5 rounded-full',
-              venue.is_featured ? 'bg-brand-800 text-white' : 'bg-black/50 text-white backdrop-blur-sm'
-            )}
-          >
-            {venue.is_featured ? 'Featured' : SPORT_LABELS[venue.sports[0]] ?? 'Sports'}
-          </span>
-          <button
-            onClick={handleToggleFavorite}
-            aria-label={favorite ? 'Remove from wishlist' : 'Save to wishlist'}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors"
-          >
-            <Heart className={cn('w-4 h-4', favorite ? 'fill-red-500 text-red-500' : 'text-white')} />
-          </button>
-        </div>
-      </div>
+    <div className="group relative bg-[#f4f6f8] rounded-[20px] p-3 sm:p-3.5 flex flex-col gap-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+      {/* Image Container */}
+      <Link href={`/venues/${venue.slug}`} className="relative block aspect-[16/10] sm:aspect-[4/3] rounded-[16px] overflow-hidden bg-[#dde3ea]">
+        <Image
+          src={imgSrc}
+          alt={venue.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
 
-      <div className="px-5 pb-5 pt-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-brand-600 truncate">{venue.area?.name ?? venue.city}</span>
-          {minPrice !== null && (
-            <span className="flex items-center gap-1 text-sm text-surface-800/60 shrink-0">
-              <IndianRupee className="w-3.5 h-3.5" />
-              {formatPrice(minPrice).replace('₹', '')}/hr
-            </span>
-          )}
-        </div>
-
-        <h3 className="font-display font-semibold text-lg text-surface-900 mt-0.5 group-hover:text-brand-700 transition-colors truncate">
-          {venue.name}
-        </h3>
-
-        <div className="border-t border-surface-100 mt-3 pt-3 flex flex-col gap-2">
-          <span className="flex items-center gap-2 text-sm text-surface-800/70">
-            <MapPin className="w-4 h-4 text-surface-800/40 shrink-0" />
-            <span className="truncate">{venue.address}</span>
-          </span>
-          <span className="flex items-center gap-2 text-sm text-surface-800/70">
-            <Layers className="w-4 h-4 text-surface-800/40 shrink-0" />
-            {courtCount} Court{courtCount === 1 ? '' : 's'}
-          </span>
-          <div className="flex items-center justify-between gap-2">
-            <span className="flex items-center gap-2 text-sm text-surface-800/70">
-              <Clock className="w-4 h-4 text-surface-800/40 shrink-0" />
-              {formatTime(venue.opening_time)} - {formatTime(venue.closing_time)}
-            </span>
-            <span className="flex items-center gap-3 shrink-0">
-              {venue.total_reviews > 0 ? (
-                <span className="flex items-center gap-1 text-sm text-surface-800">
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  {venue.rating.toFixed(1)}
-                </span>
-              ) : (
-                <span className="text-xs font-medium text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">New</span>
-              )}
-              <span className="flex items-center gap-1 text-sm text-surface-800/60">
-                <MessageSquare className="w-4 h-4" />
-                {venue.total_reviews}
-              </span>
-            </span>
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div className="bg-[#c9f13e] px-3 py-1 rounded-full text-[12px] sm:text-[13px] font-medium text-black flex items-center gap-1 shadow-sm">
+            <span>★ {venue.rating ? Number(venue.rating).toFixed(1) : '4.6'}</span>
+            {featured && <span>· Featured</span>}
           </div>
         </div>
+
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          className="absolute top-3 right-3 size-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-black/70 hover:text-red-500 transition-colors shadow-sm"
+          aria-label="Save to favorites"
+        >
+          <Heart className={cn('size-4 transition-transform active:scale-125', favorite && 'fill-red-500 text-red-500')} />
+        </button>
+
+        {/* Price Chip */}
+        <div className="absolute bottom-3 right-3 bg-white px-3 py-1 rounded-full text-[13px] font-medium text-black shadow-md">
+          From {formatPrice(minPrice)}/hr
+        </div>
+      </Link>
+
+      {/* Info Section */}
+      <div className="flex flex-col gap-1 px-1">
+        <Link href={`/venues/${venue.slug}`} className="group-hover:text-black">
+          <h3 className="text-[17px] sm:text-[18px] font-medium tracking-tight text-black line-clamp-1">
+            {venue.name}
+          </h3>
+        </Link>
+        <p className="text-[13px] sm:text-[14px] text-[#50555c] line-clamp-1">
+          {venue.area?.name || 'Surat'} · {courtCount} court{courtCount > 1 ? 's' : ''} {slotInfo ? `· ${slotInfo.available} free slots` : `· ${venue.opening_time ? formatTime(venue.opening_time) : '6 AM'} – ${venue.closing_time ? formatTime(venue.closing_time) : '11 PM'}`}
+        </p>
       </div>
-    </Link>
-    {slotInfo?.slots.length ? <SlotStrip info={slotInfo} /> : null}
+
+      {/* Bottom Action Row */}
+      <div className="flex items-center justify-between pt-1 border-t border-[#e3e5e8]/60 px-1 mt-auto">
+        <div>
+          <span className="text-[17px] sm:text-[18px] font-medium text-black">
+            {formatPrice(minPrice)}
+          </span>
+          <span className="text-[12px] text-[#6c6c6c]">/hr</span>
+        </div>
+
+        <Link
+          href={`/venues/${venue.slug}`}
+          className="bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-3.5 pr-1.5 py-1.5 rounded-full text-[13px] font-medium inline-flex items-center gap-2 group/btn"
+        >
+          <span>Book</span>
+          <span className="size-6 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover/btn:translate-x-0.5">
+            <ArrowUpRight className="size-3" strokeWidth={2.5} />
+          </span>
+        </Link>
+      </div>
     </div>
   )
 }

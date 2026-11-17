@@ -2,20 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Phone, MapPin, Save, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { ArrowLeft, Save, ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase'
 import { useToastStore } from '@/store/useToastStore'
 import type { Profile } from '@/types'
 
-// Dark-styled input box only — Input's own `label` prop stays dark text (shared with
-// dashboard settings), so labels are rendered separately here instead.
-const darkInputClass =
-  'bg-surface-100 border-surface-200 text-surface-900 placeholder:text-surface-800/50 focus:ring-brand-400'
+const inputClass =
+  'w-full px-4 py-3 bg-white border border-[#e3e5e8] rounded-[12px] text-[15px] text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:border-transparent placeholder:text-[#767b82] transition-all'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -28,12 +24,21 @@ export default function ProfilePage() {
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login?redirect=/profile'); return }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login?redirect=/profile')
+        return
+      }
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (data) {
         setProfile(data)
-        setForm({ full_name: data.full_name || '', phone: data.phone || '', area: data.area || '' })
+        setForm({
+          full_name: data.full_name || '',
+          phone: data.phone || '',
+          area: data.area || '',
+        })
       }
       setLoading(false)
     }
@@ -59,94 +64,136 @@ export default function ProfilePage() {
     if (error) {
       showToast('Failed to update profile', 'error')
     } else {
-      showToast('Profile updated', 'success')
+      showToast('Profile updated successfully', 'success')
     }
   }
 
+  const initials = profile?.full_name
+    ? profile.full_name.slice(0, 2).toUpperCase()
+    : profile?.email
+    ? profile.email.slice(0, 2).toUpperCase()
+    : 'CB'
+
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="min-h-screen bg-white text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="max-w-xl mx-auto px-4 sm:px-6 py-8">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-surface-800/50 hover:text-surface-900 mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back
+
+      <main className="w-full max-w-[680px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-[14px] text-[#50555c] hover:text-black mb-6 font-medium transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          <span>Back to home</span>
         </Link>
 
-        <h1 className="font-display font-bold text-2xl text-surface-900 mb-8">My Account</h1>
+        <h1 className="text-[34px] sm:text-[40px] font-normal tracking-tight text-black mb-6">
+          Profile & Settings
+        </h1>
 
         {loading ? (
-          <div className="text-center py-16">
-            <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="bg-[#f4f6f8] rounded-[24px] p-12 text-center">
+            <div className="size-8 border-3 border-black border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-[14px] text-[#50555c] mt-4">Loading account details...</p>
           </div>
         ) : profile ? (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 pb-6 border-b border-surface-200">
-              <div className="w-16 h-16 rounded-full bg-brand-100 text-brand-600 font-bold text-xl flex items-center justify-center shrink-0">
-                {(profile.full_name?.[0] || 'U').toUpperCase()}
-              </div>
+          <div className="flex flex-col gap-6">
+            {/* User Profile Header Card */}
+            <div className="bg-[#f4f6f8] rounded-[24px] p-6 sm:p-7 flex items-center gap-4">
+              <span className="size-16 rounded-full bg-[#c9f13e] text-black font-semibold text-xl flex items-center justify-center border-2 border-white shadow-sm shrink-0">
+                {initials}
+              </span>
               <div>
-                <p className="font-display font-semibold text-lg text-surface-900">{profile.full_name}</p>
-                <p className="text-sm text-surface-800/50">{profile.email}</p>
-                <p className="text-xs text-surface-800/40 mt-0.5">
-                  Member since {new Date(profile.created_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                <h2 className="text-[20px] sm:text-[22px] font-medium text-black">
+                  {profile.full_name || 'CricBooking Player'}
+                </h2>
+                <p className="text-[14px] text-[#50555c]">{profile.email}</p>
+                <p className="text-[12px] text-[#6c6c6c] mt-0.5">
+                  Member since{' '}
+                  {new Date(profile.created_at).toLocaleDateString('en-IN', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
                 </p>
               </div>
             </div>
 
-            <div className="glass-card rounded-xl p-5 space-y-4">
-              <h2 className="font-display font-semibold text-surface-900">Personal Details</h2>
+            {/* Form Card */}
+            <div className="bg-[#f4f6f8] rounded-[24px] p-6 sm:p-8 flex flex-col gap-5">
+              <h3 className="text-[18px] font-medium text-black">Personal Information</h3>
 
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-surface-800 mb-1.5">Full Name</label>
-                <Input
+                <label htmlFor="name" className="block text-[13px] font-medium text-black mb-1.5">
+                  Full Name
+                </label>
+                <input
                   id="name"
-                  icon={<User className="w-4 h-4" />}
                   value={form.full_name}
                   onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                  className={darkInputClass}
+                  placeholder="Your full name"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-surface-800 mb-1.5">Email</label>
-                <div className="w-full px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm text-surface-800/50 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-surface-800/40" />
-                  {profile.email}
-                </div>
-                <p className="text-xs text-surface-800/40 mt-1">Email cannot be changed</p>
+                <label className="block text-[13px] font-medium text-black mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  value={profile.email || ''}
+                  disabled
+                  className="w-full px-4 py-3 bg-[#eef1f4] border border-[#e3e5e8] rounded-[12px] text-[15px] text-[#767b82] cursor-not-allowed select-none"
+                />
+                <p className="text-[12px] text-[#6c6c6c] mt-1">Email cannot be changed</p>
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-surface-800 mb-1.5">Phone Number</label>
-                <Input
+                <label htmlFor="phone" className="block text-[13px] font-medium text-black mb-1.5">
+                  Phone Number
+                </label>
+                <input
                   id="phone"
-                  icon={<Phone className="w-4 h-4" />}
                   value={form.phone}
                   onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                   placeholder="+91 98765 43210"
-                  className={darkInputClass}
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label htmlFor="area" className="block text-sm font-medium text-surface-800 mb-1.5">Area (Locality)</label>
-                <Input
+                <label htmlFor="area" className="block text-[13px] font-medium text-black mb-1.5">
+                  Favorite Area in Surat
+                </label>
+                <input
                   id="area"
-                  icon={<MapPin className="w-4 h-4" />}
                   value={form.area}
                   onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-                  placeholder="e.g. Vesu, Adajan"
-                  className={darkInputClass}
+                  placeholder="e.g. Vesu, Adajan, Varachha"
+                  className={inputClass}
                 />
               </div>
-            </div>
 
-            <Button variant="primary" onClick={handleSave} disabled={saving} className="w-full flex items-center justify-center gap-2">
-              <Save className="w-4 h-4" />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+              <div className="pt-3 border-t border-[#e3e5e8]">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="group w-full bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <Save className="size-4" />
+                    <span>{saving ? 'Saving changes...' : 'Save changes'}</span>
+                  </span>
+                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                    <ArrowUpRight className="size-4" strokeWidth={2.5} />
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         ) : null}
       </main>
+
       <Footer />
     </div>
   )

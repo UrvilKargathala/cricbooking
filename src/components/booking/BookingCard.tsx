@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { Calendar, Clock, ChevronRight, RotateCcw } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowUpRight } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatPrice, formatTime } from '@/lib/utils'
 import type { Booking } from '@/types'
 
@@ -12,57 +12,80 @@ interface BookingCardProps {
 }
 
 export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps) {
+  const fallbackImg = booking.venue?.slug?.includes('green-pitch')
+    ? '/figma/venue-green-pitch.png'
+    : booking.venue?.slug?.includes('royal')
+    ? '/figma/venue-royal-box.png'
+    : booking.venue?.slug?.includes('sunset')
+    ? '/figma/venue-sunset-turf.png'
+    : '/figma/venue-surat-arena.png'
+
+  const imgSrc = booking.venue?.cover_image || fallbackImg
+
   return (
-    <Link href={`/bookings/${booking.id}`} className="block">
-      <div className="bg-white rounded-xl border border-surface-200 p-4 hover:shadow-md hover:border-brand-200 transition-all group">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-xs text-surface-800/70">{booking.booking_code}</span>
-          <Badge variant={booking.status}>{booking.status.replace('_', ' ')}</Badge>
+    <div className="bg-[#f4f6f8] rounded-[20px] p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-5 group hover:shadow-md transition-all">
+      <div className="flex items-center gap-4">
+        {/* Venue image */}
+        <div className="relative size-20 sm:size-24 rounded-[16px] overflow-hidden bg-[#dde3ea] shrink-0">
+          <Image src={imgSrc} alt={booking.venue?.name || ''} fill className="object-cover" />
         </div>
 
-        <h3 className="font-display font-semibold text-surface-900 mt-2 group-hover:text-brand-700 transition-colors">{booking.venue?.name}</h3>
-        {booking.court && <p className="text-sm text-surface-800/60">{booking.court.name}</p>}
-
-        {booking.slot && (
-          <div className="flex items-center gap-4 mt-3 text-sm text-surface-800">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-surface-800/50" />
-              {new Date(booking.slot.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-surface-800/50" />
-              {formatTime(booking.slot.start_time)} - {formatTime(booking.slot.end_time)}
+        {/* Details */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Badge variant={booking.status === 'confirmed' ? 'confirmed' : 'chip'}>
+              {booking.status === 'confirmed' ? 'Confirmed' : booking.status}
+            </Badge>
+            <span className="text-[12px] text-[#6c6c6c] font-mono">
+              #{booking.booking_code || booking.id.slice(0, 8)}
             </span>
           </div>
-        )}
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-surface-200">
-          <span className="font-display font-semibold text-brand-700">{formatPrice(booking.amount)}</span>
-          <div className="flex items-center gap-2">
-            {showCancel && booking.status === 'confirmed' && onCancel && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-red-600 text-red-600 hover:bg-red-50"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel() }}
-              >
-                Cancel
-              </Button>
+          <h3 className="text-[17px] sm:text-[18px] font-medium text-black tracking-tight mt-0.5">
+            {booking.venue?.name || 'Cricket Venue'}
+          </h3>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#50555c]">
+            {booking.court && <span>{booking.court.name}</span>}
+            {booking.slot && (
+              <>
+                <span>·</span>
+                <span>
+                  {new Date(booking.slot.date + 'T00:00:00').toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                  , {formatTime(booking.slot.start_time)}
+                </span>
+              </>
             )}
-            {!showCancel && booking.status !== 'confirmed' && booking.venue?.slug && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/venues/${booking.venue!.slug}` }}
-              >
-                <RotateCcw className="w-3 h-3" /> Book Again
-              </Button>
-            )}
-            <ChevronRight className="w-4 h-4 text-surface-800/30 group-hover:text-brand-600 transition-colors" />
+            <span>·</span>
+            <span className="font-medium text-black">{formatPrice(booking.amount)}</span>
           </div>
         </div>
       </div>
-    </Link>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2.5 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#e3e5e8]">
+        {showCancel && booking.status === 'confirmed' && onCancel && (
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-full text-[13px] font-medium text-red-600 hover:bg-red-50 border border-red-200 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+
+        <Link
+          href={`/bookings/${booking.id}`}
+          className="bg-black hover:bg-neutral-800 text-white pl-4 pr-1.5 py-1.5 rounded-full text-[13px] font-medium inline-flex items-center gap-2 transition-colors ml-auto sm:ml-0"
+        >
+          <span>View Ticket</span>
+          <span className="size-6 rounded-full bg-[#c9f13e] text-black flex items-center justify-center">
+            <ArrowUpRight className="size-3" strokeWidth={2.5} />
+          </span>
+        </Link>
+      </div>
+    </div>
   )
 }

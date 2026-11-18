@@ -15,15 +15,53 @@ function getInitials(name?: string) {
 export function Header() {
   const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
   const pathname = usePathname()
 
   useEffect(() => {
     setMobileMenuOpen(false)
+    setIsVisible(true)
   }, [pathname])
 
+  useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      // If mobile drawer is open, keep navbar visible
+      if (mobileMenuOpen) {
+        setIsVisible(true)
+        return
+      }
+
+      // Return to top of page (< 20px) -> always visible
+      if (currentScrollY < 20) {
+        setIsVisible(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+        // Scrolling down past threshold -> hide
+        setIsVisible(false)
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up -> slide back into view
+        setIsVisible(true)
+      }
+
+      lastScrollY = currentScrollY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [mobileMenuOpen])
+
   return (
-    <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none">
-      <div className="max-w-[1240px] mx-auto pointer-events-auto">
+    <header
+      className={`sticky top-3 z-50 w-full px-3 sm:px-6 transition-all duration-300 ease-in-out ${
+        isVisible
+          ? 'translate-y-0 opacity-100 pointer-events-none'
+          : 'translate-y-[-150%] opacity-0 pointer-events-none'
+      }`}
+    >
+      <div className={`max-w-[1240px] mx-auto ${isVisible ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <div className="backdrop-blur-[18px] bg-[rgba(0,0,0,0.88)] border border-white/10 rounded-full pl-4 sm:pl-5 pr-2 py-2 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
           {/* Logo & City */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">

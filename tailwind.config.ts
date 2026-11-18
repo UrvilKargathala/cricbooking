@@ -52,6 +52,15 @@ const config: Config = {
         display: ["var(--font-display)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
         body: ["var(--font-body)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
       },
+      keyframes: {
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+      },
+      animation: {
+        marquee: "marquee 28s linear infinite",
+      },
     },
   },
   plugins: [],

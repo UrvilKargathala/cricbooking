@@ -282,6 +282,7 @@ export function VenueForm({ onSubmit, isInsideDashboard = false, areas = [] }: V
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
               {formData.photos.map((photo, i) => (
                 <div key={i} className="aspect-square rounded-lg overflow-hidden relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={photoUrls[i]} alt="" className="w-full h-full object-cover" />
                   <button
                     type="button"
@@ -563,6 +564,7 @@ export function VenueForm({ onSubmit, isInsideDashboard = false, areas = [] }: V
               <div className="flex gap-2">
                 {formData.photos.map((_, i) => (
                   <div key={i} className="w-[60px] h-[60px] rounded-lg overflow-hidden shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={photoUrls[i]} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, ChevronRight } from 'lucide-react'
@@ -16,12 +18,29 @@ export function Header() {
   const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setMobileMenuOpen(false)
     setIsVisible(true)
   }, [pathname])
+
+  // Mobile drawer body scroll locking
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
 
   useEffect(() => {
     let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0
@@ -66,10 +85,13 @@ export function Header() {
           {/* Logo & City */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <img
+              <Image
                 src="/figma/logo-icon.svg"
                 alt="CricBooking"
+                width={32}
+                height={32}
                 className="size-8 block transition-transform group-hover:scale-105"
+                priority
               />
               <span className="text-[20px] sm:text-[22px] font-medium tracking-tight text-white font-['Geist'] whitespace-nowrap">
                 CricBooking<span className="text-xs align-super opacity-70">®</span>
@@ -77,7 +99,7 @@ export function Header() {
             </Link>
 
             <div className="hidden sm:flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
-              <img src="/figma/pin-icon.svg" alt="" className="size-3 block" />
+              <Image src="/figma/pin-icon.svg" alt="" width={12} height={12} className="size-3 block" />
               <span className="text-[13px] text-white/90 font-medium">Surat</span>
             </div>
           </div>
@@ -179,8 +201,18 @@ export function Header() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden mt-2 max-w-[1240px] mx-auto pointer-events-auto">
-          <div className="backdrop-blur-xl bg-black/95 border border-white/10 rounded-3xl p-5 shadow-2xl flex flex-col gap-2">
+        <>
+          {mounted &&
+            createPortal(
+              <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-hidden="true"
+              />,
+              document.body
+            )}
+          <div className="lg:hidden mt-2 max-w-[1240px] mx-auto pointer-events-auto relative z-50">
+            <div className="backdrop-blur-xl bg-black/95 border border-white/10 rounded-3xl p-5 shadow-2xl flex flex-col gap-2">
             <Link
               href="/venues"
               className="flex items-center justify-between px-4 py-3 rounded-2xl text-[16px] font-medium text-white hover:bg-white/10"
@@ -246,7 +278,8 @@ export function Header() {
             </div>
           </div>
         </div>
-      )}
-    </header>
+      </>
+    )}
+  </header>
   )
 }

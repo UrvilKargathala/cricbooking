@@ -306,7 +306,7 @@ function VenuesPageContent() {
         </div>
 
         {/* Area Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 px-1 scrollbar-hide">
           {popularAreas.map((area) => {
             const isActive = selectedArea === area.slug || (!selectedArea && area.slug === null)
             return (

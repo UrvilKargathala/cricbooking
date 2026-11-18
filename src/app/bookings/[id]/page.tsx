@@ -69,7 +69,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
       setLoading(false)
     }
     load()
-  }, [params.id, router])
+  }, [params, router])
 
   const canCancelBooking = () => {
     if (!booking?.slot || !booking.venue) return true
@@ -152,15 +152,17 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
         ) : booking ? (
           <div className="space-y-6">
             {/* Status Banner */}
-            <div className="flex items-center gap-3 glass-card rounded-xl p-5">
-              <StatusIcon className={`w-8 h-8 ${statusCfg.color}`} />
-              <div>
-                <p className={`font-display font-semibold text-lg ${statusCfg.color}`}>{statusCfg.label}</p>
-                <p className="text-sm text-surface-800/50">
-                  Booked on {new Date(booking.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-card rounded-xl p-5">
+              <div className="flex items-center gap-3">
+                <StatusIcon className={`w-8 h-8 ${statusCfg.color} shrink-0`} />
+                <div>
+                  <p className={`font-display font-semibold text-lg ${statusCfg.color}`}>{statusCfg.label}</p>
+                  <p className="text-sm text-surface-800/50">
+                    Booked on {new Date(booking.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
-              <span className="ml-auto font-mono text-sm text-surface-800/70 bg-surface-100 px-3 py-1 rounded-lg">
+              <span className="font-mono text-sm text-surface-800/70 bg-surface-100 px-3 py-1 rounded-lg w-fit">
                 {booking.booking_code}
               </span>
             </div>

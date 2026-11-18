@@ -143,7 +143,7 @@ export function SlotPicker({
               <span>{group.label}</span>
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-2.5">
               {group.slots.map((slot) => {
                 const isSelected = selectedSlots.some((s) => s.id === slot.id)
                 const isBooked = slot.status !== 'available'
@@ -155,7 +155,7 @@ export function SlotPicker({
                     disabled={isBooked}
                     onClick={() => toggleSlot(slot)}
                     className={cn(
-                      'h-[58px] w-[92px] rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all select-none',
+                      'h-[58px] w-full min-w-0 rounded-[12px] flex flex-col items-center justify-center gap-0.5 transition-all select-none',
                       isSelected &&
                         'bg-black text-white shadow-sm',
                       !isSelected &&

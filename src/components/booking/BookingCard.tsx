@@ -24,14 +24,14 @@ export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps)
 
   return (
     <div className="bg-[#f4f6f8] rounded-[20px] p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-5 group hover:shadow-md transition-all">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 min-w-0">
         {/* Venue image */}
         <div className="relative size-20 sm:size-24 rounded-[16px] overflow-hidden bg-[#dde3ea] shrink-0">
           <Image src={imgSrc} alt={booking.venue?.name || ''} fill className="object-cover" />
         </div>
 
         {/* Details */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-2">
             <Badge variant={booking.status === 'confirmed' ? 'confirmed' : 'chip'}>
               {booking.status === 'confirmed' ? 'Confirmed' : booking.status}
@@ -41,7 +41,7 @@ export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps)
             </span>
           </div>
 
-          <h3 className="text-[17px] sm:text-[18px] font-medium text-black tracking-tight mt-0.5">
+          <h3 className="text-[17px] sm:text-[18px] font-medium text-black tracking-tight mt-0.5 truncate">
             {booking.venue?.name || 'Cricket Venue'}
           </h3>
 

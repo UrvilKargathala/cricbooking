@@ -210,11 +210,11 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
         </div>
 
         {/* 2 Side Photos */}
-        <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
-          <div className="relative aspect-[16/10] lg:aspect-auto lg:h-[calc(50%-8px)] rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#dde3ea]">
+        <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 lg:grid-rows-2 gap-4">
+          <div className="relative aspect-[16/10] lg:aspect-auto w-full h-full rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#dde3ea]">
             <Image src={sidePhoto1} alt="" fill className="object-cover" />
           </div>
-          <div className="relative aspect-[16/10] lg:aspect-auto lg:h-[calc(50%-8px)] rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#dde3ea]">
+          <div className="relative aspect-[16/10] lg:aspect-auto w-full h-full rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#dde3ea]">
             <Image src={sidePhoto2} alt="" fill className="object-cover" />
           </div>
         </div>

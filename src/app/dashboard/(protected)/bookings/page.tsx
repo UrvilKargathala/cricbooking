@@ -444,7 +444,7 @@ function WalkinModal({ isOpen, onClose, venues, onCreated }: {
 
   useEffect(() => {
     if (isOpen && allCourts.length > 0 && !courtId) setCourtId(allCourts[0].id)
-  }, [isOpen])
+  }, [isOpen, allCourts, courtId])
 
   const selectedSlot = slots.find(s => s.id === slotId)
   const selectedCourt = allCourts.find(c => c.id === courtId)

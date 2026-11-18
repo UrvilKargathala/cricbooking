@@ -301,7 +301,7 @@ export default function Home() {
               {/* Search Bar Pill */}
               <form
                 onSubmit={handleSearch}
-                className="bg-white rounded-full p-1.5 pl-4 sm:pl-6 pr-1.5 shadow-[0_20px_35px_rgba(4,38,68,0.25)] flex flex-col sm:flex-row items-center gap-3 sm:gap-2 w-full max-w-[620px]"
+                className="bg-white rounded-[28px] sm:rounded-full p-3 sm:p-1.5 pl-4 sm:pl-6 pr-4 sm:pr-1.5 shadow-[0_20px_35px_rgba(4,38,68,0.25)] flex flex-col sm:flex-row items-center gap-3 sm:gap-2 w-full max-w-[620px]"
               >
                 {/* Where */}
                 <div className="flex-1 w-full sm:w-auto px-2 py-1">
@@ -432,7 +432,7 @@ export default function Home() {
               className="bg-white border border-[#e3e5e8] hover:border-black transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group hover:shadow-sm"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/box-cricket-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/box-cricket-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Box cricket</span>
             </Link>
@@ -443,7 +443,7 @@ export default function Home() {
               className="bg-[#eef1f4] hover:bg-[#e4e8ec] transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/open-turf-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/open-turf-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Open turfs</span>
             </Link>
@@ -454,7 +454,7 @@ export default function Home() {
               className="bg-[#c9f13e] hover:bg-[#b8e12d] transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/floodlit-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/floodlit-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Floodlit</span>
             </Link>
@@ -465,7 +465,7 @@ export default function Home() {
               className="bg-[#e3ebfa] hover:bg-[#d5e2f7] transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/open-late-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/open-late-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Open late</span>
             </Link>
@@ -476,7 +476,7 @@ export default function Home() {
               className="bg-white border border-[#e3e5e8] hover:border-black transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group hover:shadow-sm"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/live-scores-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/live-scores-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Live scores</span>
             </Link>
@@ -487,7 +487,7 @@ export default function Home() {
               className="bg-[#eef1f4] hover:bg-[#e4e8ec] transition-all p-5 rounded-[16px] flex flex-col justify-between gap-4 group"
             >
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                <img src="/figma/offers-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/offers-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
               <span className="text-[16px] font-normal text-black">Offers</span>
             </Link>
@@ -659,7 +659,7 @@ export default function Home() {
             {/* Score Your Own Match Free Card */}
             <div className="lg:col-span-4 bg-white border border-[#e3e5e8] rounded-[20px] p-6 sm:p-9 flex flex-col justify-between gap-6 group hover:shadow-md transition-all">
               <div className="size-12 rounded-full bg-black flex items-center justify-center text-white">
-                <img src="/figma/box-cricket-icon.svg" alt="" className="size-5" />
+                <Image src="/figma/box-cricket-icon.svg" alt="" width={20} height={20} className="size-5" />
               </div>
 
               <div>

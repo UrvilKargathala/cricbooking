@@ -59,7 +59,7 @@ export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) 
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className="scrollbar-hide flex gap-2 overflow-x-auto scroll-smooth py-1"
+            className="scrollbar-hide flex gap-2 overflow-x-auto scroll-smooth px-1 py-1"
           >
             {days.map((day, index) => {
               const value = format(day, 'yyyy-MM-dd')

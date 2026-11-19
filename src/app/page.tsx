@@ -633,26 +633,30 @@ export default function Home() {
               </div>
 
               {/* This Over Pill Tracker */}
-              <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
-                <span className="text-[14px] text-white/70 whitespace-nowrap mr-2">This over</span>
-                <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                  1
-                </span>
-                <span className="size-8 sm:size-9 rounded-full bg-[#c9f13e] text-black font-semibold text-xs flex items-center justify-center shrink-0">
-                  4
-                </span>
-                <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                  0
-                </span>
-                <span className="size-8 sm:size-9 rounded-full bg-black border border-[#c9f13e] text-[#c9f13e] font-semibold text-xs flex items-center justify-center shrink-0">
-                  6
-                </span>
-                <span className="size-8 sm:size-9 rounded-full bg-[#e3ebfa] text-[#042644] font-semibold text-xs flex items-center justify-center shrink-0">
-                  Wd
-                </span>
-                <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                  2
-                </span>
+              <div className="relative">
+                <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-hide pr-10">
+                  <span className="text-[14px] text-white/70 whitespace-nowrap mr-2 shrink-0">This over</span>
+                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <span className="size-8 sm:size-9 rounded-full bg-[#c9f13e] text-black font-semibold text-xs flex items-center justify-center shrink-0">
+                    4
+                  </span>
+                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                    0
+                  </span>
+                  <span className="size-8 sm:size-9 rounded-full bg-black border border-[#c9f13e] text-[#c9f13e] font-semibold text-xs flex items-center justify-center shrink-0">
+                    6
+                  </span>
+                  <span className="size-8 sm:size-9 rounded-full bg-[#e3ebfa] text-[#042644] font-semibold text-xs flex items-center justify-center shrink-0">
+                    Wd
+                  </span>
+                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                </div>
+                {/* Subtle right-edge scroll fade */}
+                <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-black to-transparent" />
               </div>
             </div>
 

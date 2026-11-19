@@ -106,20 +106,20 @@ export default function BookingsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="bg-white px-5 py-3 rounded-2xl flex flex-col shadow-sm flex-1 sm:flex-initial">
-              <span className="text-[11px] text-[#6c6c6c] uppercase tracking-wider font-medium">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:gap-4 w-full sm:w-auto">
+            <div className="bg-white px-3.5 sm:px-5 py-3 rounded-2xl flex flex-col justify-between shadow-sm min-w-0">
+              <span className="text-[11px] text-[#6c6c6c] uppercase tracking-wider font-medium truncate">
                 Total Bookings
               </span>
-              <span className="text-[22px] font-semibold text-black">
+              <span className="text-[20px] sm:text-[22px] font-semibold text-black mt-0.5">
                 {allBookings.length}
               </span>
             </div>
-            <div className="bg-white px-5 py-3 rounded-2xl flex flex-col shadow-sm flex-1 sm:flex-initial">
-              <span className="text-[11px] text-[#6c6c6c] uppercase tracking-wider font-medium">
+            <div className="bg-white px-3.5 sm:px-5 py-3 rounded-2xl flex flex-col justify-between shadow-sm min-w-0">
+              <span className="text-[11px] text-[#6c6c6c] uppercase tracking-wider font-medium truncate">
                 Hours Played
               </span>
-              <span className="text-[22px] font-semibold text-[#1849c9]">
+              <span className="text-[20px] sm:text-[22px] font-semibold text-[#1849c9] mt-0.5">
                 {allBookings.length} hrs
               </span>
             </div>

@@ -137,53 +137,53 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
   const StatusIcon = statusCfg.icon
 
   return (
-    <div className="min-h-screen bg-surface-50">
+    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-        <Link href="/bookings" className="inline-flex items-center gap-1.5 text-sm text-surface-800/50 hover:text-surface-900 mb-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-10 w-full">
+        <Link href="/bookings" className="inline-flex items-center gap-1.5 text-sm text-[#50555c] hover:text-black mb-6 font-medium transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Bookings
         </Link>
 
         {loading ? (
           <div className="text-center py-16">
-            <div className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm text-surface-800/50 mt-3">Loading booking...</p>
+            <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-[#50555c] mt-3">Loading booking...</p>
           </div>
         ) : booking ? (
           <div className="space-y-6">
             {/* Status Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-card rounded-xl p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f4f6f8] rounded-[24px] p-5 sm:p-6 border border-[#e3e5e8]">
               <div className="flex items-center gap-3">
                 <StatusIcon className={`w-8 h-8 ${statusCfg.color} shrink-0`} />
                 <div>
-                  <p className={`font-display font-semibold text-lg ${statusCfg.color}`}>{statusCfg.label}</p>
-                  <p className="text-sm text-surface-800/50">
+                  <p className={`font-medium text-lg ${statusCfg.color}`}>{statusCfg.label}</p>
+                  <p className="text-sm text-[#50555c]">
                     Booked on {new Date(booking.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
-              <span className="font-mono text-sm text-surface-800/70 bg-surface-100 px-3 py-1 rounded-lg w-fit">
+              <span className="font-mono text-xs sm:text-sm text-black bg-white px-3.5 py-1 rounded-full border border-[#e3e5e8] shadow-sm w-fit font-medium">
                 {booking.booking_code}
               </span>
             </div>
 
             {/* Receipt Card */}
-            <div className="glass-card rounded-xl overflow-hidden">
-              <div className="p-5 border-b border-surface-200">
-                <h2 className="font-display font-semibold text-surface-900 text-lg">Booking Receipt</h2>
+            <div className="bg-[#f4f6f8] rounded-[24px] overflow-hidden border border-[#e3e5e8]">
+              <div className="p-5 sm:p-6 border-b border-[#e3e5e8] bg-white">
+                <h2 className="font-medium text-black text-lg tracking-tight">Booking Receipt</h2>
               </div>
 
-              <div className="p-5 space-y-4">
+              <div className="p-5 sm:p-6 space-y-4">
                 {/* Venue */}
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
+                  <MapPin className="w-5 h-5 text-[#1849c9] mt-0.5 shrink-0" />
                   <div>
-                    <Link href={`/venues/${booking.venue?.slug}`} className="font-display font-semibold text-surface-900 hover:text-brand-600">
+                    <Link href={`/venues/${booking.venue?.slug}`} className="font-medium text-black hover:text-[#1849c9] transition-colors">
                       {booking.venue?.name}
                     </Link>
-                    <p className="text-sm text-surface-800/50">{booking.venue?.address}</p>
+                    <p className="text-sm text-[#50555c]">{booking.venue?.address}</p>
                     {booking.venue?.area && (
-                      <p className="text-sm text-surface-800/50">{booking.venue.area.name}, Surat</p>
+                      <p className="text-sm text-[#50555c]">{booking.venue.area.name}, Surat</p>
                     )}
                   </div>
                 </div>
@@ -192,9 +192,9 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 {booking.court && (
                   <div className="flex items-center gap-3">
                     <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                      <span className="w-2 h-2 rounded-full bg-brand-600" />
+                      <span className="w-2 h-2 rounded-full bg-[#1849c9]" />
                     </div>
-                    <p className="text-sm text-surface-800">
+                    <p className="text-sm text-black">
                       <span className="font-medium">{booking.court.name}</span>
                     </p>
                   </div>
@@ -204,16 +204,16 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 {booking.slot && (
                   <>
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-surface-800/50 shrink-0" />
-                      <p className="text-sm text-surface-800">
+                      <Calendar className="w-5 h-5 text-[#6c6c6c] shrink-0" />
+                      <p className="text-sm text-black">
                         {new Date(booking.slot.date + 'T00:00:00').toLocaleDateString('en-IN', {
                           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                         })}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-surface-800/50 shrink-0" />
-                      <p className="text-sm text-surface-800">
+                      <Clock className="w-5 h-5 text-[#6c6c6c] shrink-0" />
+                      <p className="text-sm text-black">
                         {formatTime(booking.slot.start_time)} &mdash; {formatTime(booking.slot.end_time)}
                       </p>
                     </div>
@@ -222,15 +222,15 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               </div>
 
               {/* Amount */}
-              <div className="bg-surface-100 px-5 py-4 flex items-center justify-between border-t border-surface-200">
+              <div className="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-t border-[#e3e5e8]">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-surface-800/50" />
-                  <span className="text-sm text-surface-800/70">Amount Paid</span>
+                  <CreditCard className="w-5 h-5 text-[#6c6c6c]" />
+                  <span className="text-sm text-[#50555c]">Amount Paid</span>
                 </div>
-                <span className="font-display font-bold text-lg text-surface-900">{formatPrice(booking.amount)}</span>
+                <span className="font-medium text-xl text-black">{formatPrice(booking.amount)}</span>
               </div>
 
-              <div className="px-5 py-3 border-t border-surface-200 flex items-center justify-between text-xs text-surface-800/40">
+              <div className="px-5 sm:px-6 py-3 border-t border-[#e3e5e8] flex items-center justify-between text-xs text-[#6c6c6c]">
                 <span>Payment: <Badge variant={booking.payment_status as 'confirmed'}>{booking.payment_status}</Badge></span>
                 <span>Source: {booking.source}</span>
               </div>
@@ -242,7 +242,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                 <>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100"
+                    className="flex items-center gap-2 border-[#e3e5e8] text-black bg-white hover:bg-[#eef1f4]"
                     onClick={async () => {
                       if (!confirm('This will cancel your current booking and take you to the venue page to book a new slot. Continue?')) return
                       await handleCancel()
@@ -253,7 +253,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-red-500/40 text-red-400 bg-transparent hover:bg-red-500/10"
+                    className="border-red-200 text-red-600 bg-white hover:bg-red-50"
                     onClick={() => setCancelOpen(true)}
                   >
                     Cancel Booking
@@ -262,24 +262,24 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               )}
               {(booking.status === 'completed' || booking.status === 'cancelled') && booking.venue?.slug && (
                 <Link href={`/venues/${booking.venue.slug}`}>
-                  <Button variant="outline" className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
+                  <Button variant="outline" className="flex items-center gap-2 border-[#e3e5e8] text-black bg-white hover:bg-[#eef1f4]">
                     <RotateCcw className="w-4 h-4" /> Book Again
                   </Button>
                 </Link>
               )}
               {(booking.status === 'completed' || booking.status === 'confirmed') && !existingReview && (
-                <Button variant="outline" onClick={() => setReviewOpen(true)} className="flex items-center gap-2 border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">
+                <Button variant="outline" onClick={() => setReviewOpen(true)} className="flex items-center gap-2 border-[#e3e5e8] text-black bg-white hover:bg-[#eef1f4]">
                   <Star className="w-4 h-4" /> Write a Review
                 </Button>
               )}
               {existingReview && (
-                <div className="flex items-center gap-2 text-sm text-surface-800/50">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center gap-2 text-sm text-[#50555c]">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   You rated this venue {existingReview.rating}/5
                 </div>
               )}
               <Link href={`/venues/${booking.venue?.slug}`}>
-                <Button variant="outline" className="border-surface-300 text-surface-800 bg-transparent hover:bg-surface-100">View Venue</Button>
+                <Button variant="outline" className="border-[#e3e5e8] text-black bg-white hover:bg-[#eef1f4]">View Venue</Button>
               </Link>
             </div>
           </div>
@@ -342,12 +342,12 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-surface-800 mb-1.5">Comment (optional)</label>
+            <label className="block text-sm font-medium text-black mb-1.5">Comment (optional)</label>
             <textarea
               value={reviewComment}
               onChange={(e) => setReviewComment(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2.5 bg-surface-100 border border-surface-200 rounded-lg text-sm placeholder:text-surface-800/40 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white border border-[#e3e5e8] rounded-xl text-sm placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:border-transparent resize-none"
               placeholder="How was your experience at this venue?"
             />
           </div>
@@ -355,12 +355,14 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             variant="primary"
             onClick={handleReview}
             disabled={submittingReview}
-            className="w-full"
+            className="w-full bg-[#c9f13e] hover:bg-[#b8e12d] text-black"
           >
             {submittingReview ? 'Submitting...' : 'Submit Review'}
           </Button>
         </div>
       </Modal>
+
+      <Footer />
     </div>
   )
 }

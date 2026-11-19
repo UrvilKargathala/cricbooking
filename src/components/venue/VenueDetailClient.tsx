@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
+  ArrowUpRight,
   Star,
   MapPin,
   Clock,
@@ -19,7 +20,7 @@ import { BookingSummary } from '@/components/booking/BookingSummary'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { createClient } from '@/lib/supabase'
 import { fetchSlots, fetchVenueReviews, fetchVenues } from '@/lib/supabase-queries'
-import { AMENITY_LABELS, formatTime } from '@/lib/utils'
+import { AMENITY_LABELS, formatPrice, formatTime } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useToastStore } from '@/store/useToastStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -168,7 +169,11 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
   const sidePhoto2 = venue.images?.[2] || '/figma/venue-green-pitch.png'
 
   return (
-    <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <div
+      className={`w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10 ${
+        schedule.slots.length > 0 ? 'pb-24 lg:pb-10' : ''
+      }`}
+    >
       {/* Top Breadcrumb & Actions */}
       <div className="flex items-center justify-between mb-6">
         <Link
@@ -398,6 +403,43 @@ export function VenueDetailClient({ venue }: { venue: Venue }) {
             {similarVenues.map((v) => (
               <VenueCard key={v.id} venue={v} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Bottom Bar (<1024px) when at least 1 slot is selected */}
+      {schedule.slots.length > 0 && (
+        <div
+          id="venue-mobile-bar"
+          className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-[#e3e5e8] px-4 py-3 shadow-[0_-8px_25px_rgba(0,0,0,0.08)]"
+        >
+          <div className="max-w-[1240px] mx-auto flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#50555c]">
+                <span className="font-medium text-black truncate max-w-[120px]">
+                  {schedule.court?.name ?? 'Court 1'}
+                </span>
+                <span>·</span>
+                <span>
+                  {schedule.slots.length} slot{schedule.slots.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="text-[18px] sm:text-[20px] font-medium text-black leading-tight mt-0.5">
+                {formatPrice(schedule.slots.reduce((sum, s) => sum + s.price, 0))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleBook}
+              disabled={bookingLoading}
+              className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-5 pr-2 py-2.5 rounded-full text-[14px] sm:text-[15px] font-medium flex items-center gap-2.5 shrink-0 shadow-sm active:scale-95 disabled:opacity-50"
+            >
+              <span>{bookingLoading ? 'Processing...' : 'Proceed to pay'}</span>
+              <span className="size-7 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
+              </span>
+            </button>
           </div>
         </div>
       )}

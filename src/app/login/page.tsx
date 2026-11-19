@@ -197,7 +197,7 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-8 gap-1.5 sm:gap-2">
+                <div className="grid grid-cols-8 gap-1 sm:gap-2 w-full max-w-full">
                   {otp.map((digit, i) => (
                     <input
                       key={i}
@@ -209,7 +209,7 @@ export default function LoginPage() {
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
-                      className="size-10 sm:size-11 text-center bg-white border border-[#e3e5e8] rounded-xl text-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                      className="w-full aspect-square max-w-[46px] min-w-0 p-0 text-center bg-white border border-[#e3e5e8] rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
                     />
                   ))}
                 </div>

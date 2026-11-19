@@ -306,14 +306,14 @@ function VenuesPageContent() {
         </div>
 
         {/* Area Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 px-1 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 px-1 scrollbar-hide snap-x snap-mandatory">
           {popularAreas.map((area) => {
             const isActive = selectedArea === area.slug || (!selectedArea && area.slug === null)
             return (
               <button
                 key={area.name}
                 onClick={() => handleAreaClick(area.slug)}
-                className={`px-4 py-2 rounded-full text-[14px] font-medium transition-all whitespace-nowrap active:scale-95 ${
+                className={`snap-start px-4 py-2 rounded-full text-[14px] font-medium transition-all whitespace-nowrap active:scale-95 ${
                   isActive
                     ? 'bg-black text-white'
                     : 'bg-[#f4f6f8] text-black hover:bg-[#eef1f4]'

@@ -30,10 +30,32 @@ function ChatWidgetInner() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [hasModal, setHasModal] = useState(false)
+  const [hasStickyBar, setHasStickyBar] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const isDashboard = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+
+  useEffect(() => {
+    const updateOverlays = () => {
+      // Body overflow hidden indicates an active modal or mobile drawer
+      const modalActive = typeof document !== 'undefined' && document.body.style.overflow === 'hidden'
+      // Check for mobile sticky checkout bar
+      const stickyBarActive = typeof document !== 'undefined' && !!document.getElementById('venue-mobile-bar')
+      setHasModal(modalActive)
+      setHasStickyBar(stickyBarActive)
+    }
+
+    updateOverlays()
+    const observer = new MutationObserver(updateOverlays)
+    observer.observe(document.body, { attributes: true, childList: true, subtree: true })
+    window.addEventListener('resize', updateOverlays)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updateOverlays)
+    }
+  }, [])
 
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus()
@@ -80,7 +102,9 @@ function ChatWidgetInner() {
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105',
+          'fixed right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105',
+          hasStickyBar ? 'bottom-[76px] lg:bottom-6' : 'bottom-6',
+          hasModal && 'opacity-0 pointer-events-none scale-75',
           open ? 'bg-surface-800 text-white' : 'bg-brand-600 text-white hover:bg-brand-700'
         )}
       >
@@ -89,8 +113,10 @@ function ChatWidgetInner() {
 
       <div
         className={cn(
-          'fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-surface-200 flex flex-col transition-all duration-300 origin-bottom-right',
-          open ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+          'fixed right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-surface-200 flex flex-col transition-all duration-300 origin-bottom-right',
+          hasStickyBar ? 'bottom-[144px] lg:bottom-24' : 'bottom-24',
+          hasModal && 'opacity-0 pointer-events-none',
+          open && !hasModal ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
         )}
         style={{ height: '520px' }}
       >

@@ -4,12 +4,29 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowUpRight, MapPin, Star } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, MapPin, Star } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { VenueCard } from '@/components/venue/VenueCard'
 import { fetchAreas, fetchVenues, fetchTodaySlotCounts, type VenueSlotInfo } from '@/lib/supabase-queries'
 import type { Area, Venue } from '@/types'
+
+const SURAT_AREAS_FEATURED = [
+  { name: 'Vesu', slug: 'vesu', image: '/figma/venue-surat-arena.png', count: '12 turfs' },
+  { name: 'Varachha', slug: 'varachha', image: '/figma/venue-green-pitch.png', count: '8 turfs' },
+  { name: 'Adajan', slug: 'adajan', image: '/figma/venue-surat-arena.png', count: '6 turfs' },
+  { name: 'Katargam', slug: 'katargam', image: '/figma/venue-royal-box.png', count: '5 turfs' },
+  { name: 'Pal', slug: 'pal', image: '/figma/venue-sunset-turf.png', count: '7 turfs' },
+]
+
+const INITIAL_MATCH_STATE = {
+  runs: 52,
+  wickets: 2,
+  balls: 33, // 5.3 overs
+  target: 75,
+  totalBalls: 48, // 8.0 overs
+  thisOver: ['1', '4', '0', '6', 'Wd', '2'],
+}
 
 // Default fallback venues for guaranteed high-fidelity render
 const DEFAULT_VENUES: Venue[] = [
@@ -234,6 +251,59 @@ export default function Home() {
     router.push(`/venues${params.toString() ? `?${params.toString()}` : ''}`)
   }
 
+  const [matchScore, setMatchScore] = useState(INITIAL_MATCH_STATE)
+
+  const handleScoreAction = (action: '1' | '4' | '6' | 'W' | 'reset') => {
+    if (action === 'reset') {
+      setMatchScore(INITIAL_MATCH_STATE)
+      return
+    }
+
+    setMatchScore((prev) => {
+      if (prev.runs >= prev.target || prev.wickets >= 10 || prev.balls >= prev.totalBalls) {
+        return prev
+      }
+
+      const newBalls = prev.balls + 1
+      let newRuns = prev.runs
+      let newWickets = prev.wickets
+      let ballLabel = action
+
+      if (action === '1') {
+        newRuns += 1
+      } else if (action === '4') {
+        newRuns += 4
+      } else if (action === '6') {
+        newRuns += 6
+      } else if (action === 'W') {
+        newWickets = Math.min(10, newWickets + 1)
+        ballLabel = 'W'
+      }
+
+      const updatedOver = [...prev.thisOver, ballLabel].slice(-8)
+
+      return {
+        ...prev,
+        runs: newRuns,
+        wickets: newWickets,
+        balls: newBalls,
+        thisOver: updatedOver,
+      }
+    })
+  }
+
+  const currentOvers = `${Math.floor(matchScore.balls / 6)}.${matchScore.balls % 6}`
+  const runsNeeded = Math.max(0, matchScore.target - matchScore.runs)
+  const ballsLeft = Math.max(0, matchScore.totalBalls - matchScore.balls)
+  const statusSubtitle =
+    matchScore.runs >= matchScore.target
+      ? `Won by ${10 - matchScore.wickets} wickets!`
+      : matchScore.wickets >= 10 || matchScore.balls >= matchScore.totalBalls
+      ? 'Innings finished'
+      : `${currentOvers} overs · need ${runsNeeded} from ${ballsLeft}`
+
+  const quickBookVenues = (venues.length ? venues : DEFAULT_VENUES).slice(0, 5)
+
   const featuredVenue = venues[0] || DEFAULT_VENUES[0]
   const otherVenues = venues.slice(1, 4).length ? venues.slice(1, 4) : DEFAULT_VENUES.slice(1, 4)
 
@@ -245,7 +315,7 @@ export default function Home() {
         {/* ========================================================
             1. HERO SECTION
             ======================================================== */}
-        <section className="px-3 sm:px-6 pt-2 pb-6 w-full max-w-[1440px] mx-auto">
+        <section className="px-3 sm:px-6 pt-6 sm:pt-9 pb-6 w-full max-w-[1440px] mx-auto">
           <div className="relative min-h-[640px] md:min-h-[740px] rounded-[32px] sm:rounded-[40px] overflow-hidden bg-[#dde3ea] flex flex-col justify-between p-6 sm:p-12 md:p-16">
             {/* Background image & overlay */}
             <div className="absolute inset-0 pointer-events-none">
@@ -306,27 +376,30 @@ export default function Home() {
                 {/* Where */}
                 <div className="flex-1 w-full sm:w-auto px-2 py-1">
                   <label className="block text-[11px] font-medium text-[#6c6c6c]">Where</label>
-                  <select
-                    value={selectedArea}
-                    onChange={(e) => setSelectedArea(e.target.value)}
-                    className="w-full bg-transparent text-[15px] font-medium text-[#1a1a1a] focus:outline-none cursor-pointer"
-                  >
-                    <option value="">Area or venue</option>
-                    {areas.map((a) => (
-                      <option key={a.id} value={a.slug}>
-                        {a.name}
-                      </option>
-                    ))}
-                    {!areas.length && (
-                      <>
-                        <option value="vesu">Vesu</option>
-                        <option value="varachha">Varachha</option>
-                        <option value="adajan">Adajan</option>
-                        <option value="katargam">Katargam</option>
-                        <option value="pal">Pal</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="relative flex items-center">
+                    <select
+                      value={selectedArea}
+                      onChange={(e) => setSelectedArea(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-medium text-[#1a1a1a] focus:outline-none cursor-pointer appearance-none pr-7"
+                    >
+                      <option value="">Area or venue</option>
+                      {areas.map((a) => (
+                        <option key={a.id} value={a.slug}>
+                          {a.name}
+                        </option>
+                      ))}
+                      {!areas.length && (
+                        <>
+                          <option value="vesu">Vesu</option>
+                          <option value="varachha">Varachha</option>
+                          <option value="adajan">Adajan</option>
+                          <option value="katargam">Katargam</option>
+                          <option value="pal">Pal</option>
+                        </>
+                      )}
+                    </select>
+                    <ChevronDown className="size-4 text-[#6c6c6c] absolute right-1 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div className="hidden sm:block h-8 w-px bg-[#e3e5e8]" />
@@ -334,16 +407,19 @@ export default function Home() {
                 {/* When */}
                 <div className="flex-1 w-full sm:w-auto px-2 py-1">
                   <label className="block text-[11px] font-medium text-[#6c6c6c]">When</label>
-                  <select
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full bg-transparent text-[15px] font-medium text-[#1a1a1a] focus:outline-none cursor-pointer"
-                  >
-                    <option value="tonight">Tonight, 8 PM</option>
-                    <option value="tomorrow">Tomorrow night</option>
-                    <option value="weekend">This Weekend</option>
-                    <option value="morning">Morning (6 - 10 AM)</option>
-                  </select>
+                  <div className="relative flex items-center">
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-medium text-[#1a1a1a] focus:outline-none cursor-pointer appearance-none pr-7"
+                    >
+                      <option value="tonight">Tonight, 8 PM</option>
+                      <option value="tomorrow">Tomorrow night</option>
+                      <option value="weekend">This Weekend</option>
+                      <option value="morning">Morning (6 - 10 AM)</option>
+                    </select>
+                    <ChevronDown className="size-4 text-[#6c6c6c] absolute right-1 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* Submit button */}
@@ -495,6 +571,94 @@ export default function Home() {
         </section>
 
         {/* ========================================================
+            4A. PLAYING TONIGHT QUICK-BOOK STRIP
+            ======================================================== */}
+        <section className="max-w-[1240px] mx-auto px-4 sm:px-6 pt-6 pb-2 w-full">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-[#e5484d] animate-pulse" />
+              <h3 className="text-[13px] font-semibold text-[#6c6c6c] uppercase tracking-wider">
+                Playing tonight in Surat
+              </h3>
+            </div>
+            <span className="text-[12px] text-[#6c6c6c] hidden sm:inline">Instant confirm slots</span>
+          </div>
+
+          <div className="relative">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-0.5 scrollbar-hide pr-10">
+              {quickBookVenues.map((v, i) => {
+                const time = ['8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM'][i % 5]
+                const price = v.courts?.[0]?.price_per_slot || 600
+                return (
+                  <Link
+                    key={v.id || i}
+                    href={`/venues/${v.slug}#book-a-slot`}
+                    className="group bg-[#f4f6f8] hover:bg-white border border-[#e3e5e8] hover:border-black rounded-full pl-4 pr-1.5 py-1.5 inline-flex items-center gap-3 transition-colors shrink-0 shadow-sm hover:shadow"
+                  >
+                    <span className="text-[14px] font-medium text-black">
+                      <span className="font-semibold">{time}</span> · {v.name} · <span className="text-[#50555c]">₹{price}</span>
+                    </span>
+                    <span className="size-7 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                      <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-white to-transparent" />
+          </div>
+        </section>
+
+        {/* ========================================================
+            4B. EXPLORE BY AREA IN SURAT
+            ======================================================== */}
+        <section className="max-w-[1240px] mx-auto px-4 sm:px-6 pt-8 pb-2 w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[20px] sm:text-[24px] font-medium tracking-tight text-black">
+              Explore by area in Surat
+            </h3>
+            <Link
+              href="/venues"
+              className="text-[14px] font-medium text-[#6c6c6c] hover:text-black inline-flex items-center gap-1 transition-colors"
+            >
+              <span>All areas</span>
+              <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            {SURAT_AREAS_FEATURED.map((item) => (
+              <Link
+                key={item.slug}
+                href={`/venues?area=${item.slug}`}
+                className="group relative rounded-[20px] overflow-hidden bg-[#dde3ea] aspect-[16/11] sm:aspect-[4/3] flex flex-col justify-between p-3.5 border border-[#e3e5e8] hover:border-black transition-all"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/30 group-hover:from-black/85 transition-colors" />
+                <div className="relative z-10 flex justify-end">
+                  <span className="bg-[#c9f13e] text-black text-[11px] sm:text-[12px] font-semibold px-2.5 py-0.5 rounded-full shadow-sm">
+                    {item.count}
+                  </span>
+                </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="text-white text-[16px] sm:text-[18px] font-medium tracking-tight">
+                    {item.name}
+                  </span>
+                  <span className="size-6 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ArrowUpRight className="size-3.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ========================================================
             5. POPULAR IN SURAT
             ======================================================== */}
         <section className="max-w-[1240px] mx-auto px-4 sm:px-6 py-12 sm:py-16 w-full">
@@ -626,37 +790,81 @@ export default function Home() {
                 <div className="bg-[#c9f13e] text-black rounded-[16px] p-5 flex flex-col gap-2">
                   <span className="text-[14px] text-black/80 font-medium">Adajan Strikers · batting</span>
                   <span className="text-[42px] sm:text-[48px] font-medium tracking-tight text-black leading-none">
-                    52/2
+                    {matchScore.runs}/{matchScore.wickets}
                   </span>
-                  <span className="text-[13px] text-black/80 font-medium">5.3 overs · need 23 from 15</span>
+                  <span className="text-[13px] text-black/80 font-medium">{statusSubtitle}</span>
                 </div>
               </div>
 
-              {/* This Over Pill Tracker */}
-              <div className="relative">
-                <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-hide pr-10">
-                  <span className="text-[14px] text-white/70 whitespace-nowrap mr-2 shrink-0">This over</span>
-                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                    1
-                  </span>
-                  <span className="size-8 sm:size-9 rounded-full bg-[#c9f13e] text-black font-semibold text-xs flex items-center justify-center shrink-0">
-                    4
-                  </span>
-                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                    0
-                  </span>
-                  <span className="size-8 sm:size-9 rounded-full bg-black border border-[#c9f13e] text-[#c9f13e] font-semibold text-xs flex items-center justify-center shrink-0">
-                    6
-                  </span>
-                  <span className="size-8 sm:size-9 rounded-full bg-[#e3ebfa] text-[#042644] font-semibold text-xs flex items-center justify-center shrink-0">
-                    Wd
-                  </span>
-                  <span className="size-8 sm:size-9 rounded-full bg-white/15 text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                    2
-                  </span>
+              {/* This Over Pill Tracker & Interactive Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-white/10">
+                <div className="relative overflow-hidden flex-1">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide pr-8">
+                    <span className="text-[13px] text-white/70 whitespace-nowrap mr-1 shrink-0">This over</span>
+                    {matchScore.thisOver.map((b, idx) => {
+                      let bgClass = 'bg-white/15 text-white'
+                      if (b === '4') bgClass = 'bg-[#c9f13e] text-black'
+                      else if (b === '6') bgClass = 'bg-black border border-[#c9f13e] text-[#c9f13e]'
+                      else if (b === 'W') bgClass = 'bg-[#e5484d] text-white'
+                      else if (b === 'Wd') bgClass = 'bg-[#e3ebfa] text-[#042644]'
+                      return (
+                        <span
+                          key={idx}
+                          className={`size-8 sm:size-9 rounded-full font-semibold text-xs flex items-center justify-center shrink-0 ${bgClass}`}
+                        >
+                          {b}
+                        </span>
+                      )
+                    })}
+                  </div>
+                  {/* Subtle right-edge scroll fade */}
+                  <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-black to-transparent" />
                 </div>
-                {/* Subtle right-edge scroll fade */}
-                <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-black to-transparent" />
+
+                {/* Score Action Pills */}
+                <div className="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                  <span className="text-[11px] text-white/50 mr-1 hidden md:inline">Try scoring:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleScoreAction('1')}
+                    className="size-8 sm:size-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white text-[12px] font-semibold flex items-center justify-center transition-all"
+                    title="Add 1 Run"
+                  >
+                    +1
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleScoreAction('4')}
+                    className="size-8 sm:size-9 rounded-full bg-[#c9f13e]/20 hover:bg-[#c9f13e] text-[#c9f13e] hover:text-black active:scale-95 text-[12px] font-bold flex items-center justify-center transition-all"
+                    title="Add 4 Runs"
+                  >
+                    4
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleScoreAction('6')}
+                    className="size-8 sm:size-9 rounded-full bg-[#c9f13e] text-black hover:bg-[#b8e12d] active:scale-95 text-[12px] font-bold flex items-center justify-center transition-all"
+                    title="Add 6 Runs"
+                  >
+                    6
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleScoreAction('W')}
+                    className="size-8 sm:size-9 rounded-full bg-[#e5484d] hover:bg-[#d63b40] text-white active:scale-95 text-[12px] font-bold flex items-center justify-center transition-all"
+                    title="Out (Wicket)"
+                  >
+                    W
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleScoreAction('reset')}
+                    className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/70 hover:text-white text-[11px] font-medium transition-all ml-1"
+                    title="Reset Score"
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
             </div>
 

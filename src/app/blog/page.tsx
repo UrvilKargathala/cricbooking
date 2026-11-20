@@ -19,28 +19,23 @@ export default function BlogPage() {
   const [featured, ...rest] = BLOG_POSTS
 
   return (
-    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
+    <div className="bg-[#f7f9f7] min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
       <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
         {/* Title Header */}
-        <div className="max-w-[700px] mb-10 sm:mb-14">
-          <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
-            The CricBooking Blog
-          </div>
-          <h1 className="text-[38px] sm:text-[52px] font-normal tracking-[-1.68px] leading-[1.1] text-black">
-            Stories, rules and tactics from the Surat cricket scene.
-          </h1>
-          <p className="text-[16px] sm:text-[18px] text-[#50555c] mt-4 leading-relaxed">
-            Guides on booking the best turfs, box cricket tournaments, and gear for the local pitch.
-          </p>
+        <div className="relative overflow-hidden rounded-[28px] sm:rounded-[36px] bg-[#061923] px-6 py-10 sm:px-12 sm:py-14 mb-10 sm:mb-14">
+          <div className="absolute -right-24 -top-24 size-80 rounded-full bg-[#c9f13e]/10 blur-3xl" />
+          <div className="relative max-w-[700px]"><div className="bg-[#c9f13e] text-[#042644] px-3.5 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-[0.1em] w-fit mb-5">The CricBooking Blog</div>
+          <h1 className="text-[38px] sm:text-[52px] font-semibold tracking-[-0.05em] leading-[1.05] text-white">Stories from the <span className="text-[#c9f13e]">Surat cricket scene.</span></h1>
+          <p className="text-[16px] sm:text-[18px] text-white/70 mt-5 leading-relaxed">Guides on booking the best turfs, box cricket tournaments, and gear for the local pitch.</p></div>
         </div>
 
         {/* Featured Post Card */}
         {featured && (
           <Link
             href={`/blog/${featured.slug}`}
-            className="group bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-4 sm:p-6 mb-12 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center hover:shadow-lg transition-all"
+            className="group bg-white border border-[#e0e6e8] rounded-[28px] sm:rounded-[36px] p-4 sm:p-6 mb-12 sm:mb-16 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center hover:shadow-[0_20px_42px_rgb(4_38_68_/_0.12)] transition-all"
           >
             <div className="lg:col-span-7 relative aspect-[16/10] sm:aspect-[16/9] rounded-[20px] sm:rounded-[28px] overflow-hidden bg-[#dde3ea]">
               <Image
@@ -57,11 +52,11 @@ export default function BlogPage() {
 
             <div className="lg:col-span-5 flex flex-col justify-between gap-6 px-2 sm:px-4">
               <div className="flex flex-col gap-3">
-                <span className="bg-white px-3 py-1 rounded-full text-[12px] font-medium text-black w-fit border border-[#e3e5e8]">
+                <span className="bg-[#eef6df] px-3 py-1 rounded-full text-[12px] font-bold text-[#527000] w-fit">
                   {featured.category}
                 </span>
 
-                <h2 className="text-[26px] sm:text-[34px] font-medium tracking-tight text-black leading-tight group-hover:text-neutral-700">
+                <h2 className="text-[26px] sm:text-[34px] font-semibold tracking-[-0.035em] text-black leading-tight group-hover:text-[#30510b]">
                   {featured.title}
                 </h2>
 
@@ -92,7 +87,7 @@ export default function BlogPage() {
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="group bg-[#f4f6f8] rounded-[24px] p-4 flex flex-col justify-between gap-4 hover:shadow-md transition-all"
+              className="group bg-white border border-[#e3e5e8] rounded-[24px] p-4 flex flex-col justify-between gap-4 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgb(4_38_68_/_0.10)] transition-all duration-300"
             >
               <div className="relative aspect-[16/10] rounded-[16px] overflow-hidden bg-[#dde3ea]">
                 <Image
@@ -101,7 +96,7 @@ export default function BlogPage() {
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-[11px] font-medium text-black shadow-sm">
+                <div className="absolute top-3 left-3 bg-[#c9f13e] px-3 py-1 rounded-full text-[11px] font-semibold text-black shadow-sm">
                   {post.category}
                 </div>
               </div>

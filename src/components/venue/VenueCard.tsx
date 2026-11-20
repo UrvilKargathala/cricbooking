@@ -20,10 +20,13 @@ export function VenueCard({ venue, slotInfo, featured }: VenueCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(venue.id)
 
-  const minPrice = venue.courts?.length
-    ? Math.min(...venue.courts.map((c) => c.price_per_slot))
-    : 600
-  const courtCount = venue.courts?.length ?? 1
+  const validPrices = (venue.courts ?? [])
+    .map((court) => Number(court.price_per_slot))
+    .filter((price) => Number.isFinite(price) && price > 0)
+  const minPrice = validPrices.length ? Math.min(...validPrices) : 600
+  const courtCount = Math.max(venue.courts?.length ?? 0, 1)
+  const rating = Number(venue.rating)
+  const displayRating = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '4.6'
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -58,7 +61,7 @@ export function VenueCard({ venue, slotInfo, featured }: VenueCardProps) {
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <div className="bg-[#c9f13e] px-3 py-1 rounded-full text-[12px] sm:text-[13px] font-medium text-black flex items-center gap-1 shadow-sm">
-            <span>★ {venue.rating ? Number(venue.rating).toFixed(1) : '4.6'}</span>
+            <span>★ {displayRating}</span>
             {featured && <span>· Featured</span>}
           </div>
         </div>

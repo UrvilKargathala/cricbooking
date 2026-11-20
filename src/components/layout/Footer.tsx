@@ -7,6 +7,33 @@ import { ArrowRight, Phone, Mail, MapPin } from 'lucide-react'
 export function Footer() {
   return (
     <footer className="w-full bg-white px-3 sm:px-5 md:px-7 pt-4 pb-6 sm:pb-8" data-name="Footer">
+      {/* Purpose-built mobile layout: percentage-positioned artwork does not scale reliably below tablet width. */}
+      <div className="md:hidden relative overflow-hidden rounded-[24px] bg-[#020B08] px-5 py-7 text-white shadow-2xl">
+        <Image src="/figma/footer-stadium-panoramic-master.png" alt="" fill className="object-cover object-center opacity-35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020b08]/75 via-[#020b08]/90 to-[#020b08]" />
+        <div className="relative z-10">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C7FF00]">Match night starts here</p>
+          <h2 className="mt-2 text-[32px] font-black italic leading-none tracking-tight">READY TO <span className="text-[#C7FF00]">PLAY?</span></h2>
+          <p className="mt-3 max-w-[290px] text-[14px] leading-relaxed text-[#C5D0CB]">Find your perfect turf, choose your slot, and get the game started.</p>
+          <div className="mt-4 flex items-center gap-2 text-[12px]"><span className="size-2 rounded-full bg-[#C7FF00] shadow-[0_0_10px_#C7FF00]" /><span className="font-semibold text-[#C7FF00]">8 courts</span><span className="text-white/70">available tonight in Surat</span></div>
+          <Link href="/venues" className="mt-5 flex items-center justify-between rounded-full bg-[#C7FF00] px-5 py-3 text-[14px] font-bold text-[#020B08] transition-transform active:scale-[0.98]"><span>Find a Turf</span><ArrowRight size={17} /></Link>
+
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <Image src="/figma/footer-logo-hires.png" alt="CricBooking®" width={180} height={50} className="h-10 w-auto object-contain" />
+            <p className="mt-3 text-[13px] leading-relaxed text-[#C5D0CB]">Surat’s easiest way to book a turf and score your match.</p>
+          </div>
+
+          <div className="mt-7 grid grid-cols-2 gap-6 border-t border-white/10 pt-6">
+            <nav><p className="text-[11px] font-bold tracking-[0.12em] text-[#C7FF00]">EXPLORE</p><div className="mt-3 flex flex-col gap-2.5 text-[13px] text-[#C5D0CB]"><Link href="/venues">Find venues</Link><Link href="/#live-scores">Live scores</Link><Link href="/bookings">My bookings</Link><Link href="/how-it-works">How it works</Link></div></nav>
+            <nav><p className="text-[11px] font-bold tracking-[0.12em] text-[#C7FF00]">MORE</p><div className="mt-3 flex flex-col gap-2.5 text-[13px] text-[#C5D0CB]"><Link href="/list-venue">List your venue</Link><Link href="/blog">Blog</Link><Link href="/contact">Contact</Link><Link href="/login">Log in</Link></div></nav>
+          </div>
+
+          <div className="mt-7 border-t border-white/10 pt-6"><p className="text-[11px] font-bold tracking-[0.12em] text-[#C7FF00]">GET IN TOUCH</p><div className="mt-3 space-y-2.5 text-[13px] text-[#C5D0CB]"><a href="tel:+919427508129" className="flex items-center gap-2"><Phone size={14} className="text-[#C7FF00]" />+91 94275 08129</a><a href="mailto:support@cricbooking.in" className="flex items-center gap-2"><Mail size={14} className="text-[#C7FF00]" />support@cricbooking.in</a><p className="flex items-center gap-2"><MapPin size={14} className="text-[#C7FF00]" />Amroli, Surat, Gujarat</p></div></div>
+          <a href="https://wa.me/919427508129?text=Hi%20CricBooking%2C%20I%20want%20to%20book%20a%20turf%20in%20Surat" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-between rounded-full border border-[#C7FF00]/40 bg-white/5 px-4 py-3 text-[13px] font-semibold text-white"><span>WhatsApp booking / inquiry</span><ArrowRight size={15} className="text-[#C7FF00]" /></a>
+          <div className="mt-7 flex flex-wrap gap-x-3 gap-y-2 border-t border-white/10 pt-5 text-[11px] text-white/50"><span>© 2026 CricBooking.</span><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></div>
+        </div>
+      </div>
+
       {/*
         ============================================================
         OUTER CONTAINER
@@ -15,7 +42,7 @@ export function Footer() {
         ============================================================
       */}
       <div
-        className="w-full max-w-[1440px] mx-auto rounded-[24px] sm:rounded-[32px] relative overflow-hidden shadow-2xl"
+        className="hidden md:block w-full max-w-[1440px] mx-auto rounded-[24px] sm:rounded-[32px] relative overflow-hidden shadow-2xl"
         style={{
           backgroundColor: '#020B08',
           border: '1px solid rgba(255, 255, 255, 0.08)',

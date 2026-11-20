@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Clock3, MapPin, Search, Sparkles } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { VenueCard } from '@/components/venue/VenueCard'
@@ -271,42 +271,31 @@ function VenuesPageContent() {
   }
 
   return (
-    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col">
+    <div className="bg-[#f7f9f7] min-h-screen text-black font-['Geist'] flex flex-col">
       <Header />
 
-      <main className="flex-1 w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* Title Header */}
-        <div className="flex flex-col gap-3 max-w-[800px] mb-8">
-          <h1 className="text-[38px] sm:text-[48px] font-normal tracking-[-1.68px] text-black leading-tight">
-            Find your turf
-          </h1>
-          <p className="text-[15px] sm:text-[16px] text-[#50555c]">
-            {filteredVenues.length} turf{filteredVenues.length === 1 ? '' : 's'} in Surat · every slot shown is free to book
-          </p>
-        </div>
+      <main className="flex-1 w-full">
+        <section className="bg-[#061923] pt-4 pb-10 sm:pt-7 sm:pb-14">
+          <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6">
+            <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] border border-white/10 bg-[#0a2939] px-5 py-8 sm:px-10 sm:py-11">
+              <div className="absolute -right-20 -top-20 size-64 rounded-full bg-[#c9f13e]/10 blur-3xl" />
+              <div className="relative max-w-[790px]"><p className="section-kicker mb-4 text-white/60">Surat’s cricket courts</p><h1 className="text-[38px] sm:text-[56px] font-semibold tracking-[-0.05em] leading-none text-white">Your game starts <span className="text-[#c9f13e]">here.</span></h1><p className="mt-4 text-[15px] sm:text-[17px] text-white/65">Find live availability, book in seconds, and get the whole squad on the turf.</p></div>
+              <div className="relative mt-7 flex flex-col sm:flex-row gap-2 rounded-[20px] sm:rounded-full bg-white p-2 sm:pl-5 shadow-[0_15px_40px_rgb(0_0_0_/_0.25)]">
+                <Search className="mt-2 sm:mt-0 sm:self-center size-5 text-[#63707a] shrink-0" />
+                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search venue, area or amenity" className="min-w-0 flex-1 bg-transparent px-1 py-2 text-[15px] text-black placeholder:text-[#7b858c] focus:outline-none" />
+                {query && <button onClick={() => setQuery('')} className="rounded-full px-3 text-xs font-semibold text-[#63707a] hover:text-black">Clear</button>}
+                <button type="button" onClick={() => handleAreaClick(selectedArea)} className="rounded-full bg-[#c9f13e] px-5 py-3 text-[14px] font-bold text-[#042644] hover:bg-[#d6fa5b]">Search turfs</button>
+              </div>
+              <div className="relative mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-white/65"><span className="inline-flex items-center gap-1.5"><Sparkles className="size-3.5 text-[#c9f13e]" />Instant confirmation</span><span className="inline-flex items-center gap-1.5"><Clock3 className="size-3.5 text-[#c9f13e]" />Live slots for tonight</span><span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5 text-[#c9f13e]" />Across Surat</span></div>
+            </div>
+          </div>
+        </section>
 
-        {/* Search Bar */}
-        <div className="bg-[#f4f6f8] rounded-full pl-5 sm:pl-6 pr-2 py-2 flex items-center gap-3 max-w-[720px] shadow-sm mb-6">
-          <Search className="size-5 text-[#767b82] shrink-0" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by venue name, area or amenity..."
-            className="w-full bg-transparent text-[15px] text-black placeholder:text-[#767b82] focus:outline-none"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="text-xs text-[#767b82] hover:text-black px-2 py-1"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        <section className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-9 sm:py-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5"><div><p className="section-kicker mb-3">Available to book</p><h2 className="text-[28px] sm:text-[38px] font-semibold tracking-[-0.04em]">{filteredVenues.length} turf{filteredVenues.length === 1 ? '' : 's'} in Surat</h2></div><p className="text-[14px] text-[#63707a]">Every slot shown is free to book.</p></div>
 
         {/* Area Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 px-1 scrollbar-hide snap-x snap-mandatory">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-7 px-1 scrollbar-hide snap-x snap-mandatory">
           {popularAreas.map((area) => {
             const isActive = selectedArea === area.slug || (!selectedArea && area.slug === null)
             return (
@@ -315,8 +304,8 @@ function VenuesPageContent() {
                 onClick={() => handleAreaClick(area.slug)}
                 className={`snap-start px-4 py-2 rounded-full text-[14px] font-medium transition-all whitespace-nowrap active:scale-95 ${
                   isActive
-                    ? 'bg-black text-white'
-                    : 'bg-[#f4f6f8] text-black hover:bg-[#eef1f4]'
+                    ? 'bg-[#042644] text-[#c9f13e] shadow-[0_5px_14px_rgb(4_38_68_/_0.16)]'
+                    : 'bg-white border border-[#e0e6e8] text-[#35444d] hover:border-[#042644]/40 hover:bg-[#f3f8e9]'
                 }`}
               >
                 {area.name}
@@ -350,6 +339,7 @@ function VenuesPageContent() {
             </button>
           </div>
         )}
+        </section>
       </main>
 
       <Footer />

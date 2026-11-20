@@ -44,21 +44,18 @@ const OWNER_PERKS = [
 
 export default function HowItWorksPage() {
   return (
-    <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
+    <div className="bg-[#f7f9f7] min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
       <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
         {/* Title Header */}
-        <div className="max-w-[760px] mb-12 sm:mb-16">
-          <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
-            Simple & Transparent
-          </div>
-          <h1 className="text-[38px] sm:text-[54px] font-normal tracking-[-1.68px] leading-[1.1] text-black">
-            Three simple taps from discovery to the pitch.
-          </h1>
-          <p className="text-[16px] sm:text-[18px] text-[#50555c] mt-4 leading-relaxed">
+        <div className="relative overflow-hidden rounded-[28px] sm:rounded-[36px] bg-[#061923] px-6 py-10 sm:px-12 sm:py-14 mb-12 sm:mb-16">
+          <div className="absolute -right-24 -top-24 size-80 rounded-full bg-[#c9f13e]/10 blur-3xl" />
+          <div className="relative max-w-[760px]"><div className="bg-[#c9f13e] text-[#042644] px-3.5 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-[0.1em] w-fit mb-5">Simple & transparent</div>
+          <h1 className="text-[38px] sm:text-[54px] font-semibold tracking-[-0.05em] leading-[1.05] text-white">Three simple taps from discovery to the <span className="text-[#c9f13e]">pitch.</span></h1>
+          <p className="text-[16px] sm:text-[18px] text-white/70 mt-5 leading-relaxed">
             No endless phone calls to turf managers. No arriving to find someone else on the court. CricBooking connects you directly to live slots.
-          </p>
+          </p></div>
         </div>
 
         {/* 3 Step Cards */}
@@ -66,20 +63,20 @@ export default function HowItWorksPage() {
           {STEPS.map((step, idx) => (
             <div
               key={step.number}
-              className={`rounded-[24px] p-8 flex flex-col justify-between min-h-[260px] ${
+              className={`rounded-[24px] p-8 flex flex-col justify-between min-h-[260px] transition-transform duration-300 hover:-translate-y-1 ${
                 idx === 0
                   ? 'bg-white border border-[#e3e5e8]'
                   : idx === 1
                   ? 'bg-[#eef1f4]'
-                  : 'bg-[#e3ebfa]'
+                  : 'bg-[#042644] text-white'
               }`}
             >
-              <span className="text-[54px] sm:text-[64px] font-medium tracking-tighter text-[#1849c9] leading-none">
+              <span className={`text-[54px] sm:text-[64px] font-medium tracking-tighter leading-none ${idx === 2 ? 'text-[#c9f13e]' : 'text-[#1849c9]'}`}>
                 {step.number}
               </span>
               <div>
-                <h3 className="text-[22px] font-medium text-black tracking-tight">{step.title}</h3>
-                <p className="text-[14px] text-[#50555c] mt-2 leading-relaxed">{step.description}</p>
+                <h3 className={`text-[22px] font-medium tracking-tight ${idx === 2 ? 'text-white' : 'text-black'}`}>{step.title}</h3>
+                <p className={`text-[14px] mt-2 leading-relaxed ${idx === 2 ? 'text-white/70' : 'text-[#50555c]'}`}>{step.description}</p>
               </div>
             </div>
           ))}
@@ -88,7 +85,7 @@ export default function HowItWorksPage() {
         {/* Players vs Owners Split Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 sm:mb-24">
           {/* Players */}
-          <div className="bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8">
+          <div className="bg-white border border-[#e3e5e8] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8 shadow-[0_16px_36px_rgb(4_38_68_/_0.06)]">
             <div>
               <span className="bg-[#c9f13e] text-black px-3 py-1 rounded-full text-[12px] font-medium">
                 For Players
@@ -120,7 +117,8 @@ export default function HowItWorksPage() {
           </div>
 
           {/* Owners */}
-          <div className="bg-[#042644] text-white rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8">
+          <div className="relative overflow-hidden bg-[#042644] text-white rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 flex flex-col justify-between gap-8 shadow-[0_18px_42px_rgb(4_38_68_/_0.16)]">
+            <div className="absolute -right-20 -bottom-24 size-72 rounded-full bg-[#c9f13e]/10 blur-3xl" />
             <div>
               <span className="bg-[#c9f13e] text-black px-3 py-1 rounded-full text-[12px] font-medium">
                 For Turf Owners

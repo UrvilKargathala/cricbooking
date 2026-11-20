@@ -218,21 +218,25 @@ export default function ListVenuePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black font-['Geist'] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#f7f9f7] text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
       <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-12">
           {/* Main Hero Card (8 cols) */}
-          <div className="lg:col-span-8 relative min-h-[360px] sm:min-h-[440px] rounded-[24px] sm:rounded-[32px] overflow-hidden p-6 sm:p-12 flex flex-col justify-end bg-[#042644]">
+          <div className="lg:col-span-8 relative min-h-[360px] sm:min-h-[440px] rounded-[24px] sm:rounded-[32px] overflow-hidden p-6 sm:p-12 flex flex-col justify-end bg-[#042644] shadow-[0_22px_48px_rgb(4_38_68_/_0.18)]">
             <Image
               src="/figma/owner-banner.png"
               alt="Turf owner banner"
               fill
               className="object-cover opacity-60"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#042644] via-[#042644]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#042644] via-[#042644]/55 to-transparent" />
+            <div className="absolute top-5 left-5 sm:top-7 sm:left-7 flex items-center gap-2 rounded-full border border-white/15 bg-[#061923]/45 px-3.5 py-2 text-[12px] font-medium text-white/80 backdrop-blur-md">
+              <span className="size-2 rounded-full bg-[#c9f13e] shadow-[0_0_12px_#c9f13e]" />
+              Trusted by local venue owners
+            </div>
 
             <div className="relative z-10 flex flex-col items-start gap-4">
               <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full inline-flex items-center gap-2 border border-white/15">
@@ -256,15 +260,24 @@ export default function ListVenuePage() {
           </div>
 
           {/* Right Feature Card (4 cols) */}
-          <div className="lg:col-span-4 relative min-h-[220px] lg:min-h-[440px] rounded-[24px] sm:rounded-[32px] overflow-hidden bg-[#dde3ea]">
+          <div className="lg:col-span-4 relative min-h-[280px] lg:min-h-[440px] rounded-[24px] sm:rounded-[32px] overflow-hidden bg-[#dde3ea] shadow-[0_22px_48px_rgb(4_38_68_/_0.12)]">
             <Image
               src="/figma/venue-royal-box.png"
               alt="Turf preview"
               fill
               className="object-cover"
             />
-            <div className="absolute top-4 right-4 bg-white px-4 py-2 rounded-full text-[13px] font-semibold text-black shadow-md">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#061923]/90 via-[#061923]/5 to-transparent" />
+            <div className="absolute top-4 right-4 bg-[#c9f13e] px-4 py-2 rounded-full text-[13px] font-semibold text-black shadow-md">
               Free listing
+            </div>
+            <div className="absolute inset-x-5 bottom-5 text-white">
+              <p className="text-[12px] uppercase tracking-[0.14em] text-[#c9f13e] font-bold">Your venue, online</p>
+              <p className="mt-1 text-[21px] font-medium tracking-tight">Make every open hour bookable.</p>
+              <div className="mt-4 flex items-center gap-2 text-[12px] text-white/75">
+                <span className="rounded-full bg-white/15 px-2.5 py-1">Online payments</span>
+                <span className="rounded-full bg-white/15 px-2.5 py-1">Live slots</span>
+              </div>
             </div>
           </div>
         </div>
@@ -297,38 +310,38 @@ export default function ListVenuePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mb-16">
             {/* Left Value Props (4 cols) */}
             <div className="lg:col-span-4 flex flex-col gap-4">
-              <div className="bg-[#c9f13e] rounded-[20px] p-7 flex flex-col justify-between">
+              <div className="bg-[#c9f13e] rounded-[20px] p-7 flex flex-col justify-between shadow-[0_14px_28px_rgb(201_241_62_/_0.22)]">
                 <span className="text-[44px] font-semibold text-black leading-none">₹0</span>
                 <span className="text-[16px] text-black/80 font-normal mt-3">to list, forever</span>
               </div>
 
-              <div className="bg-white border border-[#e3e5e8] rounded-[20px] p-7 flex flex-col justify-between">
+              <div className="bg-white border border-[#e3e5e8] rounded-[20px] p-7 flex flex-col justify-between shadow-[0_10px_24px_rgb(4_38_68_/_0.05)]">
                 <span className="text-[44px] font-semibold text-black leading-none">48 hr</span>
                 <span className="text-[16px] text-[#50555c] font-normal mt-3">to go live after review</span>
               </div>
 
-              <div className="bg-[#f4f6f8] rounded-[20px] p-7 flex flex-col gap-2">
-                <span className="text-[16px] font-medium text-black">What you’ll need</span>
-                <p className="text-[14px] text-[#50555c] leading-relaxed">
+              <div className="bg-[#061923] rounded-[20px] p-7 flex flex-col gap-2">
+                <span className="text-[16px] font-medium text-white">What you’ll need</span>
+                <p className="text-[14px] text-white/70 leading-relaxed">
                   Venue photos, court count, operating hours, hourly price, and bank details for instant payouts.
                 </p>
               </div>
             </div>
 
             {/* Right Form Card (8 cols) */}
-            <div className="lg:col-span-8 bg-[#f4f6f8] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col gap-6">
+            <div className="lg:col-span-8 bg-white border border-[#e3e5e8] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col gap-6 shadow-[0_18px_45px_rgb(4_38_68_/_0.07)]">
               <div className="flex items-center justify-between">
                 <h2 className="text-[24px] sm:text-[28px] font-normal tracking-tight text-black">
                   Tell us about your venue
                 </h2>
-                <span className="bg-white px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-black shadow-sm">
+                <span className="bg-[#eef6df] px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-[#315300]">
                   Step 1 of 3
                 </span>
               </div>
 
               {/* Progress bar */}
               <div className="w-full bg-[#e3e5e8] h-2 rounded-full overflow-hidden">
-                <div className="bg-black h-full w-1/3 rounded-full" />
+                <div className="bg-[#c9f13e] h-full w-1/3 rounded-full" />
               </div>
 
               {error && (

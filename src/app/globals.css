@@ -167,6 +167,135 @@ body {
   background: radial-gradient(600px circle at 50% 0%, rgb(59 130 246 / 0.08), transparent 70%);
 }
 
+/* Homepage refinements: restrained depth and clearer section hierarchy. */
+.home-canvas {
+  background-image: linear-gradient(to bottom, #fff 0, #fbfcfa 32%, #fff 100%);
+}
+
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #56616a;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.section-kicker::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #c9f13e;
+}
+
+.sport-category,
+.process-card {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.sport-category:hover,
+.process-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgb(4 38 68 / 0.09);
+}
+
+/* Match-night discovery cards: a lime trace confirms the selected path. */
+.category-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: 2;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(from 180deg, transparent 0 28%, #c9f13e 42%, transparent 56% 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.category-card::after {
+  content: '↗';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 1px solid rgb(201 241 62 / 0.42);
+  border-radius: 999px;
+  color: #c9f13e;
+  font-size: 0.9rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translate(-4px, 4px);
+  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.category-card:hover::before,
+.category-card:focus-visible::before,
+.category-card:active::before {
+  opacity: 1;
+  animation: category-border-trace 700ms linear infinite;
+}
+
+.category-card:hover::after,
+.category-card:focus-visible::after,
+.category-card:active::after {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+.category-card:active::after {
+  background: #c9f13e;
+  color: #042644;
+}
+
+.category-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(201 241 62 / 0.32);
+}
+
+.category-card:hover .category-icon,
+.category-card:focus-visible .category-icon {
+  box-shadow: 0 0 0 5px rgb(201 241 62 / 0.12), 0 0 22px rgb(201 241 62 / 0.28);
+}
+
+@keyframes category-border-trace {
+  to { transform: rotate(1turn); }
+}
+
+.owner-panel {
+  position: relative;
+  box-shadow: 0 22px 48px rgb(4 38 68 / 0.20);
+}
+
+.owner-panel::before {
+  content: '';
+  position: absolute;
+  width: 28rem;
+  height: 28rem;
+  right: -12rem;
+  top: -15rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(201 241 62 / 0.16), transparent 66%);
+  pointer-events: none;
+}
+
 .dashboard-theme {
   /* Owner dashboard keeps its original typeface — Manrope above is a
      public-site-only change. */
@@ -186,6 +315,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up {
+    animation: none;
+  }
+
+  .category-card:hover::before,
+  .category-card:focus-visible::before,
+  .category-card:active::before {
     animation: none;
   }
 }

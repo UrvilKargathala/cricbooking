@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronRight, ArrowRight, MapPin } from 'lucide-react'
+import { Menu, X, ChevronRight, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 function getInitials(name?: string) {

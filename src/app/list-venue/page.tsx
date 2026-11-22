@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Upload, X, Check, Eye, EyeOff, FileText, ArrowUpRight } from 'lucide-react'
@@ -8,9 +9,10 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
 
 const inputClass =
-  'w-full px-4 py-3 bg-white border border-[#e3e5e8] rounded-[12px] text-[15px] text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:border-transparent placeholder:text-[#767b82] transition-all'
+  'w-full px-4 py-3 bg-white border border-[#e3e5e8] rounded-[12px] text-[15px] text-black focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent placeholder:text-[#767b82] transition-all'
 const errorClass = 'border-red-500/50 focus:ring-red-500/50'
 
 function FileUploadZone({
@@ -99,6 +101,22 @@ export default function ListVenuePage() {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [needsConfirm, setNeedsConfirm] = useState(false)
+  const [confirmCode, setConfirmCode] = useState('')
+  const [confirmState, setConfirmState] = useState<'idle' | 'checking' | 'done' | 'error'>('idle')
+  const { user, signOut } = useAuth()
+  const signedIn = Boolean(user)
+  const isOwner = Boolean(user && (user.role === 'owner' || user.role === 'admin'))
+
+  useEffect(() => {
+    if (!user) return
+    setFormData((prev) => ({
+      ...prev,
+      email: user.email ?? prev.email,
+      ownerName: prev.ownerName || user.full_name || '',
+      mobile: prev.mobile || (user.phone ?? '').replace(/^\+91/, '').replace(/\D/g, '').slice(-10),
+    }))
+  }, [user])
 
   const update = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
@@ -114,8 +132,8 @@ export default function ListVenuePage() {
     if (!formData.ownerName.trim()) errs.ownerName = 'Name is required'
     if (!/^\d{10}$/.test(formData.mobile)) errs.mobile = 'Enter a valid 10-digit number'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Enter a valid email'
-    if (formData.password.length < 8) errs.password = 'Minimum 8 characters'
-    if (formData.confirmPassword !== formData.password) errs.confirmPassword = 'Passwords do not match'
+    if (!signedIn && formData.password.length < 8) errs.password = 'Minimum 8 characters'
+    if (!signedIn && formData.confirmPassword !== formData.password) errs.confirmPassword = 'Passwords do not match'
     if (!formData.businessName.trim()) errs.businessName = 'Business name is required'
     if (!formData.businessAddress.trim()) errs.businessAddress = 'Address is required'
     if (!/^\d{6}$/.test(formData.pincode)) errs.pincode = 'Enter a valid 6-digit pincode'
@@ -132,28 +150,37 @@ export default function ListVenuePage() {
     try {
       const supabase = createClient()
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: { data: { full_name: formData.ownerName } },
-      })
+      let userId = user?.id ?? null
+      if (!userId) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: { data: { full_name: formData.ownerName } },
+        })
 
-      if (authError) {
-        if (
-          authError.message.toLowerCase().includes('already registered') ||
-          authError.message.toLowerCase().includes('already been registered')
-        ) {
-          setError(
-            'An account with this email already exists. Please log in and use the Owner Dashboard to add your venue.'
-          )
-        } else {
-          setError(authError.message)
+        if (authError) {
+          if (
+            authError.message.toLowerCase().includes('already registered') ||
+            authError.message.toLowerCase().includes('already been registered')
+          ) {
+            setError(
+              'This email already has a CricBooking account. Log in with it first, then come back to this page to apply.'
+            )
+          } else {
+            setError(authError.message)
+          }
+          setLoading(false)
+          return
         }
-        setLoading(false)
-        return
-      }
 
-      const userId = authData.user?.id
+        if (authData.user && authData.user.identities?.length === 0) {
+          setError('This email already has a CricBooking account. Log in with it first, then come back to this page to apply.')
+          setLoading(false)
+          return
+        }
+        userId = authData.user?.id ?? null
+        if (userId && !authData.session) setNeedsConfirm(true)
+      }
       if (!userId) {
         setSubmitted(true)
         setLoading(false)
@@ -179,39 +206,39 @@ export default function ListVenuePage() {
         if (uploadData) businessDocUrl = uploadData.path
       }
 
-      await supabase.from('owner_applications').insert({
-        user_id: userId,
-        owner_name: formData.ownerName,
-        mobile: formData.mobile,
-        email: formData.email,
-        business_name: formData.businessName,
-        business_address: formData.businessAddress,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        number_of_venues: formData.numberOfVenues,
-        basic_turf_info: formData.basicTurfInfo || null,
-        identity_document: identityDocUrl,
-        business_document: businessDocUrl,
-        bank_name: formData.bankName || null,
-        account_holder: formData.accountHolder || null,
-        account_number: formData.accountNumber || null,
-        ifsc_code: formData.ifscCode || null,
-        upi_id: formData.upiId || null,
+      const res = await fetch('/api/owner-applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          owner_name: formData.ownerName,
+          mobile: formData.mobile,
+          email: formData.email,
+          business_name: formData.businessName,
+          business_address: formData.businessAddress,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          number_of_venues: formData.numberOfVenues,
+          basic_turf_info: formData.basicTurfInfo,
+          identity_document: identityDocUrl,
+          business_document: businessDocUrl,
+          bank_name: formData.bankName,
+          account_holder: formData.accountHolder,
+          account_number: formData.accountNumber,
+          ifsc_code: formData.ifscCode,
+          upi_id: formData.upiId,
+        }),
       })
-
-      await supabase
-        .from('profiles')
-        .update({
-          full_name: formData.ownerName,
-          phone: '+91' + formData.mobile,
-        })
-        .eq('id', userId)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setError(err.error || 'Could not submit your application. Please try again.')
+        return
+      }
 
       setSubmitted(true)
     } catch {
-      // Demo fallback success
-      setSubmitted(true)
+      setError('Something went wrong. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -221,7 +248,7 @@ export default function ListVenuePage() {
     <div className="min-h-screen bg-[#f7f9f7] text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
-      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-12">
           {/* Main Hero Card (8 cols) */}
@@ -230,25 +257,25 @@ export default function ListVenuePage() {
               src="/figma/owner-banner.png"
               alt="Turf owner banner"
               fill
-              className="object-cover opacity-60"
+              className="object-cover opacity-60" sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#042644] via-[#042644]/55 to-transparent" />
             <div className="absolute top-5 left-5 sm:top-7 sm:left-7 flex items-center gap-2 rounded-full border border-white/15 bg-[#061923]/45 px-3.5 py-2 text-[12px] font-medium text-white/80 backdrop-blur-md">
-              <span className="size-2 rounded-full bg-[#c9f13e] shadow-[0_0_12px_#c9f13e]" />
+              <span className="size-2 rounded-full bg-[#F59E0B] shadow-[0_0_12px_#F59E0B]" />
               Trusted by local venue owners
             </div>
 
             <div className="relative z-10 flex flex-col items-start gap-4">
               <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full inline-flex items-center gap-2 border border-white/15">
-                <span className="size-2 rounded-full bg-[#c9f13e]" />
-                <span className="text-[12px] font-medium text-[#c9f13e] uppercase tracking-wider">
+                <span className="size-2 rounded-full bg-[#F59E0B]" />
+                <span className="text-[12px] font-medium text-[#FBBF24] uppercase tracking-wider">
                   List your venue
                 </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[36px] sm:text-[56px] font-normal tracking-tight text-white leading-tight">
                 <span>Fill your empty</span>
-                <span className="bg-[#c9f13e] text-black px-4 py-0.5 rounded-2xl font-normal inline-block">
+                <span className="bg-[#F59E0B] text-black px-4 py-0.5 rounded-2xl font-normal inline-block">
                   hours.
                 </span>
               </div>
@@ -265,14 +292,14 @@ export default function ListVenuePage() {
               src="/figma/venue-royal-box.png"
               alt="Turf preview"
               fill
-              className="object-cover"
+              className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#061923]/90 via-[#061923]/5 to-transparent" />
-            <div className="absolute top-4 right-4 bg-[#c9f13e] px-4 py-2 rounded-full text-[13px] font-semibold text-black shadow-md">
+            <div className="absolute top-4 right-4 bg-[#F59E0B] px-4 py-2 rounded-full text-[13px] font-semibold text-black shadow-md">
               Free listing
             </div>
             <div className="absolute inset-x-5 bottom-5 text-white">
-              <p className="text-[12px] uppercase tracking-[0.14em] text-[#c9f13e] font-bold">Your venue, online</p>
+              <p className="text-[12px] uppercase tracking-[0.14em] text-[#FBBF24] font-bold">Your venue, online</p>
               <p className="mt-1 text-[21px] font-medium tracking-tight">Make every open hour bookable.</p>
               <div className="mt-4 flex items-center gap-2 text-[12px] text-white/75">
                 <span className="rounded-full bg-white/15 px-2.5 py-1">Online payments</span>
@@ -283,9 +310,20 @@ export default function ListVenuePage() {
         </div>
 
         {/* Form & Value Props Section */}
+        {isOwner && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[20px] border border-[#F59E0B]/40 bg-[#FEF7E6] px-5 py-4">
+            <p className="text-[14px] text-[#92400E]">
+              You already have owner access. Add more venues from your dashboard instead of applying again.
+            </p>
+            <Link href="/dashboard/venues" className="shrink-0 rounded-full bg-[#042644] px-5 py-2.5 text-center text-[14px] font-medium text-white hover:bg-[#06345c]">
+              Open owner dashboard
+            </Link>
+          </div>
+        )}
+
         {submitted ? (
           <div className="bg-[#f4f6f8] rounded-[28px] p-8 sm:p-12 text-center max-w-xl mx-auto mb-16">
-            <div className="w-16 h-16 rounded-full bg-[#c9f13e] mx-auto flex items-center justify-center text-black">
+            <div className="w-16 h-16 rounded-full bg-[#F59E0B] mx-auto flex items-center justify-center text-black">
               <Check className="w-8 h-8" strokeWidth={3} />
             </div>
             <h2 className="text-[28px] font-medium text-black mt-5 tracking-tight">
@@ -298,9 +336,57 @@ export default function ListVenuePage() {
             <p className="text-[13px] text-[#6c6c6c] mt-1">
               Our team will verify your details and activate your venue within 48 hours.
             </p>
+
+            {needsConfirm && confirmState !== 'done' && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  if (confirmCode.trim().length < 6) return
+                  setConfirmState('checking')
+                  const { error: verifyError } = await createClient().auth.verifyOtp({
+                    email: formData.email.trim(),
+                    token: confirmCode.trim(),
+                    type: 'signup',
+                  })
+                  setConfirmState(verifyError ? 'error' : 'done')
+                }}
+                className="mt-7 rounded-2xl bg-white p-5 text-left"
+              >
+                <p className="text-[15px] font-medium text-black">Confirm your email</p>
+                <p className="mt-1 text-[13px] text-[#50555c]">
+                  We sent a code to <span className="font-medium text-black">{formData.email}</span>. Enter it so you can log in once you&apos;re approved.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    aria-label="Email confirmation code"
+                    value={confirmCode}
+                    onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder="8-digit code"
+                    className="min-w-0 flex-1 rounded-full border border-[#e3e5e8] px-4 py-2.5 text-[15px] tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={confirmState === 'checking'}
+                    className="shrink-0 rounded-full bg-[#042644] px-5 py-2.5 text-[14px] font-medium text-white hover:bg-[#06345c] disabled:opacity-60"
+                  >
+                    {confirmState === 'checking' ? 'Checking…' : 'Confirm'}
+                  </button>
+                </div>
+                {confirmState === 'error' && (
+                  <p role="alert" className="mt-2 text-[13px] text-red-600">That code didn&apos;t work. Check the latest email and try again.</p>
+                )}
+              </form>
+            )}
+            {confirmState === 'done' && (
+              <p className="mt-6 rounded-2xl bg-white px-5 py-4 text-[14px] text-[#92400E]">
+                Email confirmed. Once we approve your application, log in at the owner dashboard with this email and your password.
+              </p>
+            )}
             <button
               onClick={() => router.push('/')}
-              className="mt-8 bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black px-6 py-3 rounded-full text-[14px] font-medium inline-flex items-center gap-2"
+              className="mt-8 bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black px-6 py-3 rounded-full text-[14px] font-medium inline-flex items-center gap-2"
             >
               <span>Back to home</span>
               <ArrowUpRight className="size-4" />
@@ -310,7 +396,7 @@ export default function ListVenuePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mb-16">
             {/* Left Value Props (4 cols) */}
             <div className="lg:col-span-4 flex flex-col gap-4">
-              <div className="bg-[#c9f13e] rounded-[20px] p-7 flex flex-col justify-between shadow-[0_14px_28px_rgb(201_241_62_/_0.22)]">
+              <div className="bg-[#F59E0B] rounded-[20px] p-7 flex flex-col justify-between shadow-[0_14px_28px_rgb(201_241_62_/_0.22)]">
                 <span className="text-[44px] font-semibold text-black leading-none">₹0</span>
                 <span className="text-[16px] text-black/80 font-normal mt-3">to list, forever</span>
               </div>
@@ -334,14 +420,14 @@ export default function ListVenuePage() {
                 <h2 className="text-[24px] sm:text-[28px] font-normal tracking-tight text-black">
                   Tell us about your venue
                 </h2>
-                <span className="bg-[#eef6df] px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-[#315300]">
+                <span className="bg-[#FEF7E6] px-3.5 py-1.5 rounded-full text-[12px] font-semibold text-[#92400E]">
                   Step 1 of 3
                 </span>
               </div>
 
               {/* Progress bar */}
               <div className="w-full bg-[#e3e5e8] h-2 rounded-full overflow-hidden">
-                <div className="bg-[#c9f13e] h-full w-1/3 rounded-full" />
+                <div className="bg-[#F59E0B] h-full w-1/3 rounded-full" />
               </div>
 
               {error && (
@@ -469,6 +555,7 @@ export default function ListVenuePage() {
                       className={cn(inputClass, fieldErrors.email && errorClass)}
                       placeholder="owner@cricbooking.com"
                       value={formData.email}
+                      readOnly={signedIn}
                       onChange={(e) => update('email', e.target.value)}
                     />
                     {fieldErrors.email && (
@@ -476,6 +563,16 @@ export default function ListVenuePage() {
                     )}
                   </div>
 
+                  {signedIn ? (
+                    <div className="sm:col-span-2 rounded-2xl bg-[#f4f6f8] px-4 py-3 text-[13px] text-[#404449]">
+                      You&apos;re applying with your current account, <span className="font-medium text-black">{user?.email}</span>.
+                      You&apos;ll log in to the owner dashboard with this email once approved.{' '}
+                      <button type="button" onClick={() => signOut('/list-venue')} className="font-medium text-black underline underline-offset-2">
+                        Use a different account
+                      </button>
+                    </div>
+                  ) : (
+                    <>
                   <div>
                     <label className="block text-[13px] font-medium text-black mb-1.5">
                       Password *
@@ -516,6 +613,8 @@ export default function ListVenuePage() {
                       <p className="text-xs text-red-500 mt-1">{fieldErrors.confirmPassword}</p>
                     )}
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -588,10 +687,10 @@ export default function ListVenuePage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="group mt-2 w-full bg-[#c9f13e] hover:bg-[#b8e12d] transition-all text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between disabled:opacity-50"
+                  className="group mt-2 w-full bg-[#F59E0B] hover:bg-[#D97706] transition-all text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between disabled:opacity-50"
                 >
                   <span>{loading ? 'Submitting venue...' : 'Submit venue for review'}</span>
-                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="size-8 rounded-full bg-black text-[#FBBF24] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-4" strokeWidth={2.5} />
                   </span>
                 </button>

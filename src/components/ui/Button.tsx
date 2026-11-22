@@ -10,7 +10,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<string, string> = {
   primary:
-    'bg-[#c9f13e] text-black hover:bg-[#b8e12d] font-medium shadow-sm transition-all duration-200 active:scale-[0.98]',
+    'bg-[#F59E0B] text-black hover:bg-[#D97706] font-medium shadow-sm transition-all duration-200 active:scale-[0.98]',
   dark:
     'bg-black text-white hover:bg-neutral-800 font-medium shadow-sm transition-all duration-200 active:scale-[0.98]',
   secondary:
@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2.5 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none',
+          'inline-flex items-center justify-center gap-2.5 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none',
           variantClasses[variant],
           sizeClasses[size],
           withArrow && variant === 'primary' && 'pr-2',
@@ -47,7 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <span
             className={cn(
               'inline-flex items-center justify-center size-[34px] rounded-full shrink-0 transition-transform duration-200 group-hover:translate-x-0.5',
-              variant === 'primary' ? 'bg-black text-[#c9f13e]' : 'bg-[#c9f13e] text-black'
+              variant === 'primary' ? 'bg-black text-[#FBBF24]' : 'bg-[#F59E0B] text-black'
             )}
           >
             <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />

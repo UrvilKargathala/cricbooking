@@ -36,6 +36,7 @@ function ChatWidgetInner() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const isDashboard = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+  const isVenuePage = /^\/venues\/[^/]+/.test(pathname)
 
   useEffect(() => {
     const updateOverlays = () => {
@@ -101,11 +102,13 @@ function ChatWidgetInner() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-label={open ? 'Close CricBooking assistant' : 'Open CricBooking assistant'}
         className={cn(
           'fixed right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105',
+          isVenuePage && !open && 'max-lg:hidden',
           hasStickyBar ? 'bottom-[76px] lg:bottom-6' : 'bottom-6',
           hasModal && 'opacity-0 pointer-events-none scale-75',
-          open ? 'bg-surface-800 text-white' : 'bg-brand-600 text-white hover:bg-brand-700'
+          open ? 'bg-[#020B12] text-[#FBBF24] ring-2 ring-[#F59E0B]/40' : 'bg-[#042644] text-[#FBBF24] ring-2 ring-[#F59E0B]/40 hover:bg-[#06345c]'
         )}
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
@@ -120,9 +123,9 @@ function ChatWidgetInner() {
         )}
         style={{ height: '520px' }}
       >
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-200 bg-brand-600 rounded-t-2xl">
-          <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-200 bg-[#042644] rounded-t-2xl">
+          <div className="w-9 h-9 bg-[#F59E0B] rounded-full flex items-center justify-center">
+            <Bot className="w-5 h-5 text-[#042644]" />
           </div>
           <div>
             <p className="font-display font-semibold text-white text-sm">CricBooking AI</p>
@@ -133,8 +136,8 @@ function ChatWidgetInner() {
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
           {messages.length === 0 && !loading && (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-              <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mb-3">
-                <Bot className="w-6 h-6 text-brand-600" />
+              <div className="w-12 h-12 bg-[#FEF3C7] rounded-full flex items-center justify-center mb-3">
+                <Bot className="w-6 h-6 text-[#042644]" />
               </div>
               <p className="text-sm font-medium text-surface-900 mb-1">How can I help?</p>
               <p className="text-xs text-surface-800/50 mb-5">Ask me about venues, slots, or booking</p>
@@ -143,7 +146,7 @@ function ChatWidgetInner() {
                   <button
                     key={s}
                     onClick={() => send(s)}
-                    className="text-left text-sm px-3 py-2.5 bg-surface-50 hover:bg-brand-50 border border-surface-200 hover:border-brand-200 rounded-lg text-surface-800/70 hover:text-brand-700 transition-colors"
+                    className="text-left text-sm px-3 py-2.5 bg-surface-50 hover:bg-[#FEF7E6] border border-surface-200 hover:border-[#F59E0B] rounded-lg text-surface-800/70 hover:text-[#042644] transition-colors"
                   >
                     {s}
                   </button>
@@ -155,15 +158,15 @@ function ChatWidgetInner() {
           {messages.map((msg, i) => (
             <div key={i} className={cn('flex gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
               {msg.role === 'assistant' && (
-                <div className="w-7 h-7 bg-brand-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot className="w-4 h-4 text-brand-700" />
+                <div className="w-7 h-7 bg-[#FEF3C7] rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <Bot className="w-4 h-4 text-[#042644]" />
                 </div>
               )}
               <div
                 className={cn(
                   'max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap',
                   msg.role === 'user'
-                    ? 'bg-brand-600 text-white rounded-br-md'
+                    ? 'bg-[#042644] text-white rounded-br-md'
                     : 'bg-surface-100 text-surface-800 rounded-bl-md'
                 )}
               >
@@ -179,8 +182,8 @@ function ChatWidgetInner() {
 
           {loading && (
             <div className="flex gap-2 justify-start">
-              <div className="w-7 h-7 bg-brand-100 rounded-full flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 text-brand-700" />
+              <div className="w-7 h-7 bg-[#FEF3C7] rounded-full flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-[#042644]" />
               </div>
               <div className="bg-surface-100 rounded-2xl rounded-bl-md px-4 py-3">
                 <Loader2 className="w-4 h-4 text-surface-800/50 animate-spin" />
@@ -199,12 +202,12 @@ function ChatWidgetInner() {
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send(input)}
               placeholder="Ask about venues, slots..."
               disabled={loading}
-              className="flex-1 bg-surface-100 border border-surface-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent placeholder:text-surface-800/40 disabled:opacity-50"
+              className="flex-1 bg-surface-100 border border-surface-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent placeholder:text-surface-800/40 disabled:opacity-50"
             />
             <button
               onClick={() => send(input)}
               disabled={!input.trim() || loading}
-              className="w-10 h-10 bg-brand-600 hover:bg-brand-700 disabled:bg-surface-300 text-white rounded-xl flex items-center justify-center transition-colors shrink-0"
+              className="w-10 h-10 bg-[#042644] hover:bg-[#06345c] disabled:bg-surface-300 text-[#FBBF24] rounded-xl flex items-center justify-center transition-colors shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

@@ -182,12 +182,12 @@ export default function DashboardBookingsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="font-display font-bold text-xl text-surface-900">Bookings</h1>
           <p className="text-sm text-surface-500 mt-0.5">Manage and track all bookings across your venues.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="ghost"
             size="sm"

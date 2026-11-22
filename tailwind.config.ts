@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         cb: {
-          lime: "#C9F13E",
-          "lime-light": "#EAF8C4",
-          "lime-hover": "#b8e12d",
+          lime: "#F59E0B",
+          "lime-light": "#FEF3C7",
+          "lime-hover": "#D97706",
           navy: "#042644",
           "navy-light": "#0a3a66",
           blue: "#1849C9",
@@ -49,8 +49,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
-        body: ["var(--font-body)", "Geist", "Inter Tight", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Geist", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "Geist", "system-ui", "sans-serif"],
+        sans: ["Geist", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "ui-monospace", "monospace"],
       },
       keyframes: {
         marquee: {

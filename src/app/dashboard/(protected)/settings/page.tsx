@@ -392,7 +392,7 @@ export default function DashboardSettingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (confirm('Log out of the Owner Dashboard?')) signOut()
+                    if (confirm('Log out of the Owner Dashboard?')) signOut('/dashboard/login')
                   }}
                   className="!text-red-600 !border-red-300 hover:!bg-red-100"
                 >

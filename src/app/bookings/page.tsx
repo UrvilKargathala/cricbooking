@@ -76,7 +76,7 @@ export default function BookingsPage() {
     return (
       <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
         <Header />
-        <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-20 text-center">
+        <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-20 text-center">
           <div className="animate-pulse space-y-4 max-w-md mx-auto">
             <div className="h-8 bg-[#f4f6f8] rounded-full w-48 mx-auto" />
             <div className="h-4 bg-[#f4f6f8] rounded-full w-32 mx-auto" />
@@ -91,11 +91,11 @@ export default function BookingsPage() {
     <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
-      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
         {/* Profile Card Header */}
         <div className="bg-[#f4f6f8] rounded-[24px] sm:rounded-[32px] p-6 sm:p-9 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <span className="size-14 sm:size-16 rounded-full bg-[#c9f13e] text-black font-semibold text-lg sm:text-xl flex items-center justify-center border-2 border-white shadow-sm">
+            <span className="size-14 sm:size-16 rounded-full bg-[#F59E0B] text-black font-semibold text-lg sm:text-xl flex items-center justify-center border-2 border-white shadow-sm">
               {initials}
             </span>
             <div>
@@ -172,10 +172,10 @@ export default function BookingsPage() {
             </p>
             <Link
               href="/venues"
-              className="group mt-6 bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-5 pr-2 py-2.5 rounded-full text-[14px] font-medium inline-flex items-center gap-2.5"
+              className="group mt-6 bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black pl-5 pr-2 py-2.5 rounded-full text-[14px] font-medium inline-flex items-center gap-2.5"
             >
               <span>Book a turf</span>
-              <span className="size-7 rounded-full bg-black text-[#c9f13e] flex items-center justify-center">
+              <span className="size-7 rounded-full bg-black text-[#FBBF24] flex items-center justify-center">
                 <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
               </span>
             </Link>

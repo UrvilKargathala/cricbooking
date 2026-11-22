@@ -11,7 +11,7 @@ import { useToastStore } from '@/store/useToastStore'
 import type { Profile } from '@/types'
 
 const inputClass =
-  'w-full px-4 py-3 bg-white border border-[#e3e5e8] rounded-[12px] text-[15px] text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:border-transparent placeholder:text-[#767b82] transition-all'
+  'w-full px-4 py-3 bg-white border border-[#e3e5e8] rounded-[12px] text-[15px] text-black focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent placeholder:text-[#767b82] transition-all'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -100,7 +100,7 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-6">
             {/* User Profile Header Card */}
             <div className="bg-[#f4f6f8] rounded-[24px] p-6 sm:p-7 flex items-center gap-4">
-              <span className="size-16 rounded-full bg-[#c9f13e] text-black font-semibold text-xl flex items-center justify-center border-2 border-white shadow-sm shrink-0">
+              <span className="size-16 rounded-full bg-[#F59E0B] text-black font-semibold text-xl flex items-center justify-center border-2 border-white shadow-sm shrink-0">
                 {initials}
               </span>
               <div>
@@ -178,13 +178,13 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="group w-full bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between disabled:opacity-50"
+                  className="group w-full bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium inline-flex items-center justify-between disabled:opacity-50"
                 >
                   <span className="flex items-center gap-2">
                     <Save className="size-4" />
                     <span>{saving ? 'Saving changes...' : 'Save changes'}</span>
                   </span>
-                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="size-8 rounded-full bg-black text-[#FBBF24] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-4" strokeWidth={2.5} />
                   </span>
                 </button>

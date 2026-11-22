@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowUpRight } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
@@ -10,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, signOut } = useAuth()
   const [step, setStep] = useState<1 | 2>(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
@@ -19,15 +20,18 @@ export default function LoginPage() {
   const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  const [redirectTo, setRedirectTo] = useState<string | null>(null)
+
   useEffect(() => {
-    if (!authLoading && user) {
-      const params = new URLSearchParams(window.location.search)
-      const redirect = params.get('redirect')
-      if (redirect) router.push(redirect)
-      else if (user.role === 'owner') router.push('/dashboard')
-      else router.push('/')
+    const redirect = new URLSearchParams(window.location.search).get('redirect')
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/dashboard')) {
+      setRedirectTo(redirect)
     }
-  }, [user, authLoading, router])
+  }, [])
+
+  useEffect(() => {
+    if (!authLoading && user && redirectTo) router.replace(redirectTo)
+  }, [user, authLoading, redirectTo, router])
 
   useEffect(() => {
     if (step !== 2 || countdown === 0) return
@@ -77,9 +81,7 @@ export default function LoginPage() {
       setError(verifyError.message)
       setLoading(false)
     } else {
-      const params = new URLSearchParams(window.location.search)
-      const redirect = params.get('redirect') || '/'
-      router.push(redirect)
+      router.push(redirectTo || '/')
     }
   }
 
@@ -98,11 +100,11 @@ export default function LoginPage() {
     <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
-      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[620px]">
           {/* Left Column (Navy Feature Card) */}
           <div className="lg:col-span-6 bg-[#042644] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 text-white flex flex-col justify-between gap-8">
-            <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit">
+            <div className="bg-[#F59E0B] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit">
               Welcome back
             </div>
 
@@ -111,25 +113,48 @@ export default function LoginPage() {
                 Your next match is two taps away.
               </h1>
               <p className="text-[16px] text-white/75 leading-relaxed">
-                Log in to book faster, view verified ticket QR codes, and score live on the pitch.
+                Log in to book faster and keep every booking ticket in one place.
               </p>
             </div>
 
-            {/* Testimonial pill */}
-            <div className="bg-white/10 rounded-[20px] p-4 sm:p-5 flex items-center gap-3.5">
-              <span className="size-10 rounded-full bg-[#c9f13e] text-black font-semibold text-sm flex items-center justify-center border-2 border-white shrink-0">
-                UK
-              </span>
-              <div className="text-[14px]">
-                <p className="font-medium text-white">Urvil Kargathala · Varachha</p>
-                <p className="text-white/70 text-[13px]">“Booked Green Pitch at 7, playing by 8.”</p>
-              </div>
-            </div>
+            <ul className="bg-white/10 rounded-[20px] p-4 sm:p-5 flex flex-col gap-2.5 text-[14px] text-white/85">
+              {['See all your bookings and ticket QR codes', 'Save your favourite turfs to your wishlist', 'Book again in a couple of taps'].map((item) => (
+                <li key={item} className="flex items-center gap-2.5">
+                  <span className="size-1.5 shrink-0 rounded-full bg-[#F59E0B]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Right Column (Form Box) */}
           <div className="lg:col-span-6 bg-[#f4f6f8] rounded-[28px] sm:rounded-[36px] p-8 sm:p-14 flex flex-col justify-center">
-            {step === 1 ? (
+            {!authLoading && user && !redirectTo ? (
+              <div className="flex flex-col gap-5 max-w-[440px] w-full mx-auto">
+                <div>
+                  <h2 className="text-[28px] sm:text-[32px] font-medium tracking-tight text-black">You&apos;re already logged in</h2>
+                  <p className="text-[14px] text-[#50555c] mt-1.5">
+                    Signed in as <span className="font-medium text-black">{user.email}</span>
+                    {user.role === 'owner' || user.role === 'admin' ? ' (venue owner account).' : '.'}
+                  </p>
+                </div>
+                <Link href="/venues" className="w-full rounded-full bg-[#F59E0B] px-6 py-3 text-center text-[15px] font-medium text-black hover:bg-[#D97706]">
+                  Continue to book a turf
+                </Link>
+                {(user.role === 'owner' || user.role === 'admin') && (
+                  <Link href="/dashboard" className="w-full rounded-full bg-[#042644] px-6 py-3 text-center text-[15px] font-medium text-white hover:bg-[#06345c]">
+                    Open owner dashboard
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => signOut('/login')}
+                  className="w-full rounded-full border border-[#d5dbe0] bg-white px-6 py-3 text-[15px] font-medium text-black hover:border-[#042644]/40"
+                >
+                  Log out and use another account
+                </button>
+              </div>
+            ) : step === 1 ? (
               <form onSubmit={handleSendOtp} className="flex flex-col gap-5 max-w-[440px] w-full mx-auto">
                 <div>
                   <h2 className="text-[28px] sm:text-[32px] font-medium tracking-tight text-black">
@@ -147,29 +172,35 @@ export default function LoginPage() {
                 )}
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[13px] font-medium text-black">Email address</label>
+                  <label htmlFor="login-email" className="text-[13px] font-medium text-black">Email address</label>
                   <input
+                    id="login-email"
+                    autoComplete="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="you@gmail.com"
-                    className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3.5 text-[15px] text-black placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                    className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3.5 text-[15px] text-black placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
+                  className="group bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
                 >
                   <span>{loading ? 'Sending code...' : 'Send login code'}</span>
-                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="size-8 rounded-full bg-black text-[#FBBF24] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-4" strokeWidth={2.5} />
                   </span>
                 </button>
 
-                <p className="text-[12px] text-[#767b82] text-center mt-2">
+                <Link href="/dashboard/login" className="text-[13px] font-medium text-black underline underline-offset-2 text-center">
+                  Venue owner? Log in to the owner dashboard
+                </Link>
+
+                <p className="text-[12px] text-[#5f656c] text-center">
                   By continuing, you agree to CricBooking’s Terms of Service and Privacy Policy.
                 </p>
               </form>
@@ -209,7 +240,7 @@ export default function LoginPage() {
                       maxLength={1}
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
-                      className="w-full aspect-square max-w-[46px] min-w-0 p-0 text-center bg-white border border-[#e3e5e8] rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                      className="w-full aspect-square max-w-[46px] min-w-0 p-0 text-center bg-white border border-[#e3e5e8] rounded-lg sm:rounded-xl text-base sm:text-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                     />
                   ))}
                 </div>
@@ -217,10 +248,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
+                  className="group bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 disabled:opacity-50 mt-2 shadow-sm"
                 >
                   <span>{loading ? 'Verifying...' : 'Verify & Continue'}</span>
-                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="size-8 rounded-full bg-black text-[#FBBF24] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-4" strokeWidth={2.5} />
                   </span>
                 </button>

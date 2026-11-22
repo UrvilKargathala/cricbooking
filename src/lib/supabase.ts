@@ -1,6 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-
-const isProduction = typeof window !== 'undefined' && window.location.hostname.endsWith('cricbooking.in')
+import { cookieDomainFor } from '@/lib/authCookies'
 
 export function createClient() {
   return createBrowserClient(
@@ -9,7 +8,7 @@ export function createClient() {
     {
       cookieOptions: {
         name: 'cricbooking-auth',
-        ...(isProduction ? { domain: '.cricbooking.in' } : {}),
+        ...cookieDomainFor(typeof window !== 'undefined' ? window.location.hostname : null),
       },
     }
   )

@@ -8,7 +8,6 @@ import { cn, formatPrice } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { fetchOwnerBookings } from '@/lib/supabase-queries'
 import { useAuth } from '@/hooks/useAuth'
-import { Toaster } from '@/components/ui/Toaster'
 import type { Booking } from '@/types'
 
 function initials(name: string) {
@@ -39,7 +38,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      window.location.href = '/login?redirect=/dashboard'
+      window.location.href = '/dashboard/login?reason=signed-out'
+    } else if (user.role !== 'owner' && user.role !== 'admin') {
+      window.location.href = '/dashboard/login'
     }
   }, [user, authLoading])
 
@@ -275,7 +276,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <button
                     onClick={() => {
                       setProfileOpen(false)
-                      signOut()
+                      signOut('/dashboard/login')
                     }}
                     className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                   >
@@ -289,7 +290,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         <main className="p-4 sm:p-6">{children}</main>
       </div>
-      <Toaster />
     </div>
   )
 }

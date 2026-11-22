@@ -13,26 +13,29 @@ export function useAuth() {
 
     let cancelled = false
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const loadProfile = async (userId: string) => {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+      if (!cancelled) {
+        setUser(profile)
+        setLoading(false)
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        if (!cancelled) setUser(profile)
+        const userId = session.user.id
+        setTimeout(() => loadProfile(userId), 0)
       } else {
         setUser(null)
+        setLoading(false)
       }
-      if (!cancelled) setLoading(false)
     })
 
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (cancelled) return
       if (authUser) {
-        supabase.from('profiles').select('*').eq('id', authUser.id).single()
-          .then(({ data: profile }) => { if (!cancelled) { setUser(profile); setLoading(false) } })
+        loadProfile(authUser.id)
       } else {
         setLoading(false)
       }
@@ -41,11 +44,11 @@ export function useAuth() {
     return () => { cancelled = true; subscription.unsubscribe() }
   }, [])
 
-  const signOut = async () => {
+  const signOut = async (redirectTo = '/login') => {
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
-    window.location.href = '/login'
+    window.location.href = redirectTo
   }
 
   return { user, loading, signOut }

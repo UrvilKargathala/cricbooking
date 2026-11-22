@@ -24,7 +24,7 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-surface-50">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-surface-900">My Wishlist</h1>
         <p className="text-sm text-surface-800/50 mt-1">
           {loading ? 'Loading...' : `${savedVenues.length} venue${savedVenues.length === 1 ? '' : 's'} saved`}

@@ -156,7 +156,7 @@ export function SmartRecommendations() {
   if (loading || recs.length === 0) return null
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-12">
       <div className="flex items-center gap-2 mb-6">
         <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
           <Sparkles className="w-4 h-4 text-amber-600" />

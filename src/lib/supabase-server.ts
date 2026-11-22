@@ -1,3 +1,4 @@
+import { cookieDomainFor } from '@/lib/authCookies'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies, headers } from 'next/headers'
@@ -15,7 +16,7 @@ export function createServerSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: { name: 'cricbooking-auth' },
+      cookieOptions: { name: 'cricbooking-auth', ...cookieDomainFor(headers().get('host')) },
       cookies: {
         getAll() {
           return cookieStore.getAll()

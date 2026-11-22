@@ -86,11 +86,16 @@ export async function fetchOwnerBookings(ownerId: string): Promise<Booking[]> {
 export async function fetchVenueReviews(venueId: string): Promise<Review[]> {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, user:profiles(*)')
+    .select('*')
     .eq('venue_id', venueId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(`Failed to load reviews: ${error.message}`)
-  return data ?? []
+  const reviews = data ?? []
+  const userIds = Array.from(new Set(reviews.map((r) => r.user_id).filter(Boolean)))
+  if (!userIds.length) return reviews
+  const { data: names } = await supabase.rpc('get_profile_names', { ids: userIds })
+  const byId = new Map(((names ?? []) as { id: string; full_name: string }[]).map((n) => [n.id, n.full_name]))
+  return reviews.map((r) => ({ ...r, user: { full_name: byId.get(r.user_id) || 'Player' } }))
 }
 
 export async function fetchBookingCount(): Promise<number> {
@@ -107,8 +112,7 @@ export interface VenueSlotInfo {
 }
 
 export async function fetchTodaySlotCounts(): Promise<Record<string, VenueSlotInfo>> {
-  const today = new Date().toISOString().split('T')[0]
-  const now = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const { date: today, time: now } = indiaNow()
 
   // Try today first
   const { data, error } = await supabase
@@ -170,4 +174,54 @@ function normalizeBooking(raw: Record<string, unknown>): Booking {
 function parsePgArray(val: string | null | undefined): string[] {
   if (!val || val === '{}') return []
   return val.replace(/^\{|\}$/g, '').split(',').filter(Boolean)
+}
+
+export async function fetchOpenSlotCountsByDate(courtIds: string[], fromDate: string, toDate: string): Promise<{ date: string; start_time: string }[]> {
+  if (!courtIds.length) return []
+  const { data, error } = await supabase
+    .from('slots')
+    .select('date, start_time')
+    .in('court_id', courtIds)
+    .eq('status', 'available')
+    .gte('date', fromDate)
+    .lte('date', toDate)
+  if (error) throw new Error(`Failed to load slot counts: ${error.message}`)
+  return data ?? []
+}
+
+function indiaNow() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value])
+  )
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}:${parts.second}` }
+}
+
+export interface ReviewStats {
+  average: number
+  count: number
+}
+
+export async function fetchReviewStats(): Promise<Record<string, ReviewStats>> {
+  const { data, error } = await supabase.from('reviews').select('venue_id, rating')
+  if (error) throw new Error(`Failed to load review stats: ${error.message}`)
+  const totals: Record<string, { sum: number; count: number }> = {}
+  for (const row of data ?? []) {
+    const entry = (totals[row.venue_id] ??= { sum: 0, count: 0 })
+    entry.sum += Number(row.rating) || 0
+    entry.count += 1
+  }
+  return Object.fromEntries(
+    Object.entries(totals).map(([venueId, { sum, count }]) => [venueId, { average: sum / count, count }])
+  )
 }

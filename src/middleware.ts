@@ -1,50 +1,57 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase-middleware'
 
+const OWNER_ROLES = ['owner', 'admin']
+
 export async function middleware(request: NextRequest) {
-  const { user, supabaseResponse, supabase } = await updateSession(request)
   const hostname = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
-  const isDashboard = hostname.startsWith('dashboard.')
+  const isDashboardHost = hostname.startsWith('dashboard.')
 
-  if (isDashboard && !pathname.startsWith('/dashboard') && pathname !== '/login') {
-    const url = request.nextUrl.clone()
-    url.pathname = pathname === '/' ? '/dashboard' : `/dashboard${pathname}`
-    return NextResponse.rewrite(url, { request: { headers: request.headers } })
+  // On dashboard.<domain>, show the dashboard pages at the root. API routes are shared and never rewritten.
+  let effectivePath = pathname
+  if (isDashboardHost && !pathname.startsWith('/dashboard') && !pathname.startsWith('/api')) {
+    effectivePath = pathname === '/login' ? '/dashboard/login' : pathname === '/' ? '/dashboard' : `/dashboard${pathname}`
   }
 
-  const publicRoutes = ['/', '/login', '/venues', '/list-venue']
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith('/venues/')
-  )
+  const { user, supabaseResponse, supabase } = await updateSession(request)
 
-  if (isPublicRoute) {
-    return supabaseResponse
-  }
-
-  if (pathname === '/wishlist' || pathname === '/profile' || pathname.startsWith('/bookings')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
+  const urlOnThisHost = (path: string) => {
+    const url = new URL(path, `${request.nextUrl.protocol}//${hostname || request.nextUrl.host}`)
+    if (isDashboardHost && url.pathname.startsWith('/dashboard')) {
+      url.pathname = url.pathname === '/dashboard/login' ? '/login' : url.pathname.replace(/^\/dashboard/, '') || '/'
     }
-    return supabaseResponse
+    return url
   }
 
-  if (pathname.startsWith('/dashboard')) {
+  if (!isDashboardHost && (pathname === '/wishlist' || pathname === '/profile' || pathname.startsWith('/bookings'))) {
     if (!user) {
-      const loginUrl = new URL('/login', request.url)
-      if (isDashboard) loginUrl.searchParams.set('redirect', '/dashboard')
+      const loginUrl = urlOnThisHost('/login')
+      loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'owner' && profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
     return supabaseResponse
+  }
+
+  if (effectivePath.startsWith('/dashboard') && !effectivePath.startsWith('/dashboard/login')) {
+    if (!user) {
+      const loginUrl = urlOnThisHost('/dashboard/login')
+      loginUrl.searchParams.set('redirect', effectivePath)
+      loginUrl.searchParams.set('reason', 'signed-out')
+      return NextResponse.redirect(loginUrl)
+    }
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+    if (!profile || !OWNER_ROLES.includes(profile.role)) {
+      return NextResponse.redirect(urlOnThisHost('/dashboard/login'))
+    }
+  }
+
+  if (effectivePath !== pathname) {
+    const url = request.nextUrl.clone()
+    url.pathname = effectivePath
+    const rewrite = NextResponse.rewrite(url, { request: { headers: request.headers } })
+    supabaseResponse.cookies.getAll().forEach((cookie) => rewrite.cookies.set(cookie))
+    return rewrite
   }
 
   return supabaseResponse

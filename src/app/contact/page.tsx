@@ -21,10 +21,10 @@ export default function ContactPage() {
     <div className="bg-white min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
-      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-14">
         {/* Title Header */}
         <div className="max-w-[700px] mb-10 sm:mb-14">
-          <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+          <div className="bg-[#F59E0B] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
             Direct Support
           </div>
           <h1 className="text-[38px] sm:text-[52px] font-normal tracking-[-1.68px] leading-[1.1] text-black">
@@ -40,7 +40,7 @@ export default function ContactPage() {
           {/* Left Column: Dark Navy Info Card */}
           <div className="lg:col-span-5 bg-[#042644] rounded-[28px] sm:rounded-[36px] p-8 sm:p-12 text-white flex flex-col justify-between gap-8">
             <div>
-              <span className="text-[13px] uppercase font-semibold text-[#c9f13e] tracking-wider">
+              <span className="text-[13px] uppercase font-semibold text-[#FBBF24] tracking-wider">
                 Support Office
               </span>
               <h2 className="text-[28px] sm:text-[32px] font-normal text-white mt-2 tracking-tight">
@@ -51,7 +51,7 @@ export default function ContactPage() {
             <div className="flex flex-col gap-5 text-[15px]">
               <a
                 href="tel:+919427508129"
-                className="flex items-center gap-3.5 hover:text-[#c9f13e] transition-colors"
+                className="flex items-center gap-3.5 hover:text-[#FBBF24] transition-colors"
               >
                 <span className="size-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                   <Phone className="size-4" />
@@ -64,7 +64,7 @@ export default function ContactPage() {
 
               <a
                 href="mailto:support@cricbooking.in"
-                className="flex items-center gap-3.5 hover:text-[#c9f13e] transition-colors"
+                className="flex items-center gap-3.5 hover:text-[#FBBF24] transition-colors"
               >
                 <span className="size-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                   <Mail className="size-4" />
@@ -129,7 +129,7 @@ export default function ContactPage() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g. Urvil Patel"
-                    className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                    className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                   />
                 </div>
 
@@ -142,7 +142,7 @@ export default function ContactPage() {
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="you@gmail.com"
-                      className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                      className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -152,7 +152,7 @@ export default function ContactPage() {
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="+91 98765 43210"
-                      className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                      className="w-full bg-white border border-[#e3e5e8] rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                     />
                   </div>
                 </div>
@@ -165,16 +165,16 @@ export default function ContactPage() {
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     placeholder="Tell us what you need help with or details about your turf..."
-                    className="w-full bg-white border border-[#e3e5e8] rounded-[20px] px-5 py-3.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#c9f13e]"
+                    className="w-full bg-white border border-[#e3e5e8] rounded-[20px] px-5 py-3.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="group bg-[#c9f13e] hover:bg-[#b8e12d] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 shadow-sm mt-2"
+                  className="group bg-[#F59E0B] hover:bg-[#D97706] transition-colors text-black pl-6 pr-2 py-3 rounded-full text-[15px] font-medium flex items-center justify-between w-full active:scale-95 shadow-sm mt-2"
                 >
                   <span>Submit message</span>
-                  <span className="size-8 rounded-full bg-black text-[#c9f13e] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="size-8 rounded-full bg-black text-[#FBBF24] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-4" strokeWidth={2.5} />
                   </span>
                 </button>

@@ -59,7 +59,7 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
 
         <div className="flex flex-col gap-4">
           <div className="inline-flex items-center gap-2">
-            <span className="bg-[#c9f13e] px-3 py-1 rounded-full text-[12px] font-medium text-black">
+            <span className="bg-[#F59E0B] px-3 py-1 rounded-full text-[12px] font-medium text-black">
               {post.category}
             </span>
             <span className="text-[13px] text-[#6c6c6c]">{post.readTime}</span>
@@ -158,7 +158,7 @@ export default function BlogDetailClient({ slug }: { slug: string }) {
                     </h3>
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#e3e5e8]/60">
                       <span className="text-[12px] text-[#6c6c6c]">{formatDate(p.date)}</span>
-                      <span className="size-6 rounded-full bg-[#c9f13e] text-black flex items-center justify-center">
+                      <span className="size-6 rounded-full bg-[#F59E0B] text-black flex items-center justify-center">
                         <ArrowUpRight className="size-3" strokeWidth={2.5} />
                       </span>
                     </div>

@@ -22,12 +22,12 @@ export default function BlogPage() {
     <div className="bg-[#f7f9f7] min-h-screen text-black font-['Geist'] flex flex-col justify-between">
       <Header />
 
-      <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-14">
         {/* Title Header */}
         <div className="relative overflow-hidden rounded-[28px] sm:rounded-[36px] bg-[#061923] px-6 py-10 sm:px-12 sm:py-14 mb-10 sm:mb-14">
-          <div className="absolute -right-24 -top-24 size-80 rounded-full bg-[#c9f13e]/10 blur-3xl" />
-          <div className="relative max-w-[700px]"><div className="bg-[#c9f13e] text-[#042644] px-3.5 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-[0.1em] w-fit mb-5">The CricBooking Blog</div>
-          <h1 className="text-[38px] sm:text-[52px] font-semibold tracking-[-0.05em] leading-[1.05] text-white">Stories from the <span className="text-[#c9f13e]">Surat cricket scene.</span></h1>
+          <div className="absolute -right-24 -top-24 size-80 rounded-full bg-[#F59E0B]/10 blur-3xl" />
+          <div className="relative max-w-[700px]"><div className="bg-[#F59E0B] text-[#042644] px-3.5 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-[0.1em] w-fit mb-5">The CricBooking Blog</div>
+          <h1 className="text-[38px] sm:text-[52px] font-semibold tracking-[-0.05em] leading-[1.05] text-white">Stories from the <span className="text-[#FBBF24]">Surat cricket scene.</span></h1>
           <p className="text-[16px] sm:text-[18px] text-white/70 mt-5 leading-relaxed">Guides on booking the best turfs, box cricket tournaments, and gear for the local pitch.</p></div>
         </div>
 
@@ -43,20 +43,20 @@ export default function BlogPage() {
                 alt={featured.title}
                 fill
                 priority
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 1024px) 100vw, 60vw"
               />
-              <div className="absolute top-4 left-4 bg-[#c9f13e] px-3.5 py-1.5 rounded-full text-[13px] font-medium text-black">
+              <div className="absolute top-4 left-4 bg-[#F59E0B] px-3.5 py-1.5 rounded-full text-[13px] font-medium text-black">
                 Featured
               </div>
             </div>
 
             <div className="lg:col-span-5 flex flex-col justify-between gap-6 px-2 sm:px-4">
               <div className="flex flex-col gap-3">
-                <span className="bg-[#eef6df] px-3 py-1 rounded-full text-[12px] font-bold text-[#527000] w-fit">
+                <span className="bg-[#FEF7E6] px-3 py-1 rounded-full text-[12px] font-bold text-[#92400E] w-fit">
                   {featured.category}
                 </span>
 
-                <h2 className="text-[26px] sm:text-[34px] font-semibold tracking-[-0.035em] text-black leading-tight group-hover:text-[#30510b]">
+                <h2 className="text-[26px] sm:text-[34px] font-semibold tracking-[-0.035em] text-black leading-tight group-hover:text-[#92400E]">
                   {featured.title}
                 </h2>
 
@@ -72,7 +72,7 @@ export default function BlogPage() {
 
                 <span className="bg-black text-white pl-4 pr-1.5 py-1.5 rounded-full text-[13px] font-medium inline-flex items-center gap-2">
                   <span>Read post</span>
-                  <span className="size-6 rounded-full bg-[#c9f13e] text-black flex items-center justify-center">
+                  <span className="size-6 rounded-full bg-[#F59E0B] text-black flex items-center justify-center">
                     <ArrowUpRight className="size-3" strokeWidth={2.5} />
                   </span>
                 </span>
@@ -94,9 +94,9 @@ export default function BlogPage() {
                   src={post.image}
                   alt={post.title}
                   fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, 33vw"
                 />
-                <div className="absolute top-3 left-3 bg-[#c9f13e] px-3 py-1 rounded-full text-[11px] font-semibold text-black shadow-sm">
+                <div className="absolute top-3 left-3 bg-[#F59E0B] px-3 py-1 rounded-full text-[11px] font-semibold text-black shadow-sm">
                   {post.category}
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function BlogPage() {
                 <span className="text-[12px] text-[#767b82]">
                   {formatDate(post.date)} · {post.readTime}
                 </span>
-                <span className="size-7 rounded-full bg-black text-[#c9f13e] flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                <span className="size-7 rounded-full bg-black text-[#FBBF24] flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
                   <ArrowUpRight className="size-3.5" strokeWidth={2.5} />
                 </span>
               </div>

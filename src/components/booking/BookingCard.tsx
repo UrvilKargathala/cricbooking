@@ -27,7 +27,7 @@ export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps)
       <div className="flex items-center gap-4 min-w-0">
         {/* Venue image */}
         <div className="relative size-20 sm:size-24 rounded-[16px] overflow-hidden bg-[#dde3ea] shrink-0">
-          <Image src={imgSrc} alt={booking.venue?.name || ''} fill className="object-cover" />
+          <Image src={imgSrc} alt={booking.venue?.name || ''} fill className="object-cover" sizes="(max-width: 640px) 100vw, 200px" />
         </div>
 
         {/* Details */}
@@ -81,7 +81,7 @@ export function BookingCard({ booking, showCancel, onCancel }: BookingCardProps)
           className="bg-black hover:bg-neutral-800 text-white pl-4 pr-1.5 py-1.5 rounded-full text-[13px] font-medium inline-flex items-center gap-2 transition-colors ml-auto sm:ml-0"
         >
           <span>View Ticket</span>
-          <span className="size-6 rounded-full bg-[#c9f13e] text-black flex items-center justify-center">
+          <span className="size-6 rounded-full bg-[#F59E0B] text-black flex items-center justify-center">
             <ArrowUpRight className="size-3" strokeWidth={2.5} />
           </span>
         </Link>

@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils'
 interface DateSelectorProps {
   selectedDate: string
   onDateChange: (date: string) => void
+  openCounts?: Record<string, number> | null
 }
 
-export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
+export function DateSelector({ selectedDate, onDateChange, openCounts = null }: DateSelectorProps) {
   const days = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i))
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -64,22 +65,28 @@ export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) 
             {days.map((day, index) => {
               const value = format(day, 'yyyy-MM-dd')
               const isSelected = value === selectedDate
+              const count = openCounts ? openCounts[value] ?? 0 : null
+              const isEmpty = count === 0
               return (
                 <button
                   key={value}
                   type="button"
                   onClick={() => onDateChange(value)}
+                  aria-pressed={isSelected}
+                  aria-label={`${format(day, 'EEEE d MMMM')}${count === null ? '' : `, ${count ? `${count} open slots` : 'no open slots'}`}`}
                   className={cn(
-                    'shrink-0 flex flex-col items-center justify-center w-16 py-2.5 rounded-[14px] text-sm transition-all select-none',
+                    'shrink-0 flex flex-col items-center justify-center w-[70px] py-2.5 rounded-[14px] text-sm transition-all select-none',
                     isSelected
-                      ? 'bg-black text-white shadow-sm'
-                      : 'bg-[#f4f6f8] text-black hover:bg-[#eef1f4]'
+                      ? 'bg-[#042644] text-white shadow-sm'
+                      : isEmpty
+                      ? 'bg-[#f4f6f8] text-[#9aa1a8] hover:bg-[#eef1f4]'
+                      : 'bg-white text-black border border-[#e3e5e8] hover:border-[#042644]/40'
                   )}
                 >
                   <span
                     className={cn(
                       'text-[11px]',
-                      isSelected ? 'text-[#c9f13e] font-medium' : 'text-[#6c6c6c]'
+                      isSelected ? 'text-[#FBBF24] font-medium' : isEmpty ? 'text-[#9aa1a8]' : 'text-[#6c6c6c]'
                     )}
                   >
                     {index === 0 ? 'Today' : format(day, 'EEE')}
@@ -88,10 +95,16 @@ export function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) 
                   <span
                     className={cn(
                       'text-[11px]',
-                      isSelected ? 'text-white/80' : 'text-[#6c6c6c]'
+                      count === null
+                        ? isSelected ? 'text-white/80' : 'text-[#6c6c6c]'
+                        : isSelected
+                        ? 'text-white/85 font-medium'
+                        : isEmpty
+                        ? 'text-[#9aa1a8]'
+                        : 'text-[#92400E] font-medium'
                     )}
                   >
-                    {format(day, 'MMM')}
+                    {count === null ? format(day, 'MMM') : count ? `${count} open` : 'No slots'}
                   </span>
                 </button>
               )

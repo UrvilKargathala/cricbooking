@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { ChatWidget } from "@/components/ai/ChatWidget";
 import { Toaster } from "@/components/ui/Toaster";
+import { ScrollAnimations } from "@/components/ui/ScrollAnimations";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
         {children}
         <ChatWidget />
         <Toaster />
+        <ScrollAnimations />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </body>
     </html>

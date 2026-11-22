@@ -9,7 +9,7 @@ export default function TermsPage() {
       <Header />
 
       <main className="w-full max-w-[880px] mx-auto px-4 sm:px-6 py-10 sm:py-16">
-        <div className="bg-[#c9f13e] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
+        <div className="bg-[#F59E0B] text-black px-3.5 py-1.5 rounded-full text-[13px] font-medium w-fit mb-4">
           Legal
         </div>
         <h1 className="text-[36px] sm:text-[48px] font-normal tracking-[-1.68px] text-black leading-tight">

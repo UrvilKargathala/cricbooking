@@ -347,7 +347,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
               value={reviewComment}
               onChange={(e) => setReviewComment(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2.5 bg-white border border-[#e3e5e8] rounded-xl text-sm placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#c9f13e] focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 bg-white border border-[#e3e5e8] rounded-xl text-sm placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent resize-none"
               placeholder="How was your experience at this venue?"
             />
           </div>
@@ -355,7 +355,7 @@ export default function BookingDetailPage({ params }: { params: { id: string } }
             variant="primary"
             onClick={handleReview}
             disabled={submittingReview}
-            className="w-full bg-[#c9f13e] hover:bg-[#b8e12d] text-black"
+            className="w-full bg-[#F59E0B] hover:bg-[#D97706] text-black"
           >
             {submittingReview ? 'Submitting...' : 'Submit Review'}
           </Button>

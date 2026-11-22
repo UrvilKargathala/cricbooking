@@ -33,15 +33,32 @@ export async function POST(req: Request) {
 
   const { data: freshSlots } = await supabase
     .from('slots')
-    .select('id, status')
+    .select('id, status, price, court_id, date, start_time')
     .in('id', slot_ids)
 
-  const unavailable = freshSlots?.filter((s) => s.status !== 'available')
-  if (unavailable && unavailable.length > 0) {
+  if (!freshSlots || freshSlots.length !== slot_ids.length || freshSlots.some((s) => s.court_id !== court_id)) {
+    return NextResponse.json({ error: 'Some slots could not be found for this court' }, { status: 400 })
+  }
+
+  if (freshSlots.some((s) => s.status !== 'available')) {
     return NextResponse.json({ error: 'Some slots are no longer available' }, { status: 409 })
   }
 
-  const amount = court.price_per_slot * slot_ids.length
+  const nowInIndia = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(new Date())
+  if (freshSlots.some((s) => `${s.date} ${s.start_time}` <= nowInIndia)) {
+    return NextResponse.json({ error: 'One of these slots has already started. Please pick a later time.' }, { status: 409 })
+  }
+
+  const amount = freshSlots.reduce((sum, s) => sum + (Number(s.price) || court.price_per_slot), 0)
 
   const order = await razorpay.orders.create({
     amount: Math.round(amount * 100),

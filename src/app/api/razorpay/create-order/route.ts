@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
-import Razorpay from 'razorpay'
+import { getRazorpay } from '@/lib/razorpay'
 import { createServerSupabaseClient, getAuthedUser } from '@/lib/supabase-server'
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
 
 export async function POST(req: Request) {
   const supabase = createServerSupabaseClient()
@@ -60,7 +56,7 @@ export async function POST(req: Request) {
 
   const amount = freshSlots.reduce((sum, s) => sum + (Number(s.price) || court.price_per_slot), 0)
 
-  const order = await razorpay.orders.create({
+  const order = await getRazorpay().orders.create({
     amount: Math.round(amount * 100),
     currency: 'INR',
     notes: {

@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import Razorpay from 'razorpay'
+import { getRazorpay } from '@/lib/razorpay'
 import { checkPaidOrder } from '@/lib/paymentCheck'
 import { getAuthedUser, createServiceRoleClient } from '@/lib/supabase-server'
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
 
 function generateBookingCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -66,7 +62,7 @@ export async function POST(req: Request) {
   // fully paid and was created for exactly this user, court and slots.
   let order
   try {
-    order = await razorpay.orders.fetch(razorpay_order_id)
+    order = await getRazorpay().orders.fetch(razorpay_order_id)
   } catch {
     return NextResponse.json({ error: 'Payment order not found' }, { status: 400 })
   }

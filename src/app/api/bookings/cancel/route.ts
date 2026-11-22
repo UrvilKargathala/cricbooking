@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
-import Razorpay from 'razorpay'
+import { getRazorpay } from '@/lib/razorpay'
 import { getAuthedUser, createServiceRoleClient } from '@/lib/supabase-server'
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
 
 export async function POST(req: Request) {
   const user = await getAuthedUser()
@@ -66,7 +62,7 @@ export async function POST(req: Request) {
   if (paymentId && booking.amount > 0 && refundPct > 0) {
     const refundAmount = Math.round((booking.amount * refundPct) / 100 * 100)
     try {
-      const refund = await razorpay.payments.refund(paymentId, {
+      const refund = await getRazorpay().payments.refund(paymentId, {
         amount: refundAmount,
         notes: { booking_id, reason: 'User cancellation' },
       })
